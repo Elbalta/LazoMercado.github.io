@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compras Grupales - Lazo Mercado</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <i class="fas fa-shopping-basket"></i>
+            <div>
+                <h1>Compras Grupales</h1>
+                <p>Lazo Mercado - Entregas a convenir</p>
+            </div>
+        </div>
+        <button id="admin-login-link" class="admin-login-btn">
+            <i class="fas fa-user-shield"></i> Administrador
+        </button>
+    </header>
+    
+    <div class="container">
+        <div class="app-container">
+            <!-- Formulario para solicitante -->
+            <div class="solicitante-form" id="solicitante-form">
+                <h2 style="text-align: center; margin-bottom: 15px; color: var(--primary);">
+                    <i class="fas fa-cart-plus"></i> Realiza tu pedido
+                </h2>
+                
+                <div class="form-group">
+                    <label for="nombre"><i class="fas fa-user"></i> Nombre completo</label>
+                    <input type="text" id="nombre" required placeholder="Juan Pérez">
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefono"><i class="fas fa-phone"></i> Teléfono</label>
+                    <input type="tel" id="telefono" required placeholder="+56912345678">
+                </div>
+                
+                <h3 style="margin: 20px 0 10px; color: var(--primary);">
+                    <i class="fas fa-apple-alt"></i> Selecciona los productos:
+                </h3>
+                
+                <div class="product-grid">
+                    <!-- Producto 1 -->
+                    <div class="product-card" id="producto1-card">
+                        <div class="product-name" id="producto1-name">Paltas</div>
+                        <div class="product-info">Precio por kilo: <span id="producto1-price">$3.500</span></div>
+                        <div class="form-group">
+                            <label for="producto1">Kilos:</label>
+                            <div class="product-quantity">
+                                <button type="button" class="quantity-btn" data-target="producto1" data-action="decrease">-</button>
+                                <input type="number" id="producto1" min="0" step="1" value="0" class="quantity-input">
+                                <button type="button" class="quantity-btn" data-target="producto1" data-action="increase">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Producto 2 -->
+                    <div class="product-card" id="producto2-card">
+                        <div class="product-name" id="producto2-name">Papas</div>
+                        <div class="product-info">Precio por kilo: <span id="producto2-price">$1.500</span></div>
+                        <div class="form-group">
+                            <label for="producto2">Kilos:</label>
+                            <div class="product-quantity">
+                                <button type="button" class="quantity-btn" data-target="producto2" data-action="decrease">-</button>
+                                <input type="number" id="producto2" min="0" step="1" value="0" class="quantity-input">
+                                <button type="button" class="quantity-btn" data-target="producto2" data-action="increase">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Producto 3 -->
+                    <div class="product-card" id="producto3-card">
+                        <div class="product-name" id="producto3-name">Limones</div>
+                        <div class="product-info">Precio por kilo: <span id="producto3-price">$1.800</span></div>
+                        <div class="form-group">
+                            <label for="producto3">Kilos:</label>
+                            <div class="product-quantity">
+                                <button type="button" class="quantity-btn" data-target="producto3" data-action="decrease">-</button>
+                                <input type="number" id="producto3" min="0" step="1" value="0" class="quantity-input">
+                                <button type="button" class="quantity-btn" data-target="producto3" data-action="increase">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Producto 4 -->
+                    <div class="product-card" id="producto4-card">
+                        <div class="product-name" id="producto4-name">Lechugas</div>
+                        <div class="product-info">Precio por unidad: <span id="producto4-price">$800</span></div>
+                        <div class="form-group">
+                            <label for="producto4">Unidades:</label>
+                            <div class="product-quantity">
+                                <button type="button" class="quantity-btn" data-target="producto4" data-action="decrease">-</button>
+                                <input type="number" id="producto4" min="0" step="1" value="0" class="quantity-input">
+                                <button type="button" class="quantity-btn" data-target="producto4" data-action="increase">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="comentarios"><i class="fas fa-comment"></i> Comentarios adicionales</label>
+                    <textarea id="comentarios" placeholder="Especificaciones especiales, alergias, etc." rows="3"></textarea>
+                </div>
+                
+                <button class="btn" id="enviar-pedido">
+                    <i class="fas fa-paper-plane"></i> Enviar Pedido
+                </button>
+            </div>
+            
+            <!-- Panel de administrador -->
+            <div class="admin-container" id="admin-container">
+                <div class="admin-header">
+                    <h2><i class="fas fa-user-shield"></i> Panel de Administrador</h2>
+                    <div class="admin-controls">
+                        <button class="btn btn-admin" id="add-order-btn">
+                            <i class="fas fa-plus-circle"></i> Agregar Pedido
+                        </button>
+                        <button class="btn btn-admin" id="compras-btn">
+                            <i class="fas fa-shopping-cart"></i> Resumen Compra
+                        </button>
+                        <button class="btn btn-admin" id="export-btn">
+                            <i class="fas fa-file-export"></i> Exportar
+                        </button>
+                        <button class="btn btn-admin" id="refresh-btn">
+                            <i class="fas fa-sync"></i> Actualizar
+                        </button>
+                        <button class="btn btn-admin" id="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Salir
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="admin-tabs">
+                    <div class="admin-tab active" data-tab="pedidos">Pedidos</div>
+                    <div class="admin-tab" data-tab="precios">Productos</div>
+                    <div class="admin-tab" data-tab="finanzas">Finanzas</div>
+                </div>
+                
+                <!-- Pestaña de Pedidos -->
+                <div class="admin-tab-content active" id="pedidos-tab">
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-title">Total Pedidos</div>
+                            <div class="stat-value" id="total-pedidos">0</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-title">Pendientes</div>
+                            <div class="stat-value" id="pedidos-pendientes">0</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-title">Entregados</div>
+                            <div class="stat-value" id="pedidos-entregados">0</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-title">Completados</div>
+                            <div class="stat-value" id="pedidos-completados">0</div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 15px 0 10px;">
+                        <i class="fas fa-list"></i> Lista de Pedidos
+                    </h3>
+                    
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Teléfono</th>
+                                <th>Productos</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-body">
+                            <!-- Los pedidos se insertarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pestaña de Gestión de Productos -->
+                <div class="admin-tab-content" id="precios-tab">
+                    <div class="price-manager">
+                        <h3><i class="fas fa-tags"></i> Gestión de Productos</h3>
+                        <p>Actualiza precios, disponibilidad y costos</p>
+                        
+                        <div class="price-item">
+                            <div class="price-name">
+                                <label>Nombre del Producto:</label>
+                                <input type="text" class="price-name-input" id="producto1-name-input" value="Paltas">
+                            </div>
+                            <div class="price-controls">
+                                <div>
+                                    <label>Precio de venta:</label>
+                                    <input type="text" class="price-input" id="producto1-price-input" value="3500">
+                                    <span>$ por kilo</span>
+                                </div>
+                                <div class="cost-controls">
+                                    <label class="cost-label">Costo de adquisición:</label>
+                                    <input type="text" class="cost-input" id="producto1-cost-input" value="2500">
+                                    <span>$ por kilo</span>
+                                </div>
+                                <div class="toggle-container">
+                                    <label>Disponible:</label>
+                                    <label class="availability-toggle">
+                                        <input type="checkbox" id="producto1-available" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="price-item">
+                            <div class="price-name">
+                                <label>Nombre del Producto:</label>
+                                <input type="text" class="price-name-input" id="producto2-name-input" value="Papas">
+                            </div>
+                            <div class="price-controls">
+                                <div>
+                                    <label>Precio de venta:</label>
+                                    <input type="text" class="price-input" id="producto2-price-input" value="1500">
+                                    <span>$ por kilo</span>
+                                </div>
+                                <div class="cost-controls">
+                                    <label class="cost-label">Costo de adquisición:</label>
+                                    <input type="text" class="cost-input" id="producto2-cost-input" value="800">
+                                    <span>$ por kilo</span>
+                                </div>
+                                <div class="toggle-container">
+                                    <label>Disponible:</label>
+                                    <label class="availability-toggle">
+                                        <input type="checkbox" id="producto2-available" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="price-item">
+                            <div class="price-name">
+                                <label>Nombre del Producto:</label>
+                                <input type="text" class="price-name-input" id="producto3-name-input" value="Limones">
+                            </div>
+                            <div class="price-controls">
+                                <div>
+                                    <label>Precio de venta:</label>
+                                    <input type="text" class="price-input" id="producto3-price-input" value="1800">
+                                    <span>$ por kilo</span>
+                                </div>
+                                <div class="cost-controls">
+                                    <label class="cost-label">Costo de adquisición:</label>
+                                    <input type="text" class="cost-input" id="producto3-cost-input" value="1000">
+                                    <span>$ por kilo</span>
+                                </div>
+                                <div class="toggle-container">
+                                    <label>Disponible:</label>
+                                    <label class="availability-toggle">
+                                        <input type="checkbox" id="producto3-available" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="price-item">
+                            <div class="price-name">
+                                <label>Nombre del Producto:</label>
+                                <input type="text" class="price-name-input" id="producto4-name-input" value="Lechugas">
+                            </div>
+                            <div class="price-controls">
+                                <div>
+                                    <label>Precio de venta:</label>
+                                    <input type="text" class="price-input" id="producto4-price-input" value="800">
+                                    <span>$ por unidad</span>
+                                </div>
+                                <div class="cost-controls">
+                                    <label class="cost-label">Costo de adquisición:</label>
+                                    <input type="text" class="cost-input" id="producto4-cost-input" value="400">
+                                    <span>$ por unidad</span>
+                                </div>
+                                <div class="toggle-container">
+                                    <label>Disponible:</label>
+                                    <label class="availability-toggle">
+                                        <input type="checkbox" id="producto4-available" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn" id="save-prices" style="margin-top: 15px;">
+                            <i class="fas fa-save"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Pestaña de Finanzas -->
+                <div class="admin-tab-content" id="finanzas-tab">
+                    <div class="finance-grid">
+                        <div class="finance-card">
+                            <div class="finance-header">
+                                <i class="fas fa-money-bill-wave finance-icon"></i>
+                                <div>
+                                    <div class="finance-title">Ingresos Totales</div>
+                                    <div class="finance-value">$<span id="total-ingresos">0</span></div>
+                                </div>
+                            </div>
+                            <div class="finance-subtitle">Suma de pedidos pagados</div>
+                        </div>
+                        
+                        <div class="finance-card">
+                            <div class="finance-header">
+                                <i class="fas fa-shopping-basket finance-icon"></i>
+                                <div>
+                                    <div class="finance-title">Costos</div>
+                                    <div class="finance-value">$<span id="total-costos">0</span></div>
+                                </div>
+                            </div>
+                            <div class="finance-subtitle">Basado en costos de productos</div>
+                        </div>
+                        
+                        <div class="finance-card">
+                            <div class="finance-header">
+                                <i class="fas fa-chart-line finance-icon"></i>
+                                <div>
+                                    <div class="finance-title">Margen de Ganancia</div>
+                                    <div class="finance-value"><span id="margen-ganancia">0</span>%</div>
+                                </div>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="margen-bar" style="width: 0%;">0%</div>
+                            </div>
+                            <div class="finance-subtitle">(Ingresos - Costos) / Ingresos</div>
+                        </div>
+                        
+                        <div class="finance-card">
+                            <div class="finance-header">
+                                <i class="fas fa-bullseye finance-icon"></i>
+                                <div>
+                                    <div class="finance-title">Meta de Ventas</div>
+                                    <div class="finance-value">$<span id="meta-ventas">0</span></div>
+                                </div>
+                            </div>
+                            <input type="number" class="goal-input" id="meta-input" placeholder="Ingrese meta de ventas">
+                            <div class="progress-container">
+                                <div class="progress-bar" id="meta-bar" style="width: 0%;">0%</div>
+                            </div>
+                            <div class="finance-subtitle">Progreso: <span id="meta-progreso">0</span>%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="price-manager">
+                        <h3><i class="fas fa-calculator"></i> Resumen Financiero</h3>
+                        <table class="cost-table">
+                            <thead>
+                                <tr>
+                                    <th>Concepto</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Total Ingresos</td>
+                                    <td>$<span id="resumen-ingresos">0</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Total Costos</td>
+                                    <td>$<span id="resumen-costos">0</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Ganancias Brutas</td>
+                                    <td>$<span id="resumen-ganancias">0</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Margen de Ganancia</td>
+                                    <td><span id="resumen-margen">0</span>%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Login -->
+    <div class="login-modal" id="login-modal">
+        <div class="login-container">
+            <span class="close-modal" id="close-login">&times;</span>
+            <h2><i class="fas fa-lock"></i> Acceso Administrador</h2>
+            <div class="form-group">
+                <label for="admin-email"><i class="fas fa-envelope"></i> Correo:</label>
+                <input type="email" id="admin-email" placeholder="admin@ejemplo.com">
+            </div>
+            <div class="form-group">
+                <label for="admin-password"><i class="fas fa-lock"></i> Contraseña:</label>
+                <input type="password" id="admin-password" placeholder="••••••••">
+            </div>
+            <button class="btn btn-admin" id="login-btn" style="width: 100%;">
+                <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+            </button>
+            <p id="login-error" style="color: #d32f2f; margin-top: 15px; display: none; text-align: center;">
+                <i class="fas fa-exclamation-circle"></i> Credenciales incorrectas
+            </p>
+            
+            <div style="margin-top: 20px; text-align: center; color: #666; background: #f9f9f9; padding: 12px; border-radius: 8px;">
+                <p>Para probar la aplicación:</p>
+                <p style="font-weight: 500; margin-top: 8px;"><i class="fas fa-user"></i> <strong>Email:</strong> admin@valledor.com</p>
+                <p style="font-weight: 500;"><i class="fas fa-key"></i> <strong>Contraseña:</strong> admin123</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para agregar pedido -->
+    <div class="add-order-modal" id="add-order-modal">
+        <div class="add-order-container">
+            <span class="close-modal" id="close-add-order">&times;</span>
+            <h2><i class="fas fa-cart-plus"></i> Agregar Nuevo Pedido</h2>
+            
+            <div class="form-group">
+                <label for="admin-nombre"><i class="fas fa-user"></i> Nombre completo</label>
+                <input type="text" id="admin-nombre" required placeholder="Juan Pérez">
+            </div>
+            
+            <div class="form-group">
+                <label for="admin-telefono"><i class="fas fa-phone"></i> Teléfono</label>
+                <input type="tel" id="admin-telefono" required placeholder="+56912345678">
+            </div>
+            
+            <h3 style="margin: 15px 0;"><i class="fas fa-apple-alt"></i> Productos:</h3>
+            
+            <div class="product-grid">
+                <!-- Producto 1 -->
+                <div class="product-card">
+                    <div class="product-name" id="admin-producto1-name">Paltas</div>
+                    <div class="product-info">Precio por kilo: $<span id="admin-producto1-price">3.500</span></div>
+                    <div class="form-group">
+                        <label for="admin-producto1">Kilos:</label>
+                        <div class="product-quantity">
+                            <button type="button" class="quantity-btn" data-target="admin-producto1" data-action="decrease">-</button>
+                            <input type="number" id="admin-producto1" min="0" step="1" value="0" class="quantity-input">
+                            <button type="button" class="quantity-btn" data-target="admin-producto1" data-action="increase">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Producto 2 -->
+                <div class="product-card">
+                    <div class="product-name" id="admin-producto2-name">Papas</div>
+                    <div class="product-info">Precio por kilo: $<span id="admin-producto2-price">1.500</span></div>
+                    <div class="form-group">
+                        <label for="admin-producto2">Kilos:</label>
+                        <div class="product-quantity">
+                            <button type="button" class="quantity-btn" data-target="admin-producto2" data-action="decrease">-</button>
+                            <input type="number" id="admin-producto2" min="0" step="1" value="0" class="quantity-input">
+                            <button type="button" class="quantity-btn" data-target="admin-producto2" data-action="increase">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Producto 3 -->
+                <div class="product-card">
+                    <div class="product-name" id="admin-producto3-name">Limones</div>
+                    <div class="product-info">Precio por kilo: $<span id="admin-producto3-price">1.800</span></div>
+                    <div class="form-group">
+                        <label for="admin-producto3">Kilos:</label>
+                        <div class="product-quantity">
+                            <button type="button" class="quantity-btn" data-target="admin-producto3" data-action="decrease">-</button>
+                            <input type="number" id="admin-producto3" min="0" step="1" value="0" class="quantity-input">
+                            <button type="button" class="quantity-btn" data-target="admin-producto3" data-action="increase">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Producto 4 -->
+                <div class="product-card">
+                    <div class="product-name" id="admin-producto4-name">Lechugas</div>
+                    <div class="product-info">Precio por unidad: $<span id="admin-producto4-price">800</span></div>
+                    <div class="form-group">
+                        <label for="admin-producto4">Unidades:</label>
+                        <div class="product-quantity">
+                            <button type="button" class="quantity-btn" data-target="admin-producto4" data-action="decrease">-</button>
+                            <input type="number" id="admin-producto4" min="0" step="1" value="0" class="quantity-input">
+                            <button type="button" class="quantity-btn" data-target="admin-producto4" data-action="increase">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="admin-comentarios"><i class="fas fa-comment"></i> Comentarios</label>
+                <textarea id="admin-comentarios" placeholder="Comentarios adicionales" rows="3"></textarea>
+            </div>
+            
+            <button class="btn" id="admin-enviar-pedido">
+                <i class="fas fa-paper-plane"></i> Agregar Pedido
+            </button>
+        </div>
+    </div>
+    
+    <!-- Modal para resumen de compras -->
+    <div class="compras-modal" id="compras-modal">
+        <div class="compras-container">
+            <span class="close-modal" id="close-compras">&times;</span>
+            <h2><i class="fas fa-shopping-cart"></i> Resumen de Compra</h2>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-title" id="compras-title1">Paltas</div>
+                    <div class="stat-value" id="compras-producto1">0 kg</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-title" id="compras-title2">Papas</div>
+                    <div class="stat-value" id="compras-papas">0 kg</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-title" id="compras-title3">Limones</div>
+                    <div class="stat-value" id="compras-limones">0 kg</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-title" id="compras-title4">Lechugas</div>
+                    <div class="stat-value" id="compras-lechugas">0 unidades</div>
+                </div>
+            </div>
+            
+            <h3 style="margin: 15px 0 10px; text-align: center;">
+                <i class="fas fa-clipboard-list"></i> Detalle por Producto
+            </h3>
+            
+            <table class="compras-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Unidad</th>
+                    </tr>
+                </thead>
+                <tbody id="compras-body">
+                    <!-- Los detalles se insertarán aquí -->
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn" id="print-compras">
+                    <i class="fas fa-print"></i> Imprimir Resumen
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notification-text">Pedido registrado con éxito!</span>
+    </div>
+    
+    <div class="footer">
+        <p>Sistema de pedidos grupales para Lazo Mercado | Entregas a convenir</p>
+        <p>© 2025 - Todos los derechos reservados</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
