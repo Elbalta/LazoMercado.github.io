@@ -72,15 +72,37 @@
 
       <section id="admin-panel-section" class="hidden">
         <div class="admin-toolbar">
-          <h4>Gestión de bins</h4>
+          <h4>Gestión avanzada de bins</h4>
           <button id="admin-logout" class="btn secondary">Cerrar sesión</button>
+        </div>
+
+        <div class="kpi-grid" id="kpi-grid"></div>
+
+        <div class="charts-grid">
+          <article class="chart-card">
+            <h5>Progreso de venta global (kg)</h5>
+            <div id="kg-chart" class="progress-chart"></div>
+            <div id="kg-legend" class="chart-legend"></div>
+          </article>
+          <article class="chart-card">
+            <h5>Montos por estado de pedido</h5>
+            <div id="amount-chart" class="bars-chart"></div>
+          </article>
         </div>
 
         <form id="bin-form" class="admin-form">
           <input type="hidden" id="bin-id" />
           <label>Producto<input id="bin-product" required /></label>
+          <label>Variedad / calibre<input id="bin-variety" placeholder="Ej: Hass, calibre 22" /></label>
           <label>Precio por kilo<input id="bin-price" type="number" min="1" required /></label>
           <label>Capacidad (kg)<input id="bin-capacity" type="number" min="1" value="500" required /></label>
+          <label>Tipo de venta
+            <select id="bin-packaging">
+              <option value="GRANEL">GRANEL</option>
+              <option value="CALIBRADA">CALIBRADA</option>
+              <option value="MIXTA">MIXTA</option>
+            </select>
+          </label>
           <label>Imagen URL<input id="bin-image" type="url" required /></label>
           <label>Estado
             <select id="bin-status">
@@ -89,14 +111,27 @@
               <option value="SOLD_OUT">SOLD_OUT</option>
             </select>
           </label>
+          <label class="span-all">Resumen del lote
+            <textarea id="bin-notes" rows="2" placeholder="Ej: Fruta homogénea, llegada semanal, venta por bin completo."></textarea>
+          </label>
           <button class="btn" type="submit">Guardar bin</button>
           <button id="clear-bin-form" class="btn secondary" type="button">Limpiar</button>
         </form>
 
-        <div id="admin-bins" class="admin-bins"></div>
+        <div class="admin-tabs">
+          <button class="tab-btn active" data-tab="open">En venta</button>
+          <button class="tab-btn" data-tab="sold">Recaudados / completados</button>
+        </div>
+
+        <div id="admin-bins-open" class="admin-bins"></div>
+        <div id="admin-bins-sold" class="admin-bins hidden"></div>
       </section>
     </div>
   </dialog>
+
+  <template id="admin-bin-template">
+    <article class="admin-bin"></article>
+  </template>
 
   <p id="toast" class="toast"></p>
   <script src="script.js"></script>
