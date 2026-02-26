@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'crowdbuying-db-v3';
+const STORAGE_KEY = 'crowdbuying-db-v4';
 const ADMIN_SESSION_KEY = 'crowdbuying-admin-session';
 
 const ORDER_STATES = ['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'];
@@ -8,7 +8,7 @@ const NEXT_STATE = {
   EN_TRANSITO: 'ENTREGADO',
   ENTREGADO: 'COMPLETADO',
   COMPLETADO: null,
-  CANCELADO: null
+  CANCELADO: 'PENDIENTE_PAGO'
 };
 
 const ORDER_LABELS = {
@@ -33,6 +33,7 @@ const el = {
   orderKg: document.getElementById('order-kg'),
   orderTotal: document.getElementById('order-total'),
   orderStockHelp: document.getElementById('order-stock-help'),
+  cancelOrderAction: document.getElementById('cancel-order-action'),
   customerName: document.getElementById('customer-name'),
   customerEmail: document.getElementById('customer-email'),
   customerPhone: document.getElementById('customer-phone'),
@@ -58,7 +59,6 @@ const el = {
   binVariety: document.getElementById('bin-variety'),
   binPrice: document.getElementById('bin-price'),
   binCapacity: document.getElementById('bin-capacity'),
-  binPackaging: document.getElementById('bin-packaging'),
   binImage: document.getElementById('bin-image'),
   binStatus: document.getElementById('bin-status'),
   binNotes: document.getElementById('bin-notes'),
@@ -94,7 +94,6 @@ function seedDB() {
       id: paltaId,
       product_name: 'Palta Hass',
       variety: 'Hass calibre 22',
-      packaging: 'GRANEL',
       notes: 'Homogénea, ideal para venta por mayor. Se entrega en pallet.',
       price_per_kg: 2690,
       capacity_kg: 500,
@@ -107,7 +106,6 @@ function seedDB() {
       id: naranjaId,
       product_name: 'Naranja Valencia',
       variety: 'Valencia tardía',
-      packaging: 'GRANEL',
       notes: 'Lote uniforme para jugo y mesa. Venta por bin completo.',
       price_per_kg: 1290,
       capacity_kg: 500,
@@ -227,7 +225,6 @@ const api = {
       id: uid(),
       product_name: payload.product_name,
       variety: payload.variety || '',
-      packaging: payload.packaging || 'GRANEL',
       notes: payload.notes || '',
       price_per_kg: Number(payload.price_per_kg),
       capacity_kg: Number(payload.capacity_kg || 500),
@@ -249,7 +246,6 @@ const api = {
     Object.assign(bin, {
       product_name: payload.product_name,
       variety: payload.variety || '',
-      packaging: payload.packaging || 'GRANEL',
       notes: payload.notes || '',
       price_per_kg: Number(payload.price_per_kg),
       capacity_kg: Number(payload.capacity_kg),
@@ -279,6 +275,32 @@ const api = {
     const order = db.orders.find((o) => o.id === orderId);
     if (!order) throw new Error('Pedido no encontrado.');
     if (!ORDER_STATES.includes(status)) throw new Error('Estado inválido.');
+
+    const bin = db.bins.find((b) => b.id === order.bin_id);
+    if (!bin) throw new Error('Bin asociado no encontrado.');
+
+    const fromCancelled = order.status === 'CANCELADO' && status !== 'CANCELADO';
+    const toCancelled = order.status !== 'CANCELADO' && status === 'CANCELADO';
+
+    if (toCancelled) {
+      bin.sold_kg = Math.max(0, bin.sold_kg - order.kg);
+      if (bin.status === 'SOLD_OUT' && bin.sold_kg < bin.capacity_kg) {
+        bin.status = 'OPEN';
+      }
+    }
+
+    if (fromCancelled) {
+      const available = Math.max(0, bin.capacity_kg - bin.sold_kg);
+      if (order.kg > available) {
+        throw new Error(`No se puede reactivar: solo hay ${available} kg disponibles.`);
+      }
+      bin.sold_kg += order.kg;
+      if (bin.sold_kg >= bin.capacity_kg) {
+        bin.sold_kg = bin.capacity_kg;
+        bin.status = 'SOLD_OUT';
+      }
+    }
+
     order.status = status;
     saveDB(db);
     return order;
@@ -323,7 +345,6 @@ function renderBins() {
           <h3>${bin.product_name}</h3>
           ${statusTag(bin.status)}
           <p class="bin-meta">Variedad: <strong>${bin.variety || 'No especificada'}</strong></p>
-          <p class="bin-meta">Tipo: <strong>${bin.packaging || 'GRANEL'}</strong></p>
           <p class="bin-meta">Precio por kilo: <strong>${money(bin.price_per_kg)}</strong></p>
           <p class="bin-meta">Capacidad total: ${bin.capacity_kg} kg</p>
 
@@ -385,7 +406,6 @@ function fillAdminForm(bin) {
   el.binVariety.value = bin.variety || '';
   el.binPrice.value = bin.price_per_kg;
   el.binCapacity.value = bin.capacity_kg;
-  el.binPackaging.value = bin.packaging || 'GRANEL';
   el.binImage.value = bin.image_url;
   el.binStatus.value = bin.status;
   el.binNotes.value = bin.notes || '';
@@ -396,7 +416,6 @@ function clearAdminForm() {
   el.binId.value = '';
   el.binCapacity.value = '500';
   el.binStatus.value = 'OPEN';
-  el.binPackaging.value = 'GRANEL';
 }
 
 function computeBinSummary(bin, orders) {
@@ -418,7 +437,7 @@ function computeBinSummary(bin, orders) {
   };
 }
 
-function orderItemTemplate(order, bin) {
+function orderItemTemplate(order, canTransitionProduct) {
   const next = NEXT_STATE[order.status];
   const canMove = Boolean(next);
 
@@ -433,14 +452,14 @@ function orderItemTemplate(order, bin) {
         <div>${order.customer?.phone || 'Sin teléfono'} · ${order.customer?.email || ''}</div>
       </div>
       <div class="order-actions">
-        ${canMove ? `<button class="btn tiny warn order-next" data-order-id="${order.id}" data-next="${next}">Pasar a: ${ORDER_LABELS[next]}</button>` : ''}
+        ${canMove && canTransitionProduct ? `<button class="btn tiny warn order-next" data-order-id="${order.id}" data-next="${next}">Pasar a: ${ORDER_LABELS[next]}</button>` : ''}
         ${order.status !== 'CANCELADO' && order.status !== 'COMPLETADO' ? `<button class="btn tiny secondary order-cancel" data-order-id="${order.id}">Cancelar</button>` : ''}
       </div>
     </div>
   `;
 }
 
-function renderAdminBinCard(bin) {
+function renderAdminBinCard(bin, isSoldView = false) {
   const orders = api.getOrdersByBin(bin.id);
   const available = Math.max(0, bin.capacity_kg - bin.sold_kg);
   const pct = Math.round((bin.sold_kg / bin.capacity_kg) * 100);
@@ -452,11 +471,11 @@ function renderAdminBinCard(bin) {
         <div>
           <h4>${bin.product_name}</h4>
           <p class="bin-meta">${money(bin.price_per_kg)} / kg · ${bin.sold_kg}/${bin.capacity_kg} kg · ${pct}%</p>
-          <p class="bin-meta">Variedad: ${bin.variety || 'No especificada'} · Tipo: ${bin.packaging || 'GRANEL'}</p>
+          <p class="bin-meta">Variedad: ${bin.variety || 'No especificada'}</p>
           ${statusTag(bin.status)}
         </div>
         <div>
-          <button class="btn secondary edit-bin" data-id="${bin.id}">Editar</button>
+          ${isSoldView ? '<span class="hint">Producto recaudado (sin edición)</span>' : `<button class="btn secondary edit-bin" data-id="${bin.id}">Editar</button>`}
         </div>
       </div>
 
@@ -478,7 +497,7 @@ function renderAdminBinCard(bin) {
 
       <div class="order-list">
         <strong>Pedidos (${orders.length}):</strong>
-        ${orders.length === 0 ? '<p>Sin pedidos.</p>' : orders.map((order) => orderItemTemplate(order, bin)).join('')}
+        ${orders.length === 0 ? '<p>Sin pedidos.</p>' : orders.map((order) => orderItemTemplate(order, !isSoldView)).join('')}
       </div>
     </article>
   `;
@@ -505,7 +524,7 @@ function renderKpisAndCharts() {
     <article class="kpi-card"><p>Bins activos</p><strong>${bins.filter((b) => b.status === 'OPEN').length}</strong></article>
     <article class="kpi-card"><p>Bins recaudados</p><strong>${bins.filter((b) => b.status === 'SOLD_OUT').length}</strong></article>
     <article class="kpi-card"><p>Kg vendidos</p><strong>${totalSoldKg}</strong></article>
-    <article class="kpi-card"><p>Monto vendido</p><strong>${money(revenuePotential)}</strong></article>
+    <article class="kpi-card"><p>Kg disponibles</p><strong>${totalAvailable}</strong></article>
   `;
 
   const soldPct = totalCapacity ? Math.round((totalSoldKg / totalCapacity) * 100) : 0;
@@ -563,7 +582,8 @@ function bindAdminBinActions() {
       try {
         api.updateOrderStatus(btn.dataset.orderId, 'CANCELADO');
         renderAdminBins();
-        toast('Pedido cancelado.');
+        renderBins();
+        toast('Pedido cancelado y kilos devueltos a disponibilidad.');
       } catch (error) {
         toast(error.message, true);
       }
@@ -576,8 +596,8 @@ function renderAdminBins() {
   const selling = bins.filter((b) => b.status === 'OPEN' || b.status === 'CLOSED');
   const recaudados = bins.filter((b) => b.status === 'SOLD_OUT');
 
-  el.adminBinsOpen.innerHTML = selling.length ? selling.map(renderAdminBinCard).join('') : '<p class="hint">No hay bins en venta.</p>';
-  el.adminBinsSold.innerHTML = recaudados.length ? recaudados.map(renderAdminBinCard).join('') : '<p class="hint">No hay bins recaudados todavía.</p>';
+  el.adminBinsOpen.innerHTML = selling.length ? selling.map((bin) => renderAdminBinCard(bin, false)).join('') : '<p class="hint">No hay bins en venta.</p>';
+  el.adminBinsSold.innerHTML = recaudados.length ? recaudados.map((bin) => renderAdminBinCard(bin, true)).join('') : '<p class="hint">No hay bins recaudados todavía.</p>';
 
   bindAdminBinActions();
   renderKpisAndCharts();
@@ -634,6 +654,7 @@ el.openAdmin.addEventListener('click', () => {
 });
 
 el.closeOrder.addEventListener('click', closeOrderFlow);
+el.cancelOrderAction.addEventListener('click', closeOrderFlow);
 el.closeAdmin.addEventListener('click', () => el.adminModal.close());
 el.purchaseAlertClose.addEventListener('click', hidePurchaseAlert);
 el.purchaseAlert.addEventListener('click', (event) => {
@@ -663,7 +684,6 @@ el.binForm.addEventListener('submit', (event) => {
     const payload = {
       product_name: el.binProduct.value.trim(),
       variety: el.binVariety.value.trim(),
-      packaging: el.binPackaging.value,
       notes: el.binNotes.value.trim(),
       price_per_kg: Number(el.binPrice.value),
       capacity_kg: Number(el.binCapacity.value || 500),
