@@ -1,17 +1,28 @@
-const STORAGE_KEY = 'crowdbuying-db-v2';
+const STORAGE_KEY = 'crowdbuying-db-v3';
 const ADMIN_SESSION_KEY = 'crowdbuying-admin-session';
 
-const ORDER_STATES = ['PENDING', 'IN_TRANSIT', 'DELIVERED', 'COMPLETED', 'CANCELLED'];
+const ORDER_STATES = ['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'];
 const NEXT_STATE = {
-  PENDING: 'IN_TRANSIT',
-  IN_TRANSIT: 'DELIVERED',
-  DELIVERED: 'COMPLETED',
-  COMPLETED: null,
-  CANCELLED: null
+  PENDIENTE_PAGO: 'PAGO_CONFIRMADO',
+  PAGO_CONFIRMADO: 'EN_TRANSITO',
+  EN_TRANSITO: 'ENTREGADO',
+  ENTREGADO: 'COMPLETADO',
+  COMPLETADO: null,
+  CANCELADO: null
+};
+
+const ORDER_LABELS = {
+  PENDIENTE_PAGO: 'Pendiente de pago',
+  PAGO_CONFIRMADO: 'Pago confirmado',
+  EN_TRANSITO: 'En tránsito',
+  ENTREGADO: 'Entregado',
+  COMPLETADO: 'Completado',
+  CANCELADO: 'Cancelado'
 };
 
 const el = {
   binsList: document.getElementById('bins-list'),
+  summaryPanel: document.getElementById('summary-panel'),
   summaryProduct: document.getElementById('summary-product'),
   summaryKg: document.getElementById('summary-kg'),
   summaryUnit: document.getElementById('summary-unit'),
@@ -35,6 +46,12 @@ const el = {
   adminEmail: document.getElementById('admin-email'),
   adminPassword: document.getElementById('admin-password'),
   adminLogout: document.getElementById('admin-logout'),
+  mainTabs: Array.from(document.querySelectorAll('.main-tab')),
+  adminViews: {
+    resumen: document.getElementById('admin-view-resumen'),
+    venta: document.getElementById('admin-view-venta'),
+    recaudado: document.getElementById('admin-view-recaudado')
+  },
   binForm: document.getElementById('bin-form'),
   binId: document.getElementById('bin-id'),
   binProduct: document.getElementById('bin-product'),
@@ -52,6 +69,9 @@ const el = {
   kgChart: document.getElementById('kg-chart'),
   amountChart: document.getElementById('amount-chart'),
   kgLegend: document.getElementById('kg-legend'),
+  purchaseAlert: document.getElementById('purchase-alert'),
+  purchaseAlertText: document.getElementById('purchase-alert-text'),
+  purchaseAlertClose: document.getElementById('purchase-alert-close'),
   toast: document.getElementById('toast')
 };
 
@@ -60,12 +80,11 @@ const CLP = new Intl.NumberFormat('es-CL');
 
 function seedDB() {
   const now = new Date().toISOString();
-  const adminId = uid();
   const paltaId = uid();
   const naranjaId = uid();
 
   const users = [
-    { id: adminId, name: 'Administrador', email: 'admin@lazo.cl', phone: '+56900000000', role: 'ADMIN', password: 'admin123', created_at: now },
+    { id: uid(), name: 'Administrador', email: 'admin@lazo.cl', phone: '+56900000000', role: 'ADMIN', password: 'admin123', created_at: now },
     { id: uid(), name: 'Juan Pérez', email: 'juan@email.com', phone: '+56999888777', role: 'CUSTOMER', created_at: now },
     { id: uid(), name: 'Mini Market Norte', email: 'compras@market.cl', phone: '+56911222333', role: 'CUSTOMER', created_at: now }
   ];
@@ -107,7 +126,7 @@ function seedDB() {
       kg: 220,
       unit_price: 1290,
       total_price: 283800,
-      status: 'COMPLETED',
+      status: 'COMPLETADO',
       created_at: now
     },
     {
@@ -117,7 +136,7 @@ function seedDB() {
       kg: 280,
       unit_price: 1290,
       total_price: 361200,
-      status: 'DELIVERED',
+      status: 'ENTREGADO',
       created_at: now
     }
   ];
@@ -176,7 +195,7 @@ const api = {
       kg: requestedKg,
       unit_price: bin.price_per_kg,
       total_price: requestedKg * bin.price_per_kg,
-      status: 'PENDING',
+      status: 'PENDIENTE_PAGO',
       created_at: new Date().toISOString()
     };
 
@@ -273,7 +292,16 @@ function money(value) {
 function toast(message, isError = false) {
   el.toast.textContent = message;
   el.toast.className = `toast show ${isError ? 'error' : 'success'}`;
-  setTimeout(() => (el.toast.className = 'toast'), 2800);
+  setTimeout(() => (el.toast.className = 'toast'), 2600);
+}
+
+function showPurchaseAlert(order, bin) {
+  el.purchaseAlertText.textContent = `Pedido registrado: ${order.kg} kg de ${bin.product_name} por ${money(order.total_price)}. Estado: ${ORDER_LABELS[order.status]}.`;
+  el.purchaseAlert.classList.remove('hidden');
+}
+
+function hidePurchaseAlert() {
+  el.purchaseAlert.classList.add('hidden');
 }
 
 function statusTag(status) {
@@ -342,7 +370,13 @@ function openOrderModal(binId) {
   el.orderStockHelp.textContent = `${available} kg disponibles para ${bin.product_name}.`;
   updateSummary(bin, 0);
   el.orderTotal.textContent = `Total: ${money(0)}`;
+  el.summaryPanel.classList.remove('hidden');
   el.orderModal.showModal();
+}
+
+function closeOrderFlow() {
+  el.orderModal.close();
+  el.summaryPanel.classList.add('hidden');
 }
 
 function fillAdminForm(bin) {
@@ -366,31 +400,21 @@ function clearAdminForm() {
 }
 
 function computeBinSummary(bin, orders) {
-  const byStatus = {
-    PENDING: 0,
-    IN_TRANSIT: 0,
-    DELIVERED: 0,
-    COMPLETED: 0,
-    CANCELLED: 0
-  };
-
   let soldAmount = 0;
   let recaudado = 0;
   let inTransit = 0;
 
   orders.forEach((o) => {
-    byStatus[o.status] += 1;
     soldAmount += o.total_price;
-    if (o.status === 'COMPLETED') recaudado += o.total_price;
-    if (o.status === 'IN_TRANSIT' || o.status === 'DELIVERED') inTransit += o.total_price;
+    if (o.status === 'COMPLETADO') recaudado += o.total_price;
+    if (o.status === 'EN_TRANSITO' || o.status === 'ENTREGADO') inTransit += o.total_price;
   });
 
   return {
     soldAmount,
     recaudado,
     inTransit,
-    pendingAmount: soldAmount - recaudado - inTransit,
-    byStatus
+    pendingAmount: soldAmount - recaudado - inTransit
   };
 }
 
@@ -405,12 +429,12 @@ function orderItemTemplate(order, bin) {
         <div>${order.kg} kg · ${money(order.total_price)}</div>
       </div>
       <div>
-        <span class="order-status ${order.status}">${order.status}</span>
+        <span class="order-status ${order.status}">${ORDER_LABELS[order.status]}</span>
         <div>${order.customer?.phone || 'Sin teléfono'} · ${order.customer?.email || ''}</div>
       </div>
       <div class="order-actions">
-        ${canMove ? `<button class="btn tiny warn order-next" data-order-id="${order.id}" data-next="${next}" data-bin-id="${bin.id}">Pasar a ${next}</button>` : ''}
-        ${order.status !== 'CANCELLED' && order.status !== 'COMPLETED' ? `<button class="btn tiny secondary order-cancel" data-order-id="${order.id}" data-bin-id="${bin.id}">Cancelar</button>` : ''}
+        ${canMove ? `<button class="btn tiny warn order-next" data-order-id="${order.id}" data-next="${next}">Pasar a: ${ORDER_LABELS[next]}</button>` : ''}
+        ${order.status !== 'CANCELADO' && order.status !== 'COMPLETADO' ? `<button class="btn tiny secondary order-cancel" data-order-id="${order.id}">Cancelar</button>` : ''}
       </div>
     </div>
   `;
@@ -475,8 +499,7 @@ function renderKpisAndCharts() {
     return acc;
   }, {});
 
-  const recaudado = statusAmounts.COMPLETED || 0;
-  const inTransit = (statusAmounts.IN_TRANSIT || 0) + (statusAmounts.DELIVERED || 0);
+  const inTransit = (statusAmounts.EN_TRANSITO || 0) + (statusAmounts.ENTREGADO || 0);
 
   el.kpiGrid.innerHTML = `
     <article class="kpi-card"><p>Bins activos</p><strong>${bins.filter((b) => b.status === 'OPEN').length}</strong></article>
@@ -503,21 +526,22 @@ function renderKpisAndCharts() {
     const w = Math.round((value / maxAmount) * 100);
     return `
       <div class="bar-row">
-        <span>${state}</span>
+        <span>${ORDER_LABELS[state]}</span>
         <div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div>
         <strong>${money(value)}</strong>
       </div>
     `;
   }).join('');
-
-  void recaudado;
 }
 
 function bindAdminBinActions() {
   document.querySelectorAll('.edit-bin').forEach((btn) => {
     btn.addEventListener('click', () => {
       const bin = api.getBin(btn.dataset.id);
-      if (bin) fillAdminForm(bin);
+      if (bin) {
+        fillAdminForm(bin);
+        switchAdminView('venta');
+      }
     });
   });
 
@@ -527,7 +551,7 @@ function bindAdminBinActions() {
         api.updateOrderStatus(btn.dataset.orderId, btn.dataset.next);
         renderAdminBins();
         renderBins();
-        toast(`Pedido actualizado a ${btn.dataset.next}.`);
+        toast(`Pedido actualizado: ${ORDER_LABELS[btn.dataset.next]}.`);
       } catch (error) {
         toast(error.message, true);
       }
@@ -537,7 +561,7 @@ function bindAdminBinActions() {
   document.querySelectorAll('.order-cancel').forEach((btn) => {
     btn.addEventListener('click', () => {
       try {
-        api.updateOrderStatus(btn.dataset.orderId, 'CANCELLED');
+        api.updateOrderStatus(btn.dataset.orderId, 'CANCELADO');
         renderAdminBins();
         toast('Pedido cancelado.');
       } catch (error) {
@@ -559,11 +583,19 @@ function renderAdminBins() {
   renderKpisAndCharts();
 }
 
+function switchAdminView(view) {
+  el.mainTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.view === view));
+  Object.entries(el.adminViews).forEach(([key, node]) => node.classList.toggle('hidden', key !== view));
+}
+
 function syncAdminView() {
   const isAdmin = api.isAdmin();
   el.adminLoginSection.classList.toggle('hidden', isAdmin);
   el.adminPanelSection.classList.toggle('hidden', !isAdmin);
-  if (isAdmin) renderAdminBins();
+  if (isAdmin) {
+    renderAdminBins();
+    switchAdminView('resumen');
+  }
 }
 
 el.orderKg.addEventListener('input', () => {
@@ -586,10 +618,11 @@ el.orderForm.addEventListener('submit', (event) => {
       phone: el.customerPhone.value.trim(),
       kg: Number(el.orderKg.value)
     });
-    el.orderModal.close();
+    const bin = api.getBin(el.orderBinId.value);
+    closeOrderFlow();
     renderBins();
     syncAdminView();
-    toast(`Pedido creado: ${order.kg} kg (${order.status}).`);
+    showPurchaseAlert(order, bin);
   } catch (error) {
     toast(error.message, true);
   }
@@ -600,8 +633,12 @@ el.openAdmin.addEventListener('click', () => {
   el.adminModal.showModal();
 });
 
-el.closeOrder.addEventListener('click', () => el.orderModal.close());
+el.closeOrder.addEventListener('click', closeOrderFlow);
 el.closeAdmin.addEventListener('click', () => el.adminModal.close());
+el.purchaseAlertClose.addEventListener('click', hidePurchaseAlert);
+el.purchaseAlert.addEventListener('click', (event) => {
+  if (event.target === el.purchaseAlert) hidePurchaseAlert();
+});
 
 el.adminLoginForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -651,16 +688,7 @@ el.binForm.addEventListener('submit', (event) => {
 });
 
 el.clearBinForm.addEventListener('click', clearAdminForm);
-
-Array.from(document.querySelectorAll('.tab-btn')).forEach((tabBtn) => {
-  tabBtn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach((btn) => btn.classList.remove('active'));
-    tabBtn.classList.add('active');
-    const tab = tabBtn.dataset.tab;
-    el.adminBinsOpen.classList.toggle('hidden', tab !== 'open');
-    el.adminBinsSold.classList.toggle('hidden', tab !== 'sold');
-  });
-});
+el.mainTabs.forEach((tab) => tab.addEventListener('click', () => switchAdminView(tab.dataset.view)));
 
 renderBins();
 syncAdminView();
