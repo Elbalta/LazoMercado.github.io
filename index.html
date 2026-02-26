@@ -50,7 +50,10 @@
       <label>Kilos a comprar<input id="order-kg" type="number" min="1" step="1" required /></label>
       <p id="order-stock-help" class="hint"></p>
       <p id="order-total" class="total-preview">Total: $0</p>
-      <button type="submit" class="btn">Registrar pedido</button>
+      <div class="modal-actions">
+        <button type="button" id="cancel-order-action" class="btn secondary">Cancelar</button>
+        <button type="submit" class="btn">Aceptar compra</button>
+      </div>
     </form>
   </dialog>
 
@@ -112,13 +115,6 @@
             <label>Variedad / calibre<input id="bin-variety" placeholder="Ej: Hass, calibre 22" /></label>
             <label>Precio por kilo<input id="bin-price" type="number" min="1" required /></label>
             <label>Capacidad (kg)<input id="bin-capacity" type="number" min="1" value="500" required /></label>
-            <label>Tipo de venta
-              <select id="bin-packaging">
-                <option value="GRANEL">GRANEL</option>
-                <option value="CALIBRADA">CALIBRADA</option>
-                <option value="MIXTA">MIXTA</option>
-              </select>
-            </label>
             <label>Imagen URL<input id="bin-image" type="url" required /></label>
             <label>Estado
               <select id="bin-status">
@@ -138,6 +134,7 @@
         </section>
 
         <section id="admin-view-recaudado" class="admin-view hidden">
+          <p class="hint">Bins recaudados (sin edición de producto). Puedes corregir estados de pedidos si hubo un error.</p>
           <div id="admin-bins-sold" class="admin-bins"></div>
         </section>
       </section>
