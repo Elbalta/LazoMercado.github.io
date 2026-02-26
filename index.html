@@ -19,21 +19,21 @@
   </header>
 
   <main class="layout">
-    <section class="panel">
-      <div class="panel-header">
+    <section class="panel client-panel">
+      <div class="panel-header centered">
         <h2>Bines disponibles</h2>
         <p>Compra kilos por volumen y mejora el precio final.</p>
       </div>
       <div id="bins-list" class="bins-grid"></div>
     </section>
 
-    <aside class="panel summary-panel">
+    <aside id="summary-panel" class="panel summary-panel hidden">
       <h2>Resumen de tu pedido</h2>
       <div class="summary-item"><span>Producto</span><strong id="summary-product">—</strong></div>
       <div class="summary-item"><span>Kilos</span><strong id="summary-kg">0 kg</strong></div>
       <div class="summary-item"><span>Precio unitario</span><strong id="summary-unit">$0</strong></div>
       <div class="summary-item total"><span>Total</span><strong id="summary-total">$0</strong></div>
-      <p class="hint">Selecciona un bin para comprar.</p>
+      <p class="hint">Este panel aparece solo cuando estás comprando.</p>
     </aside>
   </main>
 
@@ -50,9 +50,17 @@
       <label>Kilos a comprar<input id="order-kg" type="number" min="1" step="1" required /></label>
       <p id="order-stock-help" class="hint"></p>
       <p id="order-total" class="total-preview">Total: $0</p>
-      <button type="submit" class="btn">Confirmar pedido (PENDING)</button>
+      <button type="submit" class="btn">Registrar pedido</button>
     </form>
   </dialog>
+
+  <div id="purchase-alert" class="purchase-alert hidden">
+    <div class="purchase-alert-card">
+      <h3>✅ Compra registrada</h3>
+      <p id="purchase-alert-text">Tu pedido fue ingresado correctamente.</p>
+      <button id="purchase-alert-close" class="btn">Entendido</button>
+    </div>
+  </div>
 
   <dialog id="admin-modal" class="modal admin-modal">
     <div class="modal-content admin-shell">
@@ -72,66 +80,69 @@
 
       <section id="admin-panel-section" class="hidden">
         <div class="admin-toolbar">
-          <h4>Gestión avanzada de bins</h4>
+          <h4>Gestión de bins y pedidos</h4>
           <button id="admin-logout" class="btn secondary">Cerrar sesión</button>
         </div>
 
-        <div class="kpi-grid" id="kpi-grid"></div>
-
-        <div class="charts-grid">
-          <article class="chart-card">
-            <h5>Progreso de venta global (kg)</h5>
-            <div id="kg-chart" class="progress-chart"></div>
-            <div id="kg-legend" class="chart-legend"></div>
-          </article>
-          <article class="chart-card">
-            <h5>Montos por estado de pedido</h5>
-            <div id="amount-chart" class="bars-chart"></div>
-          </article>
+        <div class="admin-main-tabs">
+          <button class="main-tab active" data-view="resumen">Resumen general</button>
+          <button class="main-tab" data-view="venta">Bins en venta</button>
+          <button class="main-tab" data-view="recaudado">Bins recaudados</button>
         </div>
 
-        <form id="bin-form" class="admin-form">
-          <input type="hidden" id="bin-id" />
-          <label>Producto<input id="bin-product" required /></label>
-          <label>Variedad / calibre<input id="bin-variety" placeholder="Ej: Hass, calibre 22" /></label>
-          <label>Precio por kilo<input id="bin-price" type="number" min="1" required /></label>
-          <label>Capacidad (kg)<input id="bin-capacity" type="number" min="1" value="500" required /></label>
-          <label>Tipo de venta
-            <select id="bin-packaging">
-              <option value="GRANEL">GRANEL</option>
-              <option value="CALIBRADA">CALIBRADA</option>
-              <option value="MIXTA">MIXTA</option>
-            </select>
-          </label>
-          <label>Imagen URL<input id="bin-image" type="url" required /></label>
-          <label>Estado
-            <select id="bin-status">
-              <option value="OPEN">OPEN</option>
-              <option value="CLOSED">CLOSED</option>
-              <option value="SOLD_OUT">SOLD_OUT</option>
-            </select>
-          </label>
-          <label class="span-all">Resumen del lote
-            <textarea id="bin-notes" rows="2" placeholder="Ej: Fruta homogénea, llegada semanal, venta por bin completo."></textarea>
-          </label>
-          <button class="btn" type="submit">Guardar bin</button>
-          <button id="clear-bin-form" class="btn secondary" type="button">Limpiar</button>
-        </form>
+        <section id="admin-view-resumen" class="admin-view">
+          <div class="kpi-grid" id="kpi-grid"></div>
+          <div class="charts-grid">
+            <article class="chart-card">
+              <h5>Progreso de venta global (kg)</h5>
+              <div id="kg-chart" class="progress-chart"></div>
+              <div id="kg-legend" class="chart-legend"></div>
+            </article>
+            <article class="chart-card">
+              <h5>Montos por estado de pedido</h5>
+              <div id="amount-chart" class="bars-chart"></div>
+            </article>
+          </div>
+        </section>
 
-        <div class="admin-tabs">
-          <button class="tab-btn active" data-tab="open">En venta</button>
-          <button class="tab-btn" data-tab="sold">Recaudados / completados</button>
-        </div>
+        <section id="admin-view-venta" class="admin-view hidden">
+          <form id="bin-form" class="admin-form">
+            <input type="hidden" id="bin-id" />
+            <label>Producto<input id="bin-product" required /></label>
+            <label>Variedad / calibre<input id="bin-variety" placeholder="Ej: Hass, calibre 22" /></label>
+            <label>Precio por kilo<input id="bin-price" type="number" min="1" required /></label>
+            <label>Capacidad (kg)<input id="bin-capacity" type="number" min="1" value="500" required /></label>
+            <label>Tipo de venta
+              <select id="bin-packaging">
+                <option value="GRANEL">GRANEL</option>
+                <option value="CALIBRADA">CALIBRADA</option>
+                <option value="MIXTA">MIXTA</option>
+              </select>
+            </label>
+            <label>Imagen URL<input id="bin-image" type="url" required /></label>
+            <label>Estado
+              <select id="bin-status">
+                <option value="OPEN">OPEN</option>
+                <option value="CLOSED">CLOSED</option>
+                <option value="SOLD_OUT">SOLD_OUT</option>
+              </select>
+            </label>
+            <label class="span-all">Resumen del lote
+              <textarea id="bin-notes" rows="2" placeholder="Ej: Fruta homogénea, llegada semanal, venta por bin completo."></textarea>
+            </label>
+            <button class="btn" type="submit">Guardar bin</button>
+            <button id="clear-bin-form" class="btn secondary" type="button">Limpiar</button>
+          </form>
 
-        <div id="admin-bins-open" class="admin-bins"></div>
-        <div id="admin-bins-sold" class="admin-bins hidden"></div>
+          <div id="admin-bins-open" class="admin-bins"></div>
+        </section>
+
+        <section id="admin-view-recaudado" class="admin-view hidden">
+          <div id="admin-bins-sold" class="admin-bins"></div>
+        </section>
       </section>
     </div>
   </dialog>
-
-  <template id="admin-bin-template">
-    <article class="admin-bin"></article>
-  </template>
 
   <p id="toast" class="toast"></p>
   <script src="script.js"></script>
