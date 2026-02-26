@@ -12,46 +12,127 @@
 <body>
   <header class="header">
     <div>
-      <p class="eyebrow">Plataforma de compra colectiva</p>
-      <h1>Crowdbuying por Bin (500 kg)</h1>
+      <p class="eyebrow">Compra simple, rápida y clara</p>
+      <h1>Lazo Mercado · Compra Fácil</h1>
     </div>
-    <button id="open-admin" class="btn secondary">Administrador</button>
+    <div class="header-actions">
+      <div class="theme-switcher" aria-label="Opciones de fondo">
+        <button class="theme-btn active" data-theme="theme-green" type="button">Verde claro</button>
+        <button class="theme-btn" data-theme="theme-blue" type="button">Azul claro</button>
+        <button class="theme-btn" data-theme="theme-dark" type="button">Negro</button>
+      </div>
+      <button id="open-admin" class="btn secondary">Administrador</button>
+    </div>
   </header>
 
   <main class="layout">
-    <section class="panel client-panel">
-      <div class="panel-header centered">
-        <h2>Bines disponibles</h2>
-        <p>Compra kilos por volumen y mejora el precio final.</p>
+    <section id="entry-gate" class="panel gate-panel">
+      <div class="gate-hero">
+        <p class="gate-kicker">Elige tu experiencia de compra</p>
+        <h2>Elige tu forma de compra en 1 paso</h2>
+        <p class="hint">Tenemos 2 caminos para ti: <strong>Compra al detalle</strong> (rápida, pocos kilos y despacho inmediato) o <strong>Compra colaborativa</strong>. Al completarse el bin, se liberan los despachos y se activa el mejor precio por volumen.</p>
       </div>
-      <div id="bins-list" class="bins-grid"></div>
+
+      <div class="gate-options">
+        <article class="gate-card gate-detail">
+          <div class="gate-image" style="background-image:url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80')"></div>
+          <div class="gate-content">
+            <h3>Compra al detalle</h3>
+            <p>Compra directa para tu necesidad del día. Fácil de entender, rápida de cerrar.</p>
+            <ul>
+              <li>✔ Compra directa por kilo</li>
+              <li>✔ Pocos kilos, sin esperar grupo</li>
+            </ul>
+            <button id="choose-detail" class="btn">Entrar a detalle</button>
+          </div>
+        </article>
+
+        <div class="gate-vs">VS</div>
+
+        <article class="gate-card gate-crowd featured">
+          <div class="gate-image" style="background-image:url('https://images.unsplash.com/photo-1518843875459-f738682238a6?auto=format&fit=crop&w=1200&q=80')"></div>
+          <div class="gate-content">
+            <h3>Compra colaborativa</h3>
+            <p>Te unes a otros compradores para completar el bin y desbloquear mejor precio por kilo. Cuando se completa, se liberan despachos.</p>
+            <ul>
+              <li>✔ Entrada desde 50 kg</li>
+              <li>✔ Mejor precio por volumen</li>
+              <li>✔ Avance visible del progreso del bin</li>
+            </ul>
+            <button id="choose-crowd" class="btn">Entrar a compra colaborativa</button>
+          </div>
+        </article>
+      </div>
     </section>
 
-    <aside id="summary-panel" class="panel summary-panel hidden">
-      <h2>Resumen de tu pedido</h2>
-      <div class="summary-item"><span>Producto</span><strong id="summary-product">—</strong></div>
-      <div class="summary-item"><span>Kilos</span><strong id="summary-kg">0 kg</strong></div>
-      <div class="summary-item"><span>Precio unitario</span><strong id="summary-unit">$0</strong></div>
-      <div class="summary-item total"><span>Total</span><strong id="summary-total">$0</strong></div>
-      <p class="hint">Este panel aparece solo cuando estás comprando.</p>
-    </aside>
+    <section id="mode-tabs" class="panel mode-tabs hidden">
+      <button class="mode-tab" data-mode="detail">Detalle</button>
+      <button class="mode-tab" data-mode="crowd">Crowdbuying</button>
+    </section>
+
+    <section id="detail-view" class="panel hidden">
+      <div class="panel-header centered">
+        <h2>Compra al detalle</h2>
+        <p>Selecciona kilos y confirma tu pedido inmediato.</p>
+      </div>
+      <div id="detail-products" class="bins-grid"></div>
+    </section>
+
+    <section id="crowd-view" class="hidden crowd-layout">
+      <section class="panel client-panel">
+        <div class="panel-header centered">
+          <h2>Compra colaborativa disponible</h2>
+          <p>Compra kilos por volumen y mejora el precio final.</p>
+        </div>
+        <div id="bins-list" class="bins-grid"></div>
+      </section>
+
+      <aside id="summary-panel" class="panel summary-panel hidden">
+        <h2>Resumen de tu pedido</h2>
+        <div class="summary-item"><span>Producto</span><strong id="summary-product">—</strong></div>
+        <div class="summary-item"><span>Kilos</span><strong id="summary-kg">0 kg</strong></div>
+        <div class="summary-item"><span>Precio unitario</span><strong id="summary-unit">$0</strong></div>
+        <div class="summary-item total"><span>Total</span><strong id="summary-total">$0</strong></div>
+        <p class="hint">Este panel aparece solo cuando estás comprando.</p>
+      </aside>
+    </section>
   </main>
 
   <dialog id="order-modal" class="modal">
     <form id="order-form" class="modal-content" method="dialog">
       <div class="modal-head">
-        <h3>Confirmar pedido</h3>
+        <h3>Confirmar pedido colaborativo</h3>
         <button type="button" id="close-order" class="icon-btn">✕</button>
       </div>
       <input type="hidden" id="order-bin-id" />
       <label>Nombre<input id="customer-name" required /></label>
       <label>Email<input id="customer-email" type="email" required /></label>
       <label>Teléfono<input id="customer-phone" required /></label>
-      <label>Kilos a comprar<input id="order-kg" type="number" min="1" step="1" required /></label>
+      <label>Kilos a comprar (mínimo 50 kg)<input id="order-kg" type="number" min="50" step="1" required /></label>
       <p id="order-stock-help" class="hint"></p>
       <p id="order-total" class="total-preview">Total: $0</p>
       <div class="modal-actions">
         <button type="button" id="cancel-order-action" class="btn secondary">Cancelar</button>
+        <button type="submit" class="btn">Aceptar compra</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="detail-order-modal" class="modal">
+    <form id="detail-order-form" class="modal-content" method="dialog">
+      <div class="modal-head">
+        <h3>Confirmar pedido detalle</h3>
+        <button type="button" id="close-detail-order" class="icon-btn">✕</button>
+      </div>
+      <input type="hidden" id="detail-product-id" />
+      <label>Nombre<input id="detail-customer-name" required /></label>
+      <label>Email<input id="detail-customer-email" type="email" required /></label>
+      <label>Teléfono<input id="detail-customer-phone" required /></label>
+      <label>Kilos a comprar<input id="detail-order-kg" type="number" min="1" step="1" required /></label>
+      <p id="detail-stock-help" class="hint"></p>
+      <p id="detail-order-total" class="total-preview">Total: $0</p>
+      <div class="modal-actions">
+        <button type="button" id="cancel-detail-order-action" class="btn secondary">Cancelar</button>
         <button type="submit" class="btn">Aceptar compra</button>
       </div>
     </form>
@@ -91,6 +172,7 @@
           <button class="main-tab active" data-view="resumen">Resumen general</button>
           <button class="main-tab" data-view="venta">Bins en venta</button>
           <button class="main-tab" data-view="recaudado">Bins recaudados</button>
+          <button class="main-tab" data-view="detalle">Pedidos detalle</button>
         </div>
 
         <section id="admin-view-resumen" class="admin-view">
@@ -136,6 +218,10 @@
         <section id="admin-view-recaudado" class="admin-view hidden">
           <p class="hint">Bins recaudados (sin edición de producto). Puedes corregir estados de pedidos si hubo un error.</p>
           <div id="admin-bins-sold" class="admin-bins"></div>
+        </section>
+
+        <section id="admin-view-detalle" class="admin-view hidden">
+          <div id="admin-detail-orders" class="admin-bins"></div>
         </section>
       </section>
     </div>
