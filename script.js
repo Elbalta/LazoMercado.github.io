@@ -28,8 +28,8 @@ const ORDER_LABELS = {
 
 const el = {
   chooseDetail: document.getElementById('choose-detail'),
-  themeButtons: Array.from(document.querySelectorAll('.theme-btn')),
   chooseCrowd: document.getElementById('choose-crowd'),
+  themeOptions: Array.from(document.querySelectorAll('.theme-option')),
   entryGate: document.getElementById('entry-gate'),
   modeTabsWrap: document.getElementById('mode-tabs'),
   modeTabs: Array.from(document.querySelectorAll('.mode-tab')),
@@ -81,7 +81,8 @@ const el = {
   mainTabs: Array.from(document.querySelectorAll('.main-tab')),
   adminViews: {
     resumen: document.getElementById('admin-view-resumen'),
-    venta: document.getElementById('admin-view-venta'),
+    nuevo: document.getElementById('admin-view-nuevo'),
+    seguimiento: document.getElementById('admin-view-seguimiento'),
     recaudado: document.getElementById('admin-view-recaudado'),
     detalle: document.getElementById('admin-view-detalle')
   },
@@ -113,6 +114,7 @@ const el = {
 
 const uid = () => crypto.randomUUID();
 const CLP = new Intl.NumberFormat('es-CL');
+let currentAdminView = 'resumen';
 
 function seedDB() {
   const now = new Date().toISOString();
@@ -159,7 +161,8 @@ function seedDB() {
 
   const orders = [
     { id: uid(), channel: 'CROWDBUYING', bin_id: naranjaId, detail_product_id: null, customer_id: users[1].id, kg: 220, unit_price: 1290, total_price: 283800, status: 'COMPLETADO', created_at: now },
-    { id: uid(), channel: 'CROWDBUYING', bin_id: naranjaId, detail_product_id: null, customer_id: users[2].id, kg: 280, unit_price: 1290, total_price: 361200, status: 'ENTREGADO', created_at: now }
+    { id: uid(), channel: 'CROWDBUYING', bin_id: naranjaId, detail_product_id: null, customer_id: users[2].id, kg: 280, unit_price: 1290, total_price: 361200, status: 'ENTREGADO', created_at: now },
+    { id: uid(), channel: 'DETALLE', bin_id: null, detail_product_id: detailProducts[0].id, customer_id: users[1].id, kg: 12, unit_price: 1490, total_price: 17880, status: 'PENDIENTE_PAGO', created_at: now }
   ];
 
   return { users, bins, detailProducts, orders };
@@ -335,20 +338,17 @@ function showPurchaseAlert(message) {
 function hidePurchaseAlert() { el.purchaseAlert.classList.add('hidden'); }
 function statusTag(status) { return `<span class="bin-status ${status}">${status}</span>`; }
 
-
 function setTheme(theme) {
-  const allowed = ['theme-green', 'theme-blue', 'theme-dark'];
-  const selected = allowed.includes(theme) ? theme : 'theme-green';
-  document.body.classList.remove(...allowed);
-  document.body.classList.add(selected);
+  const selected = theme === 'dark' ? 'dark' : 'light';
+  document.body.classList.toggle('theme-dark', selected === 'dark');
   localStorage.setItem(THEME_KEY, selected);
-  el.themeButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.theme === selected));
+  el.themeOptions.forEach((btn) => btn.classList.toggle('active', btn.dataset.theme === selected));
 }
 
 function initTheme() {
-  const saved = localStorage.getItem(THEME_KEY) || 'theme-green';
+  const saved = localStorage.getItem(THEME_KEY) || 'light';
   setTheme(saved);
-  el.themeButtons.forEach((btn) => btn.addEventListener('click', () => setTheme(btn.dataset.theme)));
+  el.themeOptions.forEach((btn) => btn.addEventListener('click', () => setTheme(btn.dataset.theme)));
 }
 
 function setMode(mode) {
@@ -573,7 +573,7 @@ function renderKpisAndCharts() {
   el.kpiGrid.innerHTML = `
     <article class="kpi-card"><p>Bins activos</p><strong>${bins.filter((b) => b.status === 'OPEN').length}</strong></article>
     <article class="kpi-card"><p>Bins recaudados</p><strong>${bins.filter((b) => b.status === 'SOLD_OUT').length}</strong></article>
-    <article class="kpi-card"><p>Pedidos colaborativos</p><strong>${crowdOrders}</strong></article>
+    <article class="kpi-card"><p>Pedidos crowdbuying</p><strong>${crowdOrders}</strong></article>
     <article class="kpi-card"><p>Pedidos detalle</p><strong>${detailOrders}</strong></article>
   `;
 
@@ -593,7 +593,7 @@ function renderKpisAndCharts() {
 }
 
 function bindAdminActions() {
-  document.querySelectorAll('.edit-bin').forEach((btn) => btn.addEventListener('click', () => { const bin = api.getBin(btn.dataset.id); if (bin) { fillAdminForm(bin); switchAdminView('venta'); } }));
+  document.querySelectorAll('.edit-bin').forEach((btn) => btn.addEventListener('click', () => { const bin = api.getBin(btn.dataset.id); if (bin) { fillAdminForm(bin); switchAdminView('nuevo'); } }));
   document.querySelectorAll('.order-next').forEach((btn) => btn.addEventListener('click', () => {
     try { api.updateOrderStatus(btn.dataset.orderId, btn.dataset.next); renderAll(); toast(`Pedido actualizado: ${ORDER_LABELS[btn.dataset.next]}.`); }
     catch (error) { toast(error.message, true); }
@@ -616,15 +616,17 @@ function renderAdminBins() {
 }
 
 function switchAdminView(view) {
-  el.mainTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.view === view));
-  Object.entries(el.adminViews).forEach(([key, node]) => node.classList.toggle('hidden', key !== view));
+  const fallback = el.adminViews[view] ? view : 'resumen';
+  currentAdminView = fallback;
+  el.mainTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.view === fallback));
+  Object.entries(el.adminViews).forEach(([key, node]) => node.classList.toggle('hidden', key !== fallback));
 }
 
 function syncAdminView() {
   const isAdmin = api.isAdmin();
   el.adminLoginSection.classList.toggle('hidden', isAdmin);
   el.adminPanelSection.classList.toggle('hidden', !isAdmin);
-  if (isAdmin) { renderAdminBins(); switchAdminView('resumen'); }
+  if (isAdmin) { renderAdminBins(); switchAdminView(currentAdminView); }
 }
 
 function renderAll() {
@@ -662,7 +664,7 @@ el.orderForm.addEventListener('submit', (event) => {
     const bin = api.getBin(el.orderBinId.value);
     closeOrderFlow();
     renderAll();
-    showPurchaseAlert(`Pedido colaborativo registrado: ${order.kg} kg de ${bin.product_name} por ${money(order.total_price)}.`);
+    showPurchaseAlert(`Pedido crowdbuying registrado: ${order.kg} kg de ${bin.product_name} por ${money(order.total_price)}.`);
   } catch (error) { toast(error.message, true); }
 });
 
