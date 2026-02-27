@@ -16,10 +16,9 @@
       <h1>Lazo Mercado · Compra Fácil</h1>
     </div>
     <div class="header-actions">
-      <div class="theme-switcher" aria-label="Opciones de fondo">
-        <button class="theme-btn active" data-theme="theme-green" type="button">Verde claro</button>
-        <button class="theme-btn" data-theme="theme-blue" type="button">Azul claro</button>
-        <button class="theme-btn" data-theme="theme-dark" type="button">Negro</button>
+      <div class="theme-toggle" role="group" aria-label="Cambiar tema">
+        <button type="button" class="theme-option active" data-theme="light">Claro</button>
+        <button type="button" class="theme-option" data-theme="dark">Oscuro</button>
       </div>
       <button id="open-admin" class="btn secondary">Administrador</button>
     </div>
@@ -170,7 +169,8 @@
 
         <div class="admin-main-tabs">
           <button class="main-tab active" data-view="resumen">Resumen general</button>
-          <button class="main-tab" data-view="venta">Bins en venta</button>
+          <button class="main-tab" data-view="nuevo">Nuevo bin de venta</button>
+          <button class="main-tab" data-view="seguimiento">Seguimiento bins</button>
           <button class="main-tab" data-view="recaudado">Bins recaudados</button>
           <button class="main-tab" data-view="detalle">Pedidos detalle</button>
         </div>
@@ -190,7 +190,8 @@
           </div>
         </section>
 
-        <section id="admin-view-venta" class="admin-view hidden">
+        <section id="admin-view-nuevo" class="admin-view hidden">
+          <p class="hint">Crea o edita un bin de venta. Este formulario está separado del seguimiento para que la gestión sea más clara.</p>
           <form id="bin-form" class="admin-form">
             <input type="hidden" id="bin-id" />
             <label>Producto<input id="bin-product" required /></label>
@@ -211,7 +212,10 @@
             <button class="btn" type="submit">Guardar bin</button>
             <button id="clear-bin-form" class="btn secondary" type="button">Limpiar</button>
           </form>
+        </section>
 
+        <section id="admin-view-seguimiento" class="admin-view hidden">
+          <p class="hint">Seguimiento de bins en venta y pedidos asociados. Desde aquí puedes avanzar estados o cancelar pedidos.</p>
           <div id="admin-bins-open" class="admin-bins"></div>
         </section>
 
