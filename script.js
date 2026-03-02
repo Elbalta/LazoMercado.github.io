@@ -1,7 +1,6 @@
 const STORAGE_KEY = 'crowdbuying-db-v5';
 const ADMIN_SESSION_KEY = 'crowdbuying-admin-session';
 const MODE_KEY = 'crowdbuying-mode';
-const THEME_KEY = 'crowdbuying-theme';
 
 const ORDER_STATES = ['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'ESPERA_CIERRE_BIN', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'];
 const NEXT_STATE = {
@@ -29,7 +28,6 @@ const ORDER_LABELS = {
 const el = {
   chooseDetail: document.getElementById('choose-detail'),
   chooseCrowd: document.getElementById('choose-crowd'),
-  themeOptions: Array.from(document.querySelectorAll('.theme-option')),
   entryGate: document.getElementById('entry-gate'),
   modeTabsWrap: document.getElementById('mode-tabs'),
   modeTabs: Array.from(document.querySelectorAll('.mode-tab')),
@@ -84,7 +82,9 @@ const el = {
     nuevo: document.getElementById('admin-view-nuevo'),
     seguimiento: document.getElementById('admin-view-seguimiento'),
     recaudado: document.getElementById('admin-view-recaudado'),
-    detalle: document.getElementById('admin-view-detalle')
+    detalle: document.getElementById('admin-view-detalle'),
+    completadas: document.getElementById('admin-view-completadas'),
+    crm: document.getElementById('admin-view-crm')
   },
 
   binForm: document.getElementById('bin-form'),
@@ -100,6 +100,14 @@ const el = {
   adminBinsOpen: document.getElementById('admin-bins-open'),
   adminBinsSold: document.getElementById('admin-bins-sold'),
   adminDetailOrders: document.getElementById('admin-detail-orders'),
+  completedSummary: document.getElementById('completed-summary'),
+  completedChannelChart: document.getElementById('completed-channel-chart'),
+  completedProductChart: document.getElementById('completed-product-chart'),
+  completedSalesList: document.getElementById('completed-sales-list'),
+  crmKpis: document.getElementById('crm-kpis'),
+  crmFunnel: document.getElementById('crm-funnel'),
+  crmNextActions: document.getElementById('crm-next-actions'),
+  crmList: document.getElementById('crm-list'),
 
   kpiGrid: document.getElementById('kpi-grid'),
   kgChart: document.getElementById('kg-chart'),
@@ -338,19 +346,6 @@ function showPurchaseAlert(message) {
 function hidePurchaseAlert() { el.purchaseAlert.classList.add('hidden'); }
 function statusTag(status) { return `<span class="bin-status ${status}">${status}</span>`; }
 
-function setTheme(theme) {
-  const selected = theme === 'dark' ? 'dark' : 'light';
-  document.body.classList.toggle('theme-dark', selected === 'dark');
-  localStorage.setItem(THEME_KEY, selected);
-  el.themeOptions.forEach((btn) => btn.classList.toggle('active', btn.dataset.theme === selected));
-}
-
-function initTheme() {
-  const saved = localStorage.getItem(THEME_KEY) || 'light';
-  setTheme(saved);
-  el.themeOptions.forEach((btn) => btn.addEventListener('click', () => setTheme(btn.dataset.theme)));
-}
-
 function setMode(mode) {
   localStorage.setItem(MODE_KEY, mode);
   el.entryGate.classList.add('hidden');
@@ -358,6 +353,7 @@ function setMode(mode) {
   el.modeTabs.forEach((btn) => btn.classList.toggle('active', btn.dataset.mode === mode));
   el.detailView.classList.toggle('hidden', mode !== 'detail');
   el.crowdView.classList.toggle('hidden', mode !== 'crowd');
+  document.body.classList.toggle('wholesale-mode', mode === 'crowd');
 }
 
 function initMode() {
@@ -573,7 +569,7 @@ function renderKpisAndCharts() {
   el.kpiGrid.innerHTML = `
     <article class="kpi-card"><p>Bins activos</p><strong>${bins.filter((b) => b.status === 'OPEN').length}</strong></article>
     <article class="kpi-card"><p>Bins recaudados</p><strong>${bins.filter((b) => b.status === 'SOLD_OUT').length}</strong></article>
-    <article class="kpi-card"><p>Pedidos crowdbuying</p><strong>${crowdOrders}</strong></article>
+    <article class="kpi-card"><p>Pedidos mayorista</p><strong>${crowdOrders}</strong></article>
     <article class="kpi-card"><p>Pedidos detalle</p><strong>${detailOrders}</strong></article>
   `;
 
@@ -590,6 +586,93 @@ function renderKpisAndCharts() {
     const w = Math.round((value / maxAmount) * 100);
     return `<div class="bar-row"><span>${ORDER_LABELS[state]}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${money(value)}</strong></div>`;
   }).join('');
+}
+
+function renderCompletedSalesAdmin() {
+  const db = getDB();
+  const completed = db.orders.filter((o) => o.status === 'COMPLETADO' || o.status === 'ENTREGADO');
+  const totalAmount = completed.reduce((acc, o) => acc + o.total_price, 0);
+  const byChannel = completed.reduce((acc, o) => {
+    acc[o.channel] = (acc[o.channel] || 0) + o.total_price;
+    return acc;
+  }, {});
+  const byProduct = completed.reduce((acc, o) => {
+    const name = o.channel === 'DETALLE'
+      ? (db.detailProducts.find((p) => p.id === o.detail_product_id)?.name || 'Detalle')
+      : (db.bins.find((b) => b.id === o.bin_id)?.product_name || 'Mayorista');
+    acc[name] = (acc[name] || 0) + o.total_price;
+    return acc;
+  }, {});
+
+  el.completedSummary.innerHTML = `
+    <article class="kpi-card"><p>Ventas completadas</p><strong>${completed.length}</strong></article>
+    <article class="kpi-card"><p>Monto total completado</p><strong>${money(totalAmount)}</strong></article>
+    <article class="kpi-card"><p>Canal mayorista</p><strong>${money(byChannel.CROWDBUYING || 0)}</strong></article>
+    <article class="kpi-card"><p>Canal detalle</p><strong>${money(byChannel.DETALLE || 0)}</strong></article>
+  `;
+
+  const channelMax = Math.max(1, ...Object.values(byChannel), 1);
+  const channels = [{ k: 'CROWDBUYING', n: 'Mayorista' }, { k: 'DETALLE', n: 'Detalle' }];
+  el.completedChannelChart.innerHTML = channels.map((c) => {
+    const value = byChannel[c.k] || 0;
+    const w = Math.round((value / channelMax) * 100);
+    return `<div class="bar-row"><span>${c.n}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${money(value)}</strong></div>`;
+  }).join('');
+
+  const topProducts = Object.entries(byProduct).sort((a,b) => b[1]-a[1]).slice(0,5);
+  const productMax = Math.max(1, ...topProducts.map(([,v]) => v), 1);
+  el.completedProductChart.innerHTML = topProducts.length ? topProducts.map(([name, value]) => {
+    const w = Math.round((value / productMax) * 100);
+    return `<div class="bar-row"><span>${name}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${money(value)}</strong></div>`;
+  }).join('') : '<p class="hint">Sin ventas completadas todavía.</p>';
+
+  el.completedSalesList.innerHTML = completed.length ? completed.map((o) => {
+    const customer = db.users.find((u) => u.id === o.customer_id);
+    const product = o.channel === 'DETALLE'
+      ? (db.detailProducts.find((p) => p.id === o.detail_product_id)?.name || 'Detalle')
+      : (db.bins.find((b) => b.id === o.bin_id)?.product_name || 'Mayorista');
+    return `<article class="admin-bin"><div class="admin-row"><div><h4>${product}</h4><p class="bin-meta">${o.channel === 'CROWDBUYING' ? 'Mayorista' : 'Detalle'} · ${o.kg} kg · ${money(o.total_price)}</p><span class="order-status ${o.status}">${ORDER_LABELS[o.status]}</span></div><div class="hint">${customer?.name || 'Cliente'} · ${customer?.email || ''}</div></div></article>`;
+  }).join('') : '<p class="hint">Aún no hay ventas completadas para mostrar.</p>';
+}
+
+function renderCrmAdmin() {
+  const db = getDB();
+  const majoristaOrders = db.orders.filter((o) => o.channel === 'CROWDBUYING');
+  const leads = majoristaOrders.filter((o) => o.status === 'PENDIENTE_PAGO').length;
+  const negociacion = majoristaOrders.filter((o) => o.status === 'PAGO_CONFIRMADO' || o.status === 'ESPERA_CIERRE_BIN').length;
+  const cierre = majoristaOrders.filter((o) => o.status === 'EN_TRANSITO' || o.status === 'ENTREGADO' || o.status === 'COMPLETADO').length;
+  const pipeline = leads + negociacion + cierre;
+
+  el.crmKpis.innerHTML = `
+    <article class="kpi-card"><p>Clientes mayoristas activos</p><strong>${new Set(majoristaOrders.map((o) => o.customer_id)).size}</strong></article>
+    <article class="kpi-card"><p>Pipeline mayorista</p><strong>${pipeline}</strong></article>
+    <article class="kpi-card"><p>Tickets en negociación</p><strong>${negociacion}</strong></article>
+    <article class="kpi-card"><p>Cierres realizados</p><strong>${cierre}</strong></article>
+  `;
+
+  const funnel = [
+    ['Leads', leads],
+    ['Negociación', negociacion],
+    ['Cierre', cierre]
+  ];
+  const funnelMax = Math.max(1, ...funnel.map(([,v]) => v));
+  el.crmFunnel.innerHTML = funnel.map(([name, value]) => {
+    const w = Math.round((value / funnelMax) * 100);
+    return `<div class="bar-row"><span>${name}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${value}</strong></div>`;
+  }).join('');
+
+  const next = majoristaOrders.slice().sort((a,b)=> new Date(a.created_at)-new Date(b.created_at)).slice(0,5);
+  el.crmNextActions.innerHTML = next.length ? next.map((o) => {
+    const cust = db.users.find((u) => u.id === o.customer_id);
+    const label = o.status === 'PENDIENTE_PAGO' ? 'Contactar para cierre de pago' : (o.status === 'PAGO_CONFIRMADO' ? 'Confirmar cierre de bin' : 'Coordinar despacho / postventa');
+    return `<div class="bar-row"><span>${cust?.name || 'Cliente'}</span><div>${label}</div><strong>${o.kg} kg</strong></div>`;
+  }).join('') : '<p class="hint">Sin acciones pendientes.</p>';
+
+  el.crmList.innerHTML = majoristaOrders.length ? majoristaOrders.map((o) => {
+    const cust = db.users.find((u) => u.id === o.customer_id);
+    const bin = db.bins.find((b) => b.id === o.bin_id);
+    return `<article class="admin-bin"><div class="admin-row"><div><h4>${bin?.product_name || 'Bin mayorista'}</h4><p class="bin-meta">${cust?.name || 'Cliente'} · ${cust?.phone || ''} · ${cust?.email || ''}</p><p class="bin-meta">${o.kg} kg · ${money(o.total_price)}</p><span class="order-status ${o.status}">${ORDER_LABELS[o.status]}</span></div><div class="hint">Creado: ${new Date(o.created_at).toLocaleDateString('es-CL')}</div></div></article>`;
+  }).join('') : '<p class="hint">No hay pedidos mayoristas para CRM.</p>';
 }
 
 function bindAdminActions() {
@@ -612,6 +695,8 @@ function renderAdminBins() {
   el.adminBinsSold.innerHTML = recaudados.length ? recaudados.map((bin) => renderAdminBinCard(bin, true)).join('') : '<p class="hint">No hay bins recaudados todavía.</p>';
   renderDetailOrdersAdmin();
   renderKpisAndCharts();
+  renderCompletedSalesAdmin();
+  renderCrmAdmin();
   bindAdminActions();
 }
 
@@ -721,6 +806,5 @@ el.binForm.addEventListener('submit', (event) => {
 el.clearBinForm.addEventListener('click', clearAdminForm);
 el.mainTabs.forEach((tab) => tab.addEventListener('click', () => switchAdminView(tab.dataset.view)));
 
-initTheme();
 initMode();
 renderAll();
