@@ -16,10 +16,6 @@
       <h1>Lazo Mercado · Compra Fácil</h1>
     </div>
     <div class="header-actions">
-      <div class="theme-toggle" role="group" aria-label="Cambiar tema">
-        <button type="button" class="theme-option active" data-theme="light">Claro</button>
-        <button type="button" class="theme-option" data-theme="dark">Oscuro</button>
-      </div>
       <button id="open-admin" class="btn secondary">Administrador</button>
     </div>
   </header>
@@ -29,7 +25,7 @@
       <div class="gate-hero">
         <p class="gate-kicker">Elige tu experiencia de compra</p>
         <h2>Elige tu forma de compra en 1 paso</h2>
-        <p class="hint">Tenemos 2 caminos para ti: <strong>Compra al detalle</strong> (rápida, pocos kilos y despacho inmediato) o <strong>Compra colaborativa</strong>. Al completarse el bin, se liberan los despachos y se activa el mejor precio por volumen.</p>
+        <p class="hint">Tenemos 2 caminos para ti: <strong>Compra al detalle</strong> (rápida, pocos kilos y despacho inmediato) o <strong>Compra mayorista</strong>. Al completarse el bin, se liberan los despachos y se activa el mejor precio por volumen.</p>
       </div>
 
       <div class="gate-options">
@@ -51,14 +47,14 @@
         <article class="gate-card gate-crowd featured">
           <div class="gate-image" style="background-image:url('https://images.unsplash.com/photo-1518843875459-f738682238a6?auto=format&fit=crop&w=1200&q=80')"></div>
           <div class="gate-content">
-            <h3>Compra colaborativa</h3>
+            <h3>Compra mayorista</h3>
             <p>Te unes a otros compradores para completar el bin y desbloquear mejor precio por kilo. Cuando se completa, se liberan despachos.</p>
             <ul>
               <li>✔ Entrada desde 50 kg</li>
               <li>✔ Mejor precio por volumen</li>
               <li>✔ Avance visible del progreso del bin</li>
             </ul>
-            <button id="choose-crowd" class="btn">Entrar a compra colaborativa</button>
+            <button id="choose-crowd" class="btn">Entrar a mayorista</button>
           </div>
         </article>
       </div>
@@ -66,7 +62,7 @@
 
     <section id="mode-tabs" class="panel mode-tabs hidden">
       <button class="mode-tab" data-mode="detail">Detalle</button>
-      <button class="mode-tab" data-mode="crowd">Crowdbuying</button>
+      <button class="mode-tab" data-mode="crowd">Mayorista</button>
     </section>
 
     <section id="detail-view" class="panel hidden">
@@ -80,7 +76,7 @@
     <section id="crowd-view" class="hidden crowd-layout">
       <section class="panel client-panel">
         <div class="panel-header centered">
-          <h2>Compra colaborativa disponible</h2>
+          <h2>Canal Mayorista</h2>
           <p>Compra kilos por volumen y mejora el precio final.</p>
         </div>
         <div id="bins-list" class="bins-grid"></div>
@@ -167,12 +163,18 @@
           <button id="admin-logout" class="btn secondary">Cerrar sesión</button>
         </div>
 
+        <div class="wholesale-focus">
+          <strong>Enfoque mayorista:</strong> monitorea avance de bins, compromisos de compra y seguimiento comercial desde CRM.
+        </div>
+
         <div class="admin-main-tabs">
           <button class="main-tab active" data-view="resumen">Resumen general</button>
           <button class="main-tab" data-view="nuevo">Nuevo bin de venta</button>
           <button class="main-tab" data-view="seguimiento">Seguimiento bins</button>
           <button class="main-tab" data-view="recaudado">Bins recaudados</button>
           <button class="main-tab" data-view="detalle">Pedidos detalle</button>
+          <button class="main-tab" data-view="completadas">Ventas completadas</button>
+          <button class="main-tab" data-view="crm">CRM mayorista</button>
         </div>
 
         <section id="admin-view-resumen" class="admin-view">
@@ -226,6 +228,36 @@
 
         <section id="admin-view-detalle" class="admin-view hidden">
           <div id="admin-detail-orders" class="admin-bins"></div>
+        </section>
+
+        <section id="admin-view-completadas" class="admin-view hidden">
+          <div id="completed-summary" class="kpi-grid"></div>
+          <div class="charts-grid">
+            <article class="chart-card">
+              <h5>Ventas completadas por canal</h5>
+              <div id="completed-channel-chart" class="bars-chart"></div>
+            </article>
+            <article class="chart-card">
+              <h5>Top productos vendidos</h5>
+              <div id="completed-product-chart" class="bars-chart"></div>
+            </article>
+          </div>
+          <div id="completed-sales-list" class="admin-bins"></div>
+        </section>
+
+        <section id="admin-view-crm" class="admin-view hidden">
+          <div id="crm-kpis" class="kpi-grid"></div>
+          <div class="charts-grid">
+            <article class="chart-card">
+              <h5>Embudo CRM mayorista</h5>
+              <div id="crm-funnel" class="bars-chart"></div>
+            </article>
+            <article class="chart-card">
+              <h5>Próximas acciones comerciales</h5>
+              <div id="crm-next-actions" class="bars-chart"></div>
+            </article>
+          </div>
+          <div id="crm-list" class="admin-bins"></div>
         </section>
       </section>
     </div>
