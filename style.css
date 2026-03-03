@@ -276,5 +276,4 @@ input, select, textarea { width: 100%; padding: 0.56rem; border-radius: 8px; bor
 @keyframes fadeIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
 
 
-#data-guide ol { margin: 0.4rem 0 0; padding-left: 1.2rem; color: #334155; display: grid; gap: 0.25rem; }
 .data-source-note { color: #475569; font-size: 0.85rem; margin-top: 0.25rem; max-width: 700px; }
