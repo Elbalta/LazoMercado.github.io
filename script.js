@@ -476,3 +476,374 @@ const api = {
     if (!product) throw new Error('Producto detalle no encontrado.');
     const requestedKg = Number(payload.kg);
     if (requestedKg <= 0 || requestedKg > product.stock_kg) throw new Error(`Stock detalle insuficiente. Solo quedan ${product.stock_kg} kg.`);
+      el.binPrice.value = bin.price_per_kg;
+  el.binCapacity.value = bin.capacity_kg;
+  el.binImage.value = bin.image_url;
+  el.binStatus.value = bin.status;
+  el.binNotes.value = bin.notes || '';
+}
+
+function clearAdminForm() {
+  el.binForm.reset();
+  el.binId.value = '';
+  el.binCapacity.value = '500';
+  el.binStatus.value = 'OPEN';
+}
+
+function computeBinSummary(bin, orders) {
+  let soldAmount = 0;
+  let recaudado = 0;
+  let waitingToDispatch = 0;
+  orders.forEach((o) => {
+    soldAmount += o.total_price;
+    if (o.status === 'COMPLETADO') recaudado += o.total_price;
+    if (o.status === 'ESPERA_CIERRE_BIN') waitingToDispatch += o.total_price;
+  });
+  return { soldAmount, recaudado, waitingToDispatch };
+}
+
+function orderItemTemplate(order, isSoldView) {
+  const next = NEXT_STATE[order.status];
+  const canMove = Boolean(next) && !REALIZED_STATES.has(order.status);
+  return `
+    <div class="order-item">
+      <div><strong>${order.customer?.name || 'Cliente'}</strong><div>${order.kg} kg · ${money(order.total_price)}</div></div>
+      <div><span class="order-status ${order.status}">${ORDER_LABELS[order.status]}</span><div>${order.customer?.phone || 'Sin teléfono'} · ${order.customer?.email || ''}</div></div>
+      <div class="order-actions">
+        ${canMove ? `<button class="btn tiny warn order-next" data-order-id="${order.id}" data-next="${next}">Pasar a: ${ORDER_LABELS[next]}</button>` : ''}
+        ${ACTIVE_STATES.has(order.status) ? `<button class="btn tiny secondary order-cancel" data-order-id="${order.id}">Cancelar</button>` : ''}
+        ${isSoldView ? '<span class="hint">Bin cerrado</span>' : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderAdminBinCard(bin, { isSoldView = false, orderFilter = () => true, listTitle = 'Pedidos' } = {}) {
+  const orders = api.getOrdersByBin(bin.id).filter(orderFilter);
+  const available = Math.max(0, bin.capacity_kg - bin.sold_kg);
+  const pct = Math.round((bin.sold_kg / bin.capacity_kg) * 100);
+  const summary = computeBinSummary(bin, orders);
+
+  return `
+    <article class="admin-bin">
+      <div class="admin-row">
+        <div>
+          <h4>${bin.product_name}</h4>
+          <p class="bin-meta">${money(bin.price_per_kg)} / kg · ${bin.sold_kg}/${bin.capacity_kg} kg · ${pct}%</p>
+          <p class="bin-meta">Variedad: ${bin.variety || 'No especificada'}</p>
+          ${statusTag(bin.status)}
+        </div>
+        <div>${isSoldView ? '<span class="hint">Producto recaudado (sin edición)</span>' : `<button class="btn secondary edit-bin" data-id="${bin.id}">Editar</button>`}</div>
+      </div>
+      <div class="progress-wrap"><div class="progress-mem" style="--sold:${pct}%"><div class="progress-sold"></div><div class="progress-available"></div></div></div>
+      <div class="bin-summary-grid">
+        <div class="summary-chip"><span>Disponible</span><strong>${available} kg</strong></div>
+        <div class="summary-chip"><span>Vendido</span><strong>${bin.sold_kg} kg</strong></div>
+        <div class="summary-chip"><span>Recaudado</span><strong>${money(summary.recaudado)}</strong></div>
+        <div class="summary-chip"><span>Espera despacho</span><strong>${money(summary.waitingToDispatch)}</strong></div>
+      </div>
+      ${bin.notes ? `<div class="bin-notes">${bin.notes}</div>` : ''}
+      <div class="order-list"><div class="order-list-title"><span>${listTitle} (${orders.length})</span><span class="badge">Filtrado</span></div>${orders.length === 0 ? '<p class="hint">Sin pedidos para esta etapa.</p>' : orders.map((order) => orderItemTemplate(order, isSoldView)).join('')}</div>
+    </article>
+  `;
+}
+
+function renderDetailOrdersAdmin() {
+  const orders = api.getDetailOrders();
+  const pending = orders.filter((o) => ACTIVE_STATES.has(o.status));
+  const realized = orders.filter((o) => REALIZED_STATES.has(o.status));
+
+  const renderDetailCard = (o) => `
+    <article class="admin-bin">
+      <div class="admin-row">
+        <div>
+          <h4>${o.product?.name || 'Producto detalle'}</h4>
+          <p class="bin-meta">Cliente: ${o.customer?.name || 'Cliente'} · ${o.kg} kg · ${money(o.total_price)}</p>
+          <span class="order-status ${o.status}">${ORDER_LABELS[o.status]}</span>
+        </div>
+        <div class="order-actions">
+          ${ACTIVE_STATES.has(o.status) && NEXT_STATE[o.status] ? `<button class="btn tiny warn order-next" data-order-id="${o.id}" data-next="${NEXT_STATE[o.status]}">Pasar a: ${ORDER_LABELS[NEXT_STATE[o.status]]}</button>` : ''}
+          ${ACTIVE_STATES.has(o.status) ? `<button class="btn tiny secondary order-cancel" data-order-id="${o.id}">Cancelar</button>` : ''}
+        </div>
+      </div>
+    </article>
+  `;
+
+  el.adminDetailPendingOrders.innerHTML = pending.length ? pending.map(renderDetailCard).join('') : '<p class="hint">Sin pedidos detalle pendientes o en proceso.</p>';
+  el.adminDetailCompletedOrders.innerHTML = realized.length ? realized.map(renderDetailCard).join('') : '<p class="hint">Sin pedidos detalle realizados todavía.</p>';
+
+  const statusCount = orders.reduce((acc, o) => {
+    acc[o.status] = (acc[o.status] || 0) + 1;
+    return acc;
+  }, {});
+  const maxCount = Math.max(1, ...ORDER_STATES.map((state) => statusCount[state] || 0));
+  el.detailStatusChart.innerHTML = ORDER_STATES.map((state) => {
+    const value = statusCount[state] || 0;
+    const w = Math.round((value / maxCount) * 100);
+    return `<div class="bar-row"><span>${ORDER_LABELS[state]}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${value}</strong></div>`;
+  }).join('');
+}
+
+function renderKpisAndCharts() {
+  const db = getDB();
+  const bins = db.bins;
+  const orders = db.orders;
+
+  const totalCapacity = bins.reduce((acc, b) => acc + b.capacity_kg, 0);
+  const totalSoldKg = bins.reduce((acc, b) => acc + b.sold_kg, 0);
+  const totalAvailable = Math.max(0, totalCapacity - totalSoldKg);
+
+  const crowdOrders = orders.filter((o) => o.channel === 'CROWDBUYING').length;
+  const detailOrders = orders.filter((o) => o.channel === 'DETALLE').length;
+
+  const statusAmounts = orders.reduce((acc, order) => {
+    acc[order.status] = (acc[order.status] || 0) + order.total_price;
+    return acc;
+  }, {});
+
+  el.kpiGrid.innerHTML = `
+    <article class="kpi-card"><p>Bins activos</p><strong>${bins.filter((b) => b.status === 'OPEN').length}</strong></article>
+    <article class="kpi-card"><p>Bins recaudados</p><strong>${bins.filter((b) => b.status === 'SOLD_OUT').length}</strong></article>
+    <article class="kpi-card"><p>Pedidos mayorista</p><strong>${crowdOrders}</strong></article>
+    <article class="kpi-card"><p>Pedidos detalle</p><strong>${detailOrders}</strong></article>
+  `;
+
+  const soldPct = totalCapacity ? Math.round((totalSoldKg / totalCapacity) * 100) : 0;
+  const waitingPct = statusAmounts.ESPERA_CIERRE_BIN ? Math.min(100, Math.round((statusAmounts.ESPERA_CIERRE_BIN / Math.max(1, Object.values(statusAmounts).reduce((a, b) => a + b, 0))) * 100)) : 0;
+  el.kgChart.style.setProperty('--part1', `${soldPct}%`);
+  el.kgChart.style.setProperty('--part2', `${waitingPct}%`);
+  el.kgChart.innerHTML = '<div></div><div></div><div></div>';
+  el.kgLegend.innerHTML = `<span>Vendido: <strong>${totalSoldKg} kg (${soldPct}%)</strong></span><span>Disponible: <strong>${totalAvailable} kg</strong></span><span>Pagado sin despacho: <strong>${money(statusAmounts.ESPERA_CIERRE_BIN || 0)}</strong></span>`;
+
+  const maxAmount = Math.max(1, ...ORDER_STATES.map((state) => statusAmounts[state] || 0));
+  el.amountChart.innerHTML = ORDER_STATES.map((state) => {
+    const value = statusAmounts[state] || 0;
+    const w = Math.round((value / maxAmount) * 100);
+    return `<div class="bar-row"><span>${ORDER_LABELS[state]}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${money(value)}</strong></div>`;
+  }).join('');
+}
+
+function renderCompletedSalesAdmin() {
+  const db = getDB();
+  const completed = db.orders.filter((o) => o.status === 'COMPLETADO' || o.status === 'ENTREGADO');
+  const totalAmount = completed.reduce((acc, o) => acc + o.total_price, 0);
+  const byChannel = completed.reduce((acc, o) => {
+    acc[o.channel] = (acc[o.channel] || 0) + o.total_price;
+    return acc;
+  }, {});
+  const byProduct = completed.reduce((acc, o) => {
+    const name = o.channel === 'DETALLE'
+      ? (db.detailProducts.find((p) => p.id === o.detail_product_id)?.name || 'Detalle')
+      : (db.bins.find((b) => b.id === o.bin_id)?.product_name || 'Mayorista');
+    acc[name] = (acc[name] || 0) + o.total_price;
+    return acc;
+  }, {});
+
+  el.completedSummary.innerHTML = `
+    <article class="kpi-card"><p>Ventas completadas</p><strong>${completed.length}</strong></article>
+    <article class="kpi-card"><p>Monto total completado</p><strong>${money(totalAmount)}</strong></article>
+    <article class="kpi-card"><p>Canal mayorista</p><strong>${money(byChannel.CROWDBUYING || 0)}</strong></article>
+    <article class="kpi-card"><p>Canal detalle</p><strong>${money(byChannel.DETALLE || 0)}</strong></article>
+  `;
+
+  const channelMax = Math.max(1, ...Object.values(byChannel), 1);
+  const channels = [{ k: 'CROWDBUYING', n: 'Mayorista' }, { k: 'DETALLE', n: 'Detalle' }];
+  el.completedChannelChart.innerHTML = channels.map((c) => {
+    const value = byChannel[c.k] || 0;
+    const w = Math.round((value / channelMax) * 100);
+    return `<div class="bar-row"><span>${c.n}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${money(value)}</strong></div>`;
+  }).join('');
+
+  const topProducts = Object.entries(byProduct).sort((a,b) => b[1]-a[1]).slice(0,5);
+  const productMax = Math.max(1, ...topProducts.map(([,v]) => v), 1);
+  el.completedProductChart.innerHTML = topProducts.length ? topProducts.map(([name, value]) => {
+    const w = Math.round((value / productMax) * 100);
+    return `<div class="bar-row"><span>${name}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${money(value)}</strong></div>`;
+  }).join('') : '<p class="hint">Sin ventas completadas todavía.</p>';
+
+  el.completedSalesList.innerHTML = completed.length ? completed.map((o) => {
+    const customer = db.users.find((u) => u.id === o.customer_id);
+    const product = o.channel === 'DETALLE'
+      ? (db.detailProducts.find((p) => p.id === o.detail_product_id)?.name || 'Detalle')
+      : (db.bins.find((b) => b.id === o.bin_id)?.product_name || 'Mayorista');
+    return `<article class="admin-bin"><div class="admin-row"><div><h4>${product}</h4><p class="bin-meta">${o.channel === 'CROWDBUYING' ? 'Mayorista' : 'Detalle'} · ${o.kg} kg · ${money(o.total_price)}</p><span class="order-status ${o.status}">${ORDER_LABELS[o.status]}</span></div><div class="hint">${customer?.name || 'Cliente'} · ${customer?.email || ''}</div></div></article>`;
+  }).join('') : '<p class="hint">Aún no hay ventas completadas para mostrar.</p>';
+}
+
+function renderCrmAdmin() {
+  const db = getDB();
+  const majoristaOrders = db.orders.filter((o) => o.channel === 'CROWDBUYING');
+  const leads = majoristaOrders.filter((o) => o.status === 'PENDIENTE_PAGO').length;
+  const negociacion = majoristaOrders.filter((o) => o.status === 'PAGO_CONFIRMADO' || o.status === 'ESPERA_CIERRE_BIN').length;
+  const cierre = majoristaOrders.filter((o) => o.status === 'EN_TRANSITO' || o.status === 'ENTREGADO' || o.status === 'COMPLETADO').length;
+  const pipeline = leads + negociacion + cierre;
+
+  el.crmKpis.innerHTML = `
+    <article class="kpi-card"><p>Clientes mayoristas activos</p><strong>${new Set(majoristaOrders.map((o) => o.customer_id)).size}</strong></article>
+    <article class="kpi-card"><p>Pipeline mayorista</p><strong>${pipeline}</strong></article>
+    <article class="kpi-card"><p>Tickets en negociación</p><strong>${negociacion}</strong></article>
+    <article class="kpi-card"><p>Cierres realizados</p><strong>${cierre}</strong></article>
+  `;
+
+  const funnel = [
+    ['Leads', leads],
+    ['Negociación', negociacion],
+    ['Cierre', cierre]
+  ];
+  const funnelMax = Math.max(1, ...funnel.map(([,v]) => v));
+  el.crmFunnel.innerHTML = funnel.map(([name, value]) => {
+    const w = Math.round((value / funnelMax) * 100);
+    return `<div class="bar-row"><span>${name}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${value}</strong></div>`;
+  }).join('');
+
+  const next = majoristaOrders.slice().sort((a,b)=> new Date(a.created_at)-new Date(b.created_at)).slice(0,5);
+  el.crmNextActions.innerHTML = next.length ? next.map((o) => {
+    const cust = db.users.find((u) => u.id === o.customer_id);
+    const label = o.status === 'PENDIENTE_PAGO' ? 'Contactar para cierre de pago' : (o.status === 'PAGO_CONFIRMADO' ? 'Confirmar cierre de bin' : 'Coordinar despacho / postventa');
+    return `<div class="bar-row"><span>${cust?.name || 'Cliente'}</span><div>${label}</div><strong>${o.kg} kg</strong></div>`;
+  }).join('') : '<p class="hint">Sin acciones pendientes.</p>';
+
+  el.crmList.innerHTML = majoristaOrders.length ? majoristaOrders.map((o) => {
+    const cust = db.users.find((u) => u.id === o.customer_id);
+    const bin = db.bins.find((b) => b.id === o.bin_id);
+    return `<article class="admin-bin"><div class="admin-row"><div><h4>${bin?.product_name || 'Bin mayorista'}</h4><p class="bin-meta">${cust?.name || 'Cliente'} · ${cust?.phone || ''} · ${cust?.email || ''}</p><p class="bin-meta">${o.kg} kg · ${money(o.total_price)}</p><span class="order-status ${o.status}">${ORDER_LABELS[o.status]}</span></div><div class="hint">Creado: ${new Date(o.created_at).toLocaleDateString('es-CL')}</div></div></article>`;
+  }).join('') : '<p class="hint">No hay pedidos mayoristas para CRM.</p>';
+}
+
+function bindAdminActions() {
+  document.querySelectorAll('.edit-bin').forEach((btn) => btn.addEventListener('click', () => { const bin = api.getBin(btn.dataset.id); if (bin) { fillAdminForm(bin); switchAdminView('nuevo'); } }));
+  document.querySelectorAll('.order-next').forEach((btn) => btn.addEventListener('click', () => {
+    try { api.updateOrderStatus(btn.dataset.orderId, btn.dataset.next); renderAll(); toast(`Pedido actualizado: ${ORDER_LABELS[btn.dataset.next]}.`); }
+    catch (error) { toast(error.message, true); }
+  }));
+  document.querySelectorAll('.order-cancel').forEach((btn) => btn.addEventListener('click', () => {
+    try { api.updateOrderStatus(btn.dataset.orderId, 'CANCELADO'); renderAll(); toast('Pedido cancelado y stock reingresado.'); }
+    catch (error) { toast(error.message, true); }
+  }));
+}
+
+function renderAdminBins() {
+  const bins = api.getBins();
+  const selling = bins.filter((b) => b.status === 'OPEN' || b.status === 'CLOSED');
+  const recaudados = bins.filter((b) => b.status === 'SOLD_OUT');
+  el.adminBinsOpen.innerHTML = selling.length
+    ? selling.map((bin) => renderAdminBinCard(bin, { isSoldView: false, orderFilter: (o) => ACTIVE_STATES.has(o.status), listTitle: 'Pedidos pendientes/en proceso' })).join('')
+    : '<p class="hint">No hay bins en venta.</p>';
+  el.adminBinsSold.innerHTML = recaudados.length
+    ? recaudados.map((bin) => renderAdminBinCard(bin, { isSoldView: true, orderFilter: (o) => REALIZED_STATES.has(o.status), listTitle: 'Pedidos realizados' })).join('')
+    : '<p class="hint">No hay bins recaudados todavía.</p>';
+  renderDetailOrdersAdmin();
+  renderKpisAndCharts();
+  renderCompletedSalesAdmin();
+  renderCrmAdmin();
+  bindAdminActions();
+}
+
+function switchAdminView(view) {
+  const fallback = el.adminViews[view] ? view : 'resumen';
+  currentAdminView = fallback;
+  el.mainTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.view === fallback));
+  Object.entries(el.adminViews).forEach(([key, node]) => node.classList.toggle('hidden', key !== fallback));
+}
+
+function syncAdminView() {
+  const isAdmin = api.isAdmin();
+  el.adminLoginSection.classList.toggle('hidden', isAdmin);
+  el.adminPanelSection.classList.toggle('hidden', !isAdmin);
+  if (isAdmin) { renderAdminBins(); switchAdminView(currentAdminView); }
+}
+
+function renderAll() {
+  renderBins();
+  renderDetailProducts();
+  syncAdminView();
+}
+
+el.orderKg.addEventListener('input', () => {
+  const bin = api.getBin(el.orderBinId.value);
+  if (!bin) return;
+  const available = Math.max(0, bin.capacity_kg - bin.sold_kg);
+  const kg = Number(el.orderKg.value || 0);
+  const safeKg = Math.min(Math.max(kg, CROWD_MIN_KG), available);
+  if (kg !== safeKg) el.orderKg.value = String(safeKg);
+  el.orderTotal.textContent = `Total: ${money(safeKg * bin.price_per_kg)}`;
+  el.summaryProduct.textContent = bin.product_name;
+  el.summaryKg.textContent = `${safeKg} kg`;
+  el.summaryUnit.textContent = money(bin.price_per_kg);
+  el.summaryTotal.textContent = money(safeKg * bin.price_per_kg);
+});
+
+el.detailOrderKg.addEventListener('input', () => {
+  const p = api.getDetailProduct(el.detailProductId.value);
+  if (!p) return;
+  const kg = Math.min(Math.max(Number(el.detailOrderKg.value || 0), 0), p.stock_kg);
+  el.detailOrderKg.value = String(kg);
+  el.detailOrderTotal.textContent = `Total: ${money(kg * p.price_per_kg)}`;
+});
+
+el.orderForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  try {
+    const order = api.createOrder(el.orderBinId.value, { name: el.customerName.value.trim(), email: el.customerEmail.value.trim(), phone: el.customerPhone.value.trim(), kg: Number(el.orderKg.value) });
+    const bin = api.getBin(el.orderBinId.value);
+    closeOrderFlow();
+    renderAll();
+    showPurchaseAlert(`Pedido crowdbuying registrado: ${order.kg} kg de ${bin.product_name} por ${money(order.total_price)}.`);
+  } catch (error) { toast(error.message, true); }
+});
+
+el.detailOrderForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  try {
+    const order = api.createDetailOrder(el.detailProductId.value, { name: el.detailCustomerName.value.trim(), email: el.detailCustomerEmail.value.trim(), phone: el.detailCustomerPhone.value.trim(), kg: Number(el.detailOrderKg.value) });
+    const p = api.getDetailProduct(el.detailProductId.value);
+    closeDetailOrderFlow();
+    renderAll();
+    showPurchaseAlert(`Pedido detalle registrado: ${order.kg} kg de ${p.name} por ${money(order.total_price)}.`);
+  } catch (error) { toast(error.message, true); }
+});
+
+el.chooseDetail.addEventListener('click', () => setMode('detail'));
+el.chooseCrowd.addEventListener('click', () => setMode('crowd'));
+el.modeTabs.forEach((tab) => tab.addEventListener('click', () => setMode(tab.dataset.mode)));
+
+el.openAdmin.addEventListener('click', () => { syncAdminView(); el.adminModal.showModal(); });
+el.closeOrder.addEventListener('click', closeOrderFlow);
+el.cancelOrderAction.addEventListener('click', closeOrderFlow);
+el.closeDetailOrder.addEventListener('click', closeDetailOrderFlow);
+el.cancelDetailOrderAction.addEventListener('click', closeDetailOrderFlow);
+el.closeAdmin.addEventListener('click', () => el.adminModal.close());
+el.purchaseAlertClose.addEventListener('click', hidePurchaseAlert);
+el.purchaseAlert.addEventListener('click', (event) => { if (event.target === el.purchaseAlert) hidePurchaseAlert(); });
+
+el.adminLoginForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  try { api.login(el.adminEmail.value.trim(), el.adminPassword.value.trim()); syncAdminView(); toast('Login de administrador exitoso.'); }
+  catch (error) { toast(error.message, true); }
+});
+el.adminLogout.addEventListener('click', () => { api.logout(); syncAdminView(); toast('Sesión cerrada.'); });
+
+el.binForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  try {
+    const payload = {
+      product_name: el.binProduct.value.trim(),
+      variety: el.binVariety.value.trim(),
+      notes: el.binNotes.value.trim(),
+      price_per_kg: Number(el.binPrice.value),
+      capacity_kg: Number(el.binCapacity.value || 500),
+      image_url: el.binImage.value.trim(),
+      status: el.binStatus.value
+    };
+    if (el.binId.value) { api.updateBin(el.binId.value, payload); toast('Bin actualizado correctamente.'); }
+    else { api.createBin(payload); toast('Bin creado correctamente.'); }
+    clearAdminForm();
+    renderAll();
+  } catch (error) { toast(error.message, true); }
+});
+
+el.clearBinForm.addEventListener('click', clearAdminForm);
+el.mainTabs.forEach((tab) => tab.addEventListener('click', () => switchAdminView(tab.dataset.view)));
+
+initMode();
+renderAll();
