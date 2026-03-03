@@ -2,11 +2,22 @@ const STORAGE_KEY = 'crowdbuying-db-v5';
 const ADMIN_SESSION_KEY = 'crowdbuying-admin-session';
 const MODE_KEY = 'crowdbuying-mode';
 
-const ORDER_STATES = ['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'ESPERA_CIERRE_BIN', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'];
-const NEXT_STATE = {
+const WHOLESALE_ORDER_STATES = ['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'ESPERA_CIERRE_BIN', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'];
+const DETAIL_ORDER_STATES = ['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'];
+
+const NEXT_WHOLESALE_STATE = {
   PENDIENTE_PAGO: 'PAGO_CONFIRMADO',
   PAGO_CONFIRMADO: 'ESPERA_CIERRE_BIN',
   ESPERA_CIERRE_BIN: 'EN_TRANSITO',
+  EN_TRANSITO: 'ENTREGADO',
+  ENTREGADO: 'COMPLETADO',
+  COMPLETADO: null,
+  CANCELADO: 'PENDIENTE_PAGO'
+};
+
+const NEXT_DETAIL_STATE = {
+  PENDIENTE_PAGO: 'PAGO_CONFIRMADO',
+  PAGO_CONFIRMADO: 'EN_TRANSITO',
   EN_TRANSITO: 'ENTREGADO',
   ENTREGADO: 'COMPLETADO',
   COMPLETADO: null,
@@ -26,7 +37,8 @@ const ORDER_LABELS = {
 };
 
 const REALIZED_STATES = new Set(['ENTREGADO', 'COMPLETADO']);
-const ACTIVE_STATES = new Set(['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'ESPERA_CIERRE_BIN', 'EN_TRANSITO']);
+const ACTIVE_WHOLESALE_STATES = new Set(['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'ESPERA_CIERRE_BIN', 'EN_TRANSITO']);
+const ACTIVE_DETAIL_STATES = new Set(['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'EN_TRANSITO']);
 
 const el = {
   chooseDetail: document.getElementById('choose-detail'),
@@ -330,7 +342,8 @@ const api = {
     const db = getDB();
     const order = db.orders.find((o) => o.id === orderId);
     if (!order) throw new Error('Pedido no encontrado.');
-    if (!ORDER_STATES.includes(status)) throw new Error('Estado inválido.');
+    const allowedStates = order.channel === 'DETALLE' ? DETAIL_ORDER_STATES : WHOLESALE_ORDER_STATES;
+    if (!allowedStates.includes(status)) throw new Error('Estado inválido para este canal.');
 
     if (order.channel === 'CROWDBUYING') {
       const bin = db.bins.find((b) => b.id === order.bin_id);
@@ -392,6 +405,14 @@ function showPurchaseAlert(message) {
 }
 function hidePurchaseAlert() { el.purchaseAlert.classList.add('hidden'); }
 function statusTag(status) { return `<span class="bin-status ${status}">${status}</span>`; }
+
+function nextStateForOrder(order) {
+  return order.channel === 'DETALLE' ? NEXT_DETAIL_STATE[order.status] : NEXT_WHOLESALE_STATE[order.status];
+}
+
+function isActiveOrder(order) {
+  return order.channel === 'DETALLE' ? ACTIVE_DETAIL_STATES.has(order.status) : ACTIVE_WHOLESALE_STATES.has(order.status);
+}
 
 
 function setMode(mode) {
@@ -568,7 +589,7 @@ function computeBinSummary(bin, orders) {
 }
 
 function orderItemTemplate(order, isSoldView) {
-  const next = NEXT_STATE[order.status];
+  const next = nextStateForOrder(order);
   const canMove = Boolean(next) && !REALIZED_STATES.has(order.status);
   return `
     <div class="order-item">
@@ -576,7 +597,7 @@ function orderItemTemplate(order, isSoldView) {
       <div><span class="order-status ${order.status}">${ORDER_LABELS[order.status]}</span><div>${order.customer?.phone || 'Sin teléfono'} · ${order.customer?.email || ''}</div></div>
       <div class="order-actions">
         ${canMove ? `<button class="btn tiny warn order-next" data-order-id="${order.id}" data-next="${next}">Pasar a: ${ORDER_LABELS[next]}</button>` : ''}
-        ${ACTIVE_STATES.has(order.status) ? `<button class="btn tiny secondary order-cancel" data-order-id="${order.id}">Cancelar</button>` : ''}
+        ${isActiveOrder(order) ? `<button class="btn tiny secondary order-cancel" data-order-id="${order.id}">Cancelar</button>` : ''}
         ${isSoldView ? '<span class="hint">Contenedor cerrado</span>' : ''}
       </div>
     </div>
@@ -615,7 +636,7 @@ function renderAdminBinCard(bin, { isSoldView = false, orderFilter = () => true,
 
 function renderDetailOrdersAdmin() {
   const orders = api.getDetailOrders();
-  const pending = orders.filter((o) => ACTIVE_STATES.has(o.status));
+  const pending = orders.filter((o) => ACTIVE_DETAIL_STATES.has(o.status));
   const realized = orders.filter((o) => REALIZED_STATES.has(o.status));
 
   const renderDetailCard = (o) => `
@@ -627,8 +648,8 @@ function renderDetailOrdersAdmin() {
           <span class="order-status ${o.status}">${ORDER_LABELS[o.status]}</span>
         </div>
         <div class="order-actions">
-          ${ACTIVE_STATES.has(o.status) && NEXT_STATE[o.status] ? `<button class="btn tiny warn order-next" data-order-id="${o.id}" data-next="${NEXT_STATE[o.status]}">Pasar a: ${ORDER_LABELS[NEXT_STATE[o.status]]}</button>` : ''}
-          ${ACTIVE_STATES.has(o.status) ? `<button class="btn tiny secondary order-cancel" data-order-id="${o.id}">Cancelar</button>` : ''}
+          ${ACTIVE_DETAIL_STATES.has(o.status) && nextStateForOrder(o) ? `<button class="btn tiny warn order-next" data-order-id="${o.id}" data-next="${nextStateForOrder(o)}">Pasar a: ${ORDER_LABELS[nextStateForOrder(o)]}</button>` : ''}
+          ${ACTIVE_DETAIL_STATES.has(o.status) ? `<button class="btn tiny secondary order-cancel" data-order-id="${o.id}">Cancelar</button>` : ''}
         </div>
       </div>
     </article>
@@ -641,8 +662,8 @@ function renderDetailOrdersAdmin() {
     acc[o.status] = (acc[o.status] || 0) + 1;
     return acc;
   }, {});
-  const maxCount = Math.max(1, ...ORDER_STATES.map((state) => statusCount[state] || 0));
-  el.detailStatusChart.innerHTML = ORDER_STATES.map((state) => {
+  const maxCount = Math.max(1, ...DETAIL_ORDER_STATES.map((state) => statusCount[state] || 0));
+  el.detailStatusChart.innerHTML = DETAIL_ORDER_STATES.map((state) => {
     const value = statusCount[state] || 0;
     const w = Math.round((value / maxCount) * 100);
     return `<div class="bar-row"><span>${ORDER_LABELS[state]}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${value}</strong></div>`;
@@ -680,8 +701,8 @@ function renderKpisAndCharts() {
   el.kgChart.innerHTML = '<div></div><div></div><div></div>';
   el.kgLegend.innerHTML = `<span>Vendido: <strong>${totalSoldKg} kg (${soldPct}%)</strong></span><span>Disponible: <strong>${totalAvailable} kg</strong></span><span>Pagado sin despacho: <strong>${money(statusAmounts.ESPERA_CIERRE_BIN || 0)}</strong></span>`;
 
-  const maxAmount = Math.max(1, ...ORDER_STATES.map((state) => statusAmounts[state] || 0));
-  el.amountChart.innerHTML = ORDER_STATES.map((state) => {
+  const maxAmount = Math.max(1, ...WHOLESALE_ORDER_STATES.map((state) => statusAmounts[state] || 0));
+  el.amountChart.innerHTML = WHOLESALE_ORDER_STATES.map((state) => {
     const value = statusAmounts[state] || 0;
     const w = Math.round((value / maxAmount) * 100);
     return `<div class="bar-row"><span>${ORDER_LABELS[state]}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${money(value)}</strong></div>`;
@@ -803,14 +824,26 @@ function bindAdminActions() {
 
 function renderAdminBins() {
   const bins = api.getBins();
-  const selling = bins.filter((b) => b.status === 'OPEN' || b.status === 'CLOSED');
-  const recaudados = bins.filter((b) => b.status === 'SOLD_OUT');
+  const binOrders = new Map(bins.map((b) => [b.id, api.getOrdersByBin(b.id)]));
+
+  const selling = bins.filter((b) => {
+    const orders = binOrders.get(b.id) || [];
+    return b.status === 'OPEN' || b.status === 'CLOSED' || orders.some((o) => ACTIVE_WHOLESALE_STATES.has(o.status));
+  });
+
+  const recaudados = bins.filter((b) => {
+    const orders = binOrders.get(b.id) || [];
+    return orders.some((o) => REALIZED_STATES.has(o.status));
+  });
+
   el.adminBinsOpen.innerHTML = selling.length
-    ? selling.map((bin) => renderAdminBinCard(bin, { isSoldView: false, orderFilter: (o) => ACTIVE_STATES.has(o.status), listTitle: 'Pedidos pendientes/en proceso' })).join('')
-    : '<p class="hint">No hay productos mayoristas en venta.</p>';
+    ? selling.map((bin) => renderAdminBinCard(bin, { isSoldView: false, orderFilter: (o) => ACTIVE_WHOLESALE_STATES.has(o.status), listTitle: 'Pedidos pendientes/en proceso' })).join('')
+    : '<p class="hint">No hay productos mayoristas con pedidos pendientes.</p>';
+
   el.adminBinsSold.innerHTML = recaudados.length
     ? recaudados.map((bin) => renderAdminBinCard(bin, { isSoldView: true, orderFilter: (o) => REALIZED_STATES.has(o.status), listTitle: 'Pedidos realizados' })).join('')
-    : '<p class="hint">No hay productos mayoristas recaudados todavía.</p>';
+    : '<p class="hint">No hay productos mayoristas con pedidos realizados todavía.</p>';
+
   renderDetailOrdersAdmin();
   renderKpisAndCharts();
   renderCompletedSalesAdmin();
