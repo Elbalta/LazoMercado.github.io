@@ -163,18 +163,15 @@
           <button id="admin-logout" class="btn secondary">Cerrar sesión</button>
         </div>
 
-        <div class="wholesale-focus">
-          <strong>Enfoque mayorista:</strong> monitorea avance de bins, compromisos de compra y seguimiento comercial desde CRM.
-        </div>
 
         <div class="admin-main-tabs">
-          <button class="main-tab active" data-view="resumen">Resumen general</button>
-          <button class="main-tab" data-view="nuevo">Nuevo bin de venta</button>
-          <button class="main-tab" data-view="seguimiento">Seguimiento bins</button>
-          <button class="main-tab" data-view="recaudado">Bins recaudados</button>
-          <button class="main-tab" data-view="detalle">Pedidos detalle</button>
-          <button class="main-tab" data-view="completadas">Ventas completadas</button>
-          <button class="main-tab" data-view="crm">CRM mayorista</button>
+          <button class="main-tab active" data-view="resumen">Mayorista · Resumen</button>
+          <button class="main-tab" data-view="nuevo">Mayorista · Nuevo bin</button>
+          <button class="main-tab" data-view="seguimiento">Mayorista · Seguimiento</button>
+          <button class="main-tab" data-view="recaudado">Mayorista · Recaudados</button>
+          <button class="main-tab" data-view="detalle">Detalle · Pedidos</button>
+          <button class="main-tab" data-view="completadas">Ventas · Completadas</button>
+          <button class="main-tab" data-view="crm">Mayorista · CRM</button>
         </div>
 
         <section id="admin-view-resumen" class="admin-view">
@@ -217,17 +214,33 @@
         </section>
 
         <section id="admin-view-seguimiento" class="admin-view hidden">
-          <p class="hint">Seguimiento de bins en venta y pedidos asociados. Desde aquí puedes avanzar estados o cancelar pedidos.</p>
+          <p class="hint">Seguimiento operativo: aquí solo ves pedidos pendientes/en proceso por bin. Los pedidos realizados se revisan en "Bins recaudados" y "Ventas completadas".</p>
           <div id="admin-bins-open" class="admin-bins"></div>
         </section>
 
         <section id="admin-view-recaudado" class="admin-view hidden">
-          <p class="hint">Bins recaudados (sin edición de producto). Puedes corregir estados de pedidos si hubo un error.</p>
+          <p class="hint">Bins recaudados: muestra únicamente pedidos ya entregados/completados para evitar mezclar operación pendiente con ventas cerradas.</p>
           <div id="admin-bins-sold" class="admin-bins"></div>
         </section>
 
         <section id="admin-view-detalle" class="admin-view hidden">
-          <div id="admin-detail-orders" class="admin-bins"></div>
+          <p class="hint">Pedidos detalle separados por etapa para que no se mezclen pendientes con realizados.</p>
+          <div class="charts-grid">
+            <article class="chart-card">
+              <h5>Distribución pedidos detalle por estado</h5>
+              <div id="detail-status-chart" class="bars-chart"></div>
+            </article>
+          </div>
+          <div class="split-orders-grid">
+            <article class="panel split-order-panel">
+              <h5>Pendientes / en proceso</h5>
+              <div id="admin-detail-pending-orders" class="admin-bins"></div>
+            </article>
+            <article class="panel split-order-panel">
+              <h5>Realizados</h5>
+              <div id="admin-detail-completed-orders" class="admin-bins"></div>
+            </article>
+          </div>
         </section>
 
         <section id="admin-view-completadas" class="admin-view hidden">
