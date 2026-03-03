@@ -18,7 +18,7 @@ const CROWD_MIN_KG = 50;
 const ORDER_LABELS = {
   PENDIENTE_PAGO: 'Pendiente de pago',
   PAGO_CONFIRMADO: 'Pago confirmado',
-  ESPERA_CIERRE_BIN: 'Pagado · esperando cierre del bin',
+  ESPERA_CIERRE_BIN: 'Pagado · esperando cierre del contenedor',
   EN_TRANSITO: 'En tránsito',
   ENTREGADO: 'Entregado',
   COMPLETADO: 'Completado',
@@ -100,6 +100,15 @@ const el = {
   binStatus: document.getElementById('bin-status'),
   binNotes: document.getElementById('bin-notes'),
   clearBinForm: document.getElementById('clear-bin-form'),
+  detailProductForm: document.getElementById('detail-product-form'),
+  detailAdminId: document.getElementById('detail-admin-id'),
+  detailAdminName: document.getElementById('detail-admin-name'),
+  detailAdminPrice: document.getElementById('detail-admin-price'),
+  detailAdminStock: document.getElementById('detail-admin-stock'),
+  detailAdminImage: document.getElementById('detail-admin-image'),
+  clearDetailProductForm: document.getElementById('clear-detail-product-form'),
+  adminWholesaleProducts: document.getElementById('admin-wholesale-products'),
+  adminDetailProducts: document.getElementById('admin-detail-products'),
   adminBinsOpen: document.getElementById('admin-bins-open'),
   adminBinsSold: document.getElementById('admin-bins-sold'),
   adminDetailPendingOrders: document.getElementById('admin-detail-pending-orders'),
@@ -157,7 +166,7 @@ function seedDB() {
       id: naranjaId,
       product_name: 'Naranja Valencia',
       variety: 'Valencia tardía',
-      notes: 'Lote uniforme para jugo y mesa. Venta por bin completo.',
+      notes: 'Lote uniforme para jugo y mesa. Venta por contenedor completo.',
       price_per_kg: 1290,
       capacity_kg: 500,
       sold_kg: 500,
@@ -207,8 +216,8 @@ const api = {
   createOrder(binId, payload) {
     const db = getDB();
     const bin = db.bins.find((b) => b.id === binId);
-    if (!bin) throw new Error('Bin no encontrado.');
-    if (bin.status !== 'OPEN') throw new Error('El bin no está abierto para compra.');
+    if (!bin) throw new Error('Producto mayorista no encontrado.');
+    if (bin.status !== 'OPEN') throw new Error('El producto mayorista no está abierto para compra.');
 
     const requestedKg = Number(payload.kg);
     const available = Math.max(0, bin.capacity_kg - bin.sold_kg);
@@ -270,11 +279,44 @@ const api = {
   updateBin(binId, payload) {
     const db = getDB();
     const bin = db.bins.find((b) => b.id === binId);
-    if (!bin) throw new Error('Bin no encontrado.');
+    if (!bin) throw new Error('Producto mayorista no encontrado.');
     Object.assign(bin, { product_name: payload.product_name, variety: payload.variety || '', notes: payload.notes || '', price_per_kg: Number(payload.price_per_kg), capacity_kg: Number(payload.capacity_kg), image_url: payload.image_url, status: payload.status });
     if (bin.sold_kg >= bin.capacity_kg) { bin.sold_kg = bin.capacity_kg; bin.status = 'SOLD_OUT'; }
     saveDB(db);
     return bin;
+  },
+  createDetailProduct(payload) {
+    const db = getDB();
+    const product = {
+      id: uid(),
+      name: payload.name,
+      price_per_kg: Number(payload.price_per_kg),
+      stock_kg: Number(payload.stock_kg),
+      image_url: payload.image_url
+    };
+    db.detailProducts.unshift(product);
+    saveDB(db);
+    return product;
+  },
+  updateDetailProduct(productId, payload) {
+    const db = getDB();
+    const product = db.detailProducts.find((p) => p.id === productId);
+    if (!product) throw new Error('Producto detalle no encontrado.');
+    Object.assign(product, {
+      name: payload.name,
+      price_per_kg: Number(payload.price_per_kg),
+      stock_kg: Number(payload.stock_kg),
+      image_url: payload.image_url
+    });
+    saveDB(db);
+    return product;
+  },
+  deleteDetailProduct(productId) {
+    const db = getDB();
+    const usedInOrders = db.orders.some((o) => o.detail_product_id === productId);
+    if (usedInOrders) throw new Error('No se puede eliminar: el producto tiene pedidos asociados.');
+    db.detailProducts = db.detailProducts.filter((p) => p.id !== productId);
+    saveDB(db);
   },
   getOrdersByBin(binId) {
     const db = getDB();
@@ -292,13 +334,13 @@ const api = {
 
     if (order.channel === 'CROWDBUYING') {
       const bin = db.bins.find((b) => b.id === order.bin_id);
-      if (!bin) throw new Error('Bin asociado no encontrado.');
+      if (!bin) throw new Error('Producto mayorista asociado no encontrado.');
 
       const fromCancelled = order.status === 'CANCELADO' && status !== 'CANCELADO';
       const toCancelled = order.status !== 'CANCELADO' && status === 'CANCELADO';
 
       if (status === 'EN_TRANSITO' && bin.sold_kg < bin.capacity_kg) {
-        throw new Error('No puedes despachar hasta completar el bin (100% vendido).');
+        throw new Error('No puedes despachar hasta completar el contenedor (100% vendido).');
       }
 
       if (status === 'ESPERA_CIERRE_BIN' && bin.sold_kg >= bin.capacity_kg) {
@@ -447,7 +489,7 @@ function openOrderModal(binId) {
   el.orderKg.min = String(CROWD_MIN_KG);
   el.orderKg.max = String(available);
   el.orderKg.value = String(Math.min(Math.max(CROWD_MIN_KG, 0), available));
-  el.orderStockHelp.textContent = `${available} kg disponibles para ${bin.product_name}. Mínimo por compra colaborativa: ${CROWD_MIN_KG} kg.`;
+  el.orderStockHelp.textContent = `${available} kg disponibles para ${bin.product_name}. Mínimo en mayorista: ${CROWD_MIN_KG} kg.`;
   updateSummary(bin, 0);
   el.orderTotal.textContent = `Total: ${money(0)}`;
   el.summaryPanel.classList.remove('hidden');
@@ -488,8 +530,29 @@ function fillAdminForm(bin) {
 function clearAdminForm() {
   el.binForm.reset();
   el.binId.value = '';
-  el.binCapacity.value = '500';
+  el.binCapacity.value = "";
   el.binStatus.value = 'OPEN';
+}
+
+
+function clearDetailProductForm() {
+  if (!el.detailProductForm) return;
+  el.detailProductForm.reset();
+  el.detailAdminId.value = '';
+}
+
+function renderAdminProductCatalog() {
+  if (!el.adminWholesaleProducts || !el.adminDetailProducts) return;
+
+  const wholesale = api.getBins();
+  el.adminWholesaleProducts.innerHTML = wholesale.length
+    ? wholesale.map((p) => `<article class="admin-bin"><div class="admin-row"><div><h4>${p.product_name}</h4><p class="bin-meta">${money(p.price_per_kg)} / kg · ${p.sold_kg}/${p.capacity_kg} kg</p><p class="bin-meta">${p.variety || 'Sin variedad'}</p></div><button class="btn tiny secondary edit-bin" data-id="${p.id}">Editar</button></div></article>`).join('')
+    : '<p class="hint">Sin productos mayoristas creados.</p>';
+
+  const detail = api.getDetailProducts();
+  el.adminDetailProducts.innerHTML = detail.length
+    ? detail.map((p) => `<article class="admin-bin"><div class="admin-row"><div><h4>${p.name}</h4><p class="bin-meta">${money(p.price_per_kg)} / kg · Stock ${p.stock_kg} kg</p></div><div class="order-actions"><button class="btn tiny secondary edit-detail-product" data-id="${p.id}">Editar</button><button class="btn tiny secondary delete-detail-product" data-id="${p.id}">Eliminar</button></div></div></article>`).join('')
+    : '<p class="hint">Sin productos detalle creados.</p>';
 }
 
 function computeBinSummary(bin, orders) {
@@ -514,7 +577,7 @@ function orderItemTemplate(order, isSoldView) {
       <div class="order-actions">
         ${canMove ? `<button class="btn tiny warn order-next" data-order-id="${order.id}" data-next="${next}">Pasar a: ${ORDER_LABELS[next]}</button>` : ''}
         ${ACTIVE_STATES.has(order.status) ? `<button class="btn tiny secondary order-cancel" data-order-id="${order.id}">Cancelar</button>` : ''}
-        ${isSoldView ? '<span class="hint">Bin cerrado</span>' : ''}
+        ${isSoldView ? '<span class="hint">Contenedor cerrado</span>' : ''}
       </div>
     </div>
   `;
@@ -535,7 +598,7 @@ function renderAdminBinCard(bin, { isSoldView = false, orderFilter = () => true,
           <p class="bin-meta">Variedad: ${bin.variety || 'No especificada'}</p>
           ${statusTag(bin.status)}
         </div>
-        <div>${isSoldView ? '<span class="hint">Producto recaudado (sin edición)</span>' : `<button class="btn secondary edit-bin" data-id="${bin.id}">Editar</button>`}</div>
+        <div>${isSoldView ? '<span class="hint">Producto mayorista cerrado (sin edición)</span>' : `<button class="btn secondary edit-bin" data-id="${bin.id}">Editar</button>`}</div>
       </div>
       <div class="progress-wrap"><div class="progress-mem" style="--sold:${pct}%"><div class="progress-sold"></div><div class="progress-available"></div></div></div>
       <div class="bin-summary-grid">
@@ -604,8 +667,8 @@ function renderKpisAndCharts() {
   }, {});
 
   el.kpiGrid.innerHTML = `
-    <article class="kpi-card"><p>Bins activos</p><strong>${bins.filter((b) => b.status === 'OPEN').length}</strong></article>
-    <article class="kpi-card"><p>Bins recaudados</p><strong>${bins.filter((b) => b.status === 'SOLD_OUT').length}</strong></article>
+    <article class="kpi-card"><p>Mayorista activos</p><strong>${bins.filter((b) => b.status === 'OPEN').length}</strong></article>
+    <article class="kpi-card"><p>Mayorista recaudados</p><strong>${bins.filter((b) => b.status === 'SOLD_OUT').length}</strong></article>
     <article class="kpi-card"><p>Pedidos mayorista</p><strong>${crowdOrders}</strong></article>
     <article class="kpi-card"><p>Pedidos detalle</p><strong>${detailOrders}</strong></article>
   `;
@@ -701,19 +764,33 @@ function renderCrmAdmin() {
   const next = majoristaOrders.slice().sort((a,b)=> new Date(a.created_at)-new Date(b.created_at)).slice(0,5);
   el.crmNextActions.innerHTML = next.length ? next.map((o) => {
     const cust = db.users.find((u) => u.id === o.customer_id);
-    const label = o.status === 'PENDIENTE_PAGO' ? 'Contactar para cierre de pago' : (o.status === 'PAGO_CONFIRMADO' ? 'Confirmar cierre de bin' : 'Coordinar despacho / postventa');
+    const label = o.status === 'PENDIENTE_PAGO' ? 'Contactar para cierre de pago' : (o.status === 'PAGO_CONFIRMADO' ? 'Confirmar cierre de contenedor' : 'Coordinar despacho / postventa');
     return `<div class="bar-row"><span>${cust?.name || 'Cliente'}</span><div>${label}</div><strong>${o.kg} kg</strong></div>`;
   }).join('') : '<p class="hint">Sin acciones pendientes.</p>';
 
   el.crmList.innerHTML = majoristaOrders.length ? majoristaOrders.map((o) => {
     const cust = db.users.find((u) => u.id === o.customer_id);
     const bin = db.bins.find((b) => b.id === o.bin_id);
-    return `<article class="admin-bin"><div class="admin-row"><div><h4>${bin?.product_name || 'Bin mayorista'}</h4><p class="bin-meta">${cust?.name || 'Cliente'} · ${cust?.phone || ''} · ${cust?.email || ''}</p><p class="bin-meta">${o.kg} kg · ${money(o.total_price)}</p><span class="order-status ${o.status}">${ORDER_LABELS[o.status]}</span></div><div class="hint">Creado: ${new Date(o.created_at).toLocaleDateString('es-CL')}</div></div></article>`;
+    return `<article class="admin-bin"><div class="admin-row"><div><h4>${bin?.product_name || 'Producto mayorista'}</h4><p class="bin-meta">${cust?.name || 'Cliente'} · ${cust?.phone || ''} · ${cust?.email || ''}</p><p class="bin-meta">${o.kg} kg · ${money(o.total_price)}</p><span class="order-status ${o.status}">${ORDER_LABELS[o.status]}</span></div><div class="hint">Creado: ${new Date(o.created_at).toLocaleDateString('es-CL')}</div></div></article>`;
   }).join('') : '<p class="hint">No hay pedidos mayoristas para CRM.</p>';
 }
 
 function bindAdminActions() {
   document.querySelectorAll('.edit-bin').forEach((btn) => btn.addEventListener('click', () => { const bin = api.getBin(btn.dataset.id); if (bin) { fillAdminForm(bin); switchAdminView('nuevo'); } }));
+  document.querySelectorAll('.edit-detail-product').forEach((btn) => btn.addEventListener('click', () => {
+    const p = api.getDetailProduct(btn.dataset.id);
+    if (!p) return;
+    el.detailAdminId.value = p.id;
+    el.detailAdminName.value = p.name;
+    el.detailAdminPrice.value = p.price_per_kg;
+    el.detailAdminStock.value = p.stock_kg;
+    el.detailAdminImage.value = p.image_url;
+    switchAdminView('nuevo');
+  }));
+  document.querySelectorAll('.delete-detail-product').forEach((btn) => btn.addEventListener('click', () => {
+    try { api.deleteDetailProduct(btn.dataset.id); renderAll(); toast('Producto detalle eliminado.'); }
+    catch (error) { toast(error.message, true); }
+  }));
   document.querySelectorAll('.order-next').forEach((btn) => btn.addEventListener('click', () => {
     try { api.updateOrderStatus(btn.dataset.orderId, btn.dataset.next); renderAll(); toast(`Pedido actualizado: ${ORDER_LABELS[btn.dataset.next]}.`); }
     catch (error) { toast(error.message, true); }
@@ -730,14 +807,15 @@ function renderAdminBins() {
   const recaudados = bins.filter((b) => b.status === 'SOLD_OUT');
   el.adminBinsOpen.innerHTML = selling.length
     ? selling.map((bin) => renderAdminBinCard(bin, { isSoldView: false, orderFilter: (o) => ACTIVE_STATES.has(o.status), listTitle: 'Pedidos pendientes/en proceso' })).join('')
-    : '<p class="hint">No hay bins en venta.</p>';
+    : '<p class="hint">No hay productos mayoristas en venta.</p>';
   el.adminBinsSold.innerHTML = recaudados.length
     ? recaudados.map((bin) => renderAdminBinCard(bin, { isSoldView: true, orderFilter: (o) => REALIZED_STATES.has(o.status), listTitle: 'Pedidos realizados' })).join('')
-    : '<p class="hint">No hay bins recaudados todavía.</p>';
+    : '<p class="hint">No hay productos mayoristas recaudados todavía.</p>';
   renderDetailOrdersAdmin();
   renderKpisAndCharts();
   renderCompletedSalesAdmin();
   renderCrmAdmin();
+  renderAdminProductCatalog();
   bindAdminActions();
 }
 
@@ -755,19 +833,6 @@ function syncAdminView() {
   if (isAdmin) { renderAdminBins(); switchAdminView(currentAdminView); }
 }
 
-
-function renderDataGuide() {
-  const guide = document.getElementById('data-guide');
-  if (!guide) return;
-  guide.innerHTML = `
-    <ol>
-      <li><strong>Paso 1:</strong> Elige <em>Detalle</em> o <em>Mayorista</em>.</li>
-      <li><strong>Paso 2:</strong> Crea una compra para ver datos nuevos en pantalla.</li>
-      <li><strong>Paso 3:</strong> Entra a <em>Administrador</em> para revisar pedidos y estados.</li>
-      <li><strong>Importante:</strong> Esta demo usa datos locales del navegador (localStorage). No sincroniza información en tiempo real con GitHub.</li>
-    </ol>
-  `;
-}
 
 function renderAll() {
   renderBins();
@@ -804,7 +869,7 @@ el.orderForm.addEventListener('submit', (event) => {
     const bin = api.getBin(el.orderBinId.value);
     closeOrderFlow();
     renderAll();
-    showPurchaseAlert(`Pedido crowdbuying registrado: ${order.kg} kg de ${bin.product_name} por ${money(order.total_price)}.`);
+    showPurchaseAlert(`Pedido mayorista registrado: ${order.kg} kg de ${bin.product_name} por ${money(order.total_price)}.`);
   } catch (error) { toast(error.message, true); }
 });
 
@@ -851,16 +916,37 @@ el.binForm.addEventListener('submit', (event) => {
       image_url: el.binImage.value.trim(),
       status: el.binStatus.value
     };
-    if (el.binId.value) { api.updateBin(el.binId.value, payload); toast('Bin actualizado correctamente.'); }
-    else { api.createBin(payload); toast('Bin creado correctamente.'); }
+    if (el.binId.value) { api.updateBin(el.binId.value, payload); toast('Producto mayorista actualizado correctamente.'); }
+    else { api.createBin(payload); toast('Producto mayorista creado correctamente.'); }
     clearAdminForm();
     renderAll();
   } catch (error) { toast(error.message, true); }
 });
 
+el.detailProductForm?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  try {
+    const payload = {
+      name: el.detailAdminName.value.trim(),
+      price_per_kg: Number(el.detailAdminPrice.value),
+      stock_kg: Number(el.detailAdminStock.value),
+      image_url: el.detailAdminImage.value.trim()
+    };
+    if (el.detailAdminId.value) {
+      api.updateDetailProduct(el.detailAdminId.value, payload);
+      toast('Producto detalle actualizado correctamente.');
+    } else {
+      api.createDetailProduct(payload);
+      toast('Producto detalle creado correctamente.');
+    }
+    clearDetailProductForm();
+    renderAll();
+  } catch (error) { toast(error.message, true); }
+});
+
+el.clearDetailProductForm?.addEventListener('click', clearDetailProductForm);
 el.clearBinForm.addEventListener('click', clearAdminForm);
 el.mainTabs.forEach((tab) => tab.addEventListener('click', () => switchAdminView(tab.dataset.view)));
 
 initMode();
-renderDataGuide();
 renderAll();
