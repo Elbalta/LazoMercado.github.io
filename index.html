@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crowdbuying por Bin | Lazo Mercado</title>
+  <title>Crowdbuying mayorista | Lazo Mercado</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
       <div class="gate-hero">
         <p class="gate-kicker">Elige tu experiencia de compra</p>
         <h2>Elige tu forma de compra en 1 paso</h2>
-        <p class="hint">Tenemos 2 caminos para ti: <strong>Compra al detalle</strong> (rápida, pocos kilos y despacho inmediato) o <strong>Compra mayorista</strong>. Al completarse el bin, se liberan los despachos y se activa el mejor precio por volumen.</p>
+        <p class="hint">Tenemos 2 caminos para ti: <strong>Compra al detalle</strong> (rápida, pocos kilos y despacho inmediato) o <strong>Compra mayorista</strong>. Con la compra colaborativa completa, se liberan los despachos y se activa el mejor precio por volumen.</p>
       </div>
 
       <div class="gate-options">
@@ -49,21 +49,16 @@
           <div class="gate-image" style="background-image:url('https://images.unsplash.com/photo-1518843875459-f738682238a6?auto=format&fit=crop&w=1200&q=80')"></div>
           <div class="gate-content">
             <h3>Compra mayorista</h3>
-            <p>Te unes a otros compradores para completar el bin y desbloquear mejor precio por kilo. Cuando se completa, se liberan despachos.</p>
+            <p>Te unes a otros compradores para completar la compra colaborativa y desbloquear mejor precio por kilo. Cuando se completa, se liberan despachos.</p>
             <ul>
               <li>✔ Entrada desde 50 kg</li>
               <li>✔ Mejor precio por volumen</li>
-              <li>✔ Avance visible del progreso del bin</li>
+              <li>✔ Avance visible del progreso de la compra colaborativa</li>
             </ul>
             <button id="choose-crowd" class="btn">Entrar a mayorista</button>
           </div>
         </article>
       </div>
-    </section>
-
-    <section class="panel">
-      <h3>Cómo ver la información (paso a paso)</h3>
-      <div id="data-guide" class="hint"></div>
     </section>
 
     <section id="mode-tabs" class="panel mode-tabs hidden">
@@ -82,7 +77,7 @@
     <section id="crowd-view" class="hidden crowd-layout">
       <section class="panel client-panel">
         <div class="panel-header centered">
-          <h2>Canal Mayorista</h2>
+          <h2>Canal mayorista</h2>
           <p>Compra kilos por volumen y mejora el precio final.</p>
         </div>
         <div id="bins-list" class="bins-grid"></div>
@@ -165,14 +160,14 @@
 
       <section id="admin-panel-section" class="hidden">
         <div class="admin-toolbar">
-          <h4>Gestión de bins y pedidos</h4>
+          <h4>Gestión de productos y pedidos</h4>
           <button id="admin-logout" class="btn secondary">Cerrar sesión</button>
         </div>
 
 
         <div class="admin-main-tabs">
           <button class="main-tab active" data-view="resumen">Mayorista · Resumen</button>
-          <button class="main-tab" data-view="nuevo">Mayorista · Nuevo bin</button>
+          <button class="main-tab" data-view="nuevo">Productos · Nuevo</button>
           <button class="main-tab" data-view="seguimiento">Mayorista · Seguimiento</button>
           <button class="main-tab" data-view="recaudado">Mayorista · Recaudados</button>
           <button class="main-tab" data-view="detalle">Detalle · Pedidos</button>
@@ -196,13 +191,15 @@
         </section>
 
         <section id="admin-view-nuevo" class="admin-view hidden">
-          <p class="hint">Crea o edita un bin de venta. Este formulario está separado del seguimiento para que la gestión sea más clara.</p>
+          <p class="hint">Crea o edita productos para venta mayorista y al detalle.</p>
+
+          <h5>Producto mayorista</h5>
           <form id="bin-form" class="admin-form">
             <input type="hidden" id="bin-id" />
             <label>Producto<input id="bin-product" required /></label>
             <label>Variedad / calibre<input id="bin-variety" placeholder="Ej: Hass, calibre 22" /></label>
             <label>Precio por kilo<input id="bin-price" type="number" min="1" required /></label>
-            <label>Capacidad (kg)<input id="bin-capacity" type="number" min="1" value="500" required /></label>
+            <label>Capacidad (kg)<input id="bin-capacity" type="number" min="1" required /></label>
             <label>Imagen URL<input id="bin-image" type="url" required /></label>
             <label>Estado
               <select id="bin-status">
@@ -212,20 +209,35 @@
               </select>
             </label>
             <label class="span-all">Resumen del lote
-              <textarea id="bin-notes" rows="2" placeholder="Ej: Fruta homogénea, llegada semanal, venta por bin completo."></textarea>
+              <textarea id="bin-notes" rows="2" placeholder="Ej: Fruta homogénea, llegada semanal, venta por mayor."></textarea>
             </label>
-            <button class="btn" type="submit">Guardar bin</button>
+            <button class="btn" type="submit">Guardar producto mayorista</button>
             <button id="clear-bin-form" class="btn secondary" type="button">Limpiar</button>
           </form>
+          <div id="admin-wholesale-products" class="admin-bins"></div>
+
+          <h5 style="margin-top:.8rem">Producto detalle</h5>
+          <form id="detail-product-form" class="admin-form">
+            <input type="hidden" id="detail-admin-id" />
+            <label>Nombre del producto<input id="detail-admin-name" required /></label>
+            <label>Precio por kilo<input id="detail-admin-price" type="number" min="1" required /></label>
+            <label>Stock (kg)<input id="detail-admin-stock" type="number" min="0" required /></label>
+            <label>Imagen URL<input id="detail-admin-image" type="url" required /></label>
+            <div class="span-all modal-actions">
+              <button class="btn" type="submit">Guardar producto detalle</button>
+              <button id="clear-detail-product-form" class="btn secondary" type="button">Limpiar</button>
+            </div>
+          </form>
+          <div id="admin-detail-products" class="admin-bins"></div>
         </section>
 
         <section id="admin-view-seguimiento" class="admin-view hidden">
-          <p class="hint">Seguimiento operativo: aquí solo ves pedidos pendientes/en proceso por bin. Los pedidos realizados se revisan en "Bins recaudados" y "Ventas completadas".</p>
+          <p class="hint">Seguimiento operativo: aquí solo ves pedidos pendientes/en proceso por producto mayorista. Los pedidos realizados se revisan en "Mayorista · Recaudados" y "Ventas completadas".</p>
           <div id="admin-bins-open" class="admin-bins"></div>
         </section>
 
         <section id="admin-view-recaudado" class="admin-view hidden">
-          <p class="hint">Bins recaudados: muestra únicamente pedidos ya entregados/completados para evitar mezclar operación pendiente con ventas cerradas.</p>
+          <p class="hint">Recaudados mayorista: muestra únicamente pedidos ya entregados/completados para evitar mezclar operación pendiente con ventas cerradas.</p>
           <div id="admin-bins-sold" class="admin-bins"></div>
         </section>
 
