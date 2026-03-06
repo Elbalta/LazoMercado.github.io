@@ -1,3 +1,11 @@
+# COPIAR Y PEGAR — RECUPERACIÓN
+
+Este archivo contiene el contenido completo y actualizado de `index.html`, `style.css` y `script.js`.
+Copia y pega cada bloque en su archivo correspondiente.
+
+## index.html
+
+```html
 <!doctype html>
 <html lang="es">
 <head>
@@ -21,8 +29,8 @@
     <section id="entry-gate" class="panel gate-panel">
       <div class="gate-hero">
         <p class="gate-kicker">Elige cómo quieres comprar</p>
-        <h2>Elige tu forma de pedido en 1 paso</h2>
-        <p class="hint">Tienes 2 opciones: <strong>Compra al detalle</strong> (pocos kilos, compra rápida) o <strong>Compra mayorista</strong> (desde 50 kg). En mayorista compras en grupo: cuando se completa la meta de kilos, se activa el mejor precio.</p>
+        <h2>Elige tu forma de compra en 1 paso</h2>
+        <p class="hint">Tienes 2 opciones: <strong>Compra al detalle</strong> para pedidos rápidos y <strong>Compra mayorista</strong> desde 50 kg por pedido. En mayorista, compras en grupo para acceder a un mejor precio por kilo.</p>
       </div>
 
       <div class="gate-options">
@@ -30,7 +38,7 @@
           <div class="gate-image" style="background-image:url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80')"></div>
           <div class="gate-content">
             <h3>Compra al detalle</h3>
-            <p>Ideal para compras pequeñas y rápidas, sin esperar a otros compradores.</p>
+            <p>Ideal para compras pequeñas y rápidas, sin depender de otros compradores.</p>
             <ul>
               <li>✔ Compra directa por kilo</li>
               <li>✔ Desde 1 kg</li>
@@ -46,7 +54,7 @@
           <div class="gate-image" style="background-image:url('https://images.unsplash.com/photo-1518843875459-f738682238a6?auto=format&fit=crop&w=1200&q=80')"></div>
           <div class="gate-content">
             <h3>Compra mayorista</h3>
-            <p>Te unes a un grupo de compradores. Al completar la meta de kilos, se activa el precio mayorista y se liberan los despachos.</p>
+            <p>Te unes a un grupo de compradores para completar una meta de kilos. Mientras la barra avanza, se suman los pedidos del grupo. Cuando la barra llega al 100%, se cierra la compra mayorista, se confirma el precio final y se liberan los despachos.</p>
             <ul>
               <li>✔ Mayorista = desde 50 kg por pedido</li>
               <li>✔ Mejor precio por volumen</li>
@@ -76,7 +84,7 @@
       <section class="panel client-panel">
         <div class="panel-header centered">
           <h2>Canal Mayorista</h2>
-          <p>Compra por volumen para obtener mejor precio por kilo.</p>
+          <p>Funciona como compra en grupo: cuando el lote llega al 100% de avance, se cierra la venta y se liberan los pedidos para despacho.</p>
         </div>
         <div id="bins-list" class="bins-grid"></div>
       </section>
@@ -87,7 +95,7 @@
         <div class="summary-item"><span>Kilos</span><strong id="summary-kg">0 kg</strong></div>
         <div class="summary-item"><span>Precio unitario</span><strong id="summary-unit">$0</strong></div>
         <div class="summary-item total"><span>Total</span><strong id="summary-total">$0</strong></div>
-        <p class="hint">Este panel aparece solo cuando estás comprando.</p>
+        <p class="hint">Este panel aparece solo cuando seleccionas un producto.</p>
       </aside>
     </section>
 
@@ -165,7 +173,7 @@
       </div>
 
       <section id="admin-login-section">
-        <p class="hint">Credenciales demo: admin@lazo.cl / admin123</p>
+        <p class="hint">Credenciales de prueba: admin@lazo.cl / admin123</p>
         <form id="admin-login-form" class="stack">
           <label>Email<input id="admin-email" type="email" required /></label>
           <label>Contraseña<input id="admin-password" type="password" required /></label>
@@ -244,9 +252,9 @@
         </section>
 
         <section id="admin-view-seguimiento-mayorista" class="admin-view hidden">
-          <p class="hint">Revisa mayoristas activos y sus pedidos. Desde aquí puedes avanzar estados o cancelar pedidos.</p>
+          <p class="hint">Revisa los mayoristas activos y sus pedidos. Desde aquí puedes avanzar estados o cancelar pedidos.</p>
           <div id="admin-bins-open" class="admin-bins"></div>
-          <p class="hint">Mayoristas completados (sin edición de producto). Puedes corregir estados de pedidos si hubo un error.</p>
+          <p class="hint">Mayoristas completados (sin edición de producto). Si hubo un error, puedes corregir los estados de los pedidos.</p>
           <div id="admin-bins-sold" class="admin-bins"></div>
         </section>
 
