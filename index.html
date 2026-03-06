@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crowdbuying mayorista | Lazo Mercado</title>
+  <title>Crowdbuying Mayorista | Lazo Mercado</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -14,9 +14,9 @@
     <div>
       <p class="eyebrow">Compra simple, rápida y clara</p>
       <h1>Lazo Mercado · Compra Fácil</h1>
-      <p class="data-source-note">Demo local: los datos se guardan en tu navegador (localStorage). No carga información automática desde GitHub.</p>
     </div>
     <div class="header-actions">
+      <button id="open-tracking" class="btn secondary">Mis pedidos</button>
       <button id="open-admin" class="btn secondary">Administrador</button>
     </div>
   </header>
@@ -25,8 +25,8 @@
     <section id="entry-gate" class="panel gate-panel">
       <div class="gate-hero">
         <p class="gate-kicker">Elige tu experiencia de compra</p>
-        <h2>Elige tu forma de compra en 1 paso</h2>
-        <p class="hint">Tenemos 2 caminos para ti: <strong>Compra al detalle</strong> (rápida, pocos kilos y despacho inmediato) o <strong>Compra mayorista</strong>. Con la compra colaborativa completa, se liberan los despachos y se activa el mejor precio por volumen.</p>
+        <h2>Elige tu forma de pedido en 1 paso</h2>
+        <p class="hint">Tenemos 2 caminos para ti: <strong>Compra al detalle</strong> (rápida, pocos kilos y despacho inmediato) o <strong>Compra mayorista / proveedor</strong>. Al completarse la venta mayorista, se liberan los despachos y se activa el mejor precio por volumen.</p>
       </div>
 
       <div class="gate-options">
@@ -48,14 +48,14 @@
         <article class="gate-card gate-crowd featured">
           <div class="gate-image" style="background-image:url('https://images.unsplash.com/photo-1518843875459-f738682238a6?auto=format&fit=crop&w=1200&q=80')"></div>
           <div class="gate-content">
-            <h3>Compra mayorista</h3>
-            <p>Te unes a otros compradores para completar la compra colaborativa y desbloquear mejor precio por kilo. Cuando se completa, se liberan despachos.</p>
+            <h3>Compra mayorista / proveedor</h3>
+            <p>Te unes a otros compradores para completar la venta mayorista y desbloquear mejor precio por kilo. Cuando se completa, se liberan despachos.</p>
             <ul>
               <li>✔ Entrada desde 50 kg</li>
               <li>✔ Mejor precio por volumen</li>
-              <li>✔ Avance visible del progreso de la compra colaborativa</li>
+              <li>✔ Avance visible del progreso mayorista</li>
             </ul>
-            <button id="choose-crowd" class="btn">Entrar a mayorista</button>
+            <button id="choose-crowd" class="btn">Entrar a mayorista / proveedor</button>
           </div>
         </article>
       </div>
@@ -63,7 +63,7 @@
 
     <section id="mode-tabs" class="panel mode-tabs hidden">
       <button class="mode-tab" data-mode="detail">Detalle</button>
-      <button class="mode-tab" data-mode="crowd">Mayorista</button>
+      <button class="mode-tab" data-mode="crowd">Mayorista / Proveedor</button>
     </section>
 
     <section id="detail-view" class="panel hidden">
@@ -77,7 +77,7 @@
     <section id="crowd-view" class="hidden crowd-layout">
       <section class="panel client-panel">
         <div class="panel-header centered">
-          <h2>Canal mayorista</h2>
+          <h2>Canal Mayorista</h2>
           <p>Compra kilos por volumen y mejora el precio final.</p>
         </div>
         <div id="bins-list" class="bins-grid"></div>
@@ -91,6 +91,20 @@
         <div class="summary-item total"><span>Total</span><strong id="summary-total">$0</strong></div>
         <p class="hint">Este panel aparece solo cuando estás comprando.</p>
       </aside>
+    </section>
+
+    <section id="tracking-view" class="panel hidden">
+      <div class="panel-header centered">
+        <h2>Seguimiento de pedidos</h2>
+        <p>Consulta el estado de tus pedidos con tu teléfono.</p>
+      </div>
+      <form id="tracking-form" class="tracking-form">
+        <label>Teléfono
+          <input id="tracking-phone" placeholder="Ej: +56999888777" required />
+        </label>
+        <button class="btn" type="submit">Buscar pedidos</button>
+      </form>
+      <div id="tracking-results" class="admin-bins"></div>
     </section>
   </main>
 
@@ -160,19 +174,17 @@
 
       <section id="admin-panel-section" class="hidden">
         <div class="admin-toolbar">
-          <h4>Gestión de productos y pedidos</h4>
+          <h4>Gestión de ventas mayorista y detalle</h4>
           <button id="admin-logout" class="btn secondary">Cerrar sesión</button>
         </div>
 
-
         <div class="admin-main-tabs">
-          <button class="main-tab active" data-view="resumen">Mayorista · Resumen</button>
-          <button class="main-tab" data-view="nuevo">Productos · Nuevo</button>
-          <button class="main-tab" data-view="seguimiento">Mayorista · Seguimiento</button>
-          <button class="main-tab" data-view="recaudado">Mayorista · Recaudados</button>
-          <button class="main-tab" data-view="detalle">Detalle · Pedidos</button>
-          <button class="main-tab" data-view="completadas">Ventas · Completadas</button>
-          <button class="main-tab" data-view="crm">Mayorista · CRM</button>
+          <button class="main-tab active" data-view="resumen">Resumen general</button>
+          <button class="main-tab" data-view="crear">Crear productos</button>
+          <button class="main-tab" data-view="seguimiento-mayorista">Seguimiento mayorista</button>
+          <button class="main-tab" data-view="seguimiento-detalle">Seguimiento detalle</button>
+          <button class="main-tab" data-view="terminadas">Ventas terminadas</button>
+          <button class="main-tab" data-view="financiero">Resumen financiero</button>
         </div>
 
         <section id="admin-view-resumen" class="admin-view">
@@ -190,16 +202,14 @@
           </div>
         </section>
 
-        <section id="admin-view-nuevo" class="admin-view hidden">
-          <p class="hint">Crea o edita productos para venta mayorista y al detalle.</p>
-
-          <h5>Producto mayorista</h5>
+        <section id="admin-view-crear" class="admin-view hidden">
+          <p class="hint">Crea o edita productos para ambos canales: mayorista y detalle (productos por kilo).</p>
           <form id="bin-form" class="admin-form">
             <input type="hidden" id="bin-id" />
             <label>Producto<input id="bin-product" required /></label>
             <label>Variedad / calibre<input id="bin-variety" placeholder="Ej: Hass, calibre 22" /></label>
             <label>Precio por kilo<input id="bin-price" type="number" min="1" required /></label>
-            <label>Capacidad (kg)<input id="bin-capacity" type="number" min="1" required /></label>
+            <label>Capacidad (kg)<input id="bin-capacity" type="number" min="1" value="500" required /></label>
             <label>Imagen URL<input id="bin-image" type="url" required /></label>
             <label>Estado
               <select id="bin-status">
@@ -209,59 +219,41 @@
               </select>
             </label>
             <label class="span-all">Resumen del lote
-              <textarea id="bin-notes" rows="2" placeholder="Ej: Fruta homogénea, llegada semanal, venta por mayor."></textarea>
+              <textarea id="bin-notes" rows="2" placeholder="Ej: Fruta homogénea, llegada semanal, venta mayorista completa."></textarea>
             </label>
-            <button class="btn" type="submit">Guardar producto mayorista</button>
+            <button class="btn" type="submit">Guardar mayorista</button>
             <button id="clear-bin-form" class="btn secondary" type="button">Limpiar</button>
           </form>
-          <div id="admin-wholesale-products" class="admin-bins"></div>
 
-          <h5 style="margin-top:.8rem">Producto detalle</h5>
+          <div class="admin-divider" role="separator" aria-label="Separador entre formularios">
+            <span>Productos al detalle</span>
+          </div>
+
           <form id="detail-product-form" class="admin-form">
             <input type="hidden" id="detail-admin-id" />
-            <label>Nombre del producto<input id="detail-admin-name" required /></label>
+            <label>Producto detalle<input id="detail-admin-name" required /></label>
             <label>Precio por kilo<input id="detail-admin-price" type="number" min="1" required /></label>
             <label>Stock (kg)<input id="detail-admin-stock" type="number" min="0" required /></label>
             <label>Imagen URL<input id="detail-admin-image" type="url" required /></label>
-            <div class="span-all modal-actions">
-              <button class="btn" type="submit">Guardar producto detalle</button>
-              <button id="clear-detail-product-form" class="btn secondary" type="button">Limpiar</button>
-            </div>
+            <button class="btn" type="submit">Guardar producto detalle</button>
+            <button id="clear-detail-form" class="btn secondary" type="button">Limpiar</button>
           </form>
+
           <div id="admin-detail-products" class="admin-bins"></div>
         </section>
 
-        <section id="admin-view-seguimiento" class="admin-view hidden">
-          <p class="hint">Seguimiento operativo: aquí solo ves pedidos pendientes/en proceso por producto mayorista. Los pedidos realizados se revisan en "Mayorista · Recaudados" y "Ventas completadas".</p>
+        <section id="admin-view-seguimiento-mayorista" class="admin-view hidden">
+          <p class="hint">Seguimiento de mayoristas en venta y pedidos asociados. Desde aquí puedes avanzar estados o cancelar pedidos.</p>
           <div id="admin-bins-open" class="admin-bins"></div>
-        </section>
-
-        <section id="admin-view-recaudado" class="admin-view hidden">
-          <p class="hint">Recaudados mayorista: muestra únicamente pedidos ya entregados/completados para evitar mezclar operación pendiente con ventas cerradas.</p>
+          <p class="hint">Mayoristas recaudados (sin edición de producto). Puedes corregir estados de pedidos si hubo un error.</p>
           <div id="admin-bins-sold" class="admin-bins"></div>
         </section>
 
-        <section id="admin-view-detalle" class="admin-view hidden">
-          <p class="hint">Pedidos detalle separados por etapa para que no se mezclen pendientes con realizados.</p>
-          <div class="charts-grid">
-            <article class="chart-card">
-              <h5>Distribución pedidos detalle por estado</h5>
-              <div id="detail-status-chart" class="bars-chart"></div>
-            </article>
-          </div>
-          <div class="split-orders-grid">
-            <article class="panel split-order-panel">
-              <h5>Pendientes / en proceso</h5>
-              <div id="admin-detail-pending-orders" class="admin-bins"></div>
-            </article>
-            <article class="panel split-order-panel">
-              <h5>Realizados</h5>
-              <div id="admin-detail-completed-orders" class="admin-bins"></div>
-            </article>
-          </div>
+        <section id="admin-view-seguimiento-detalle" class="admin-view hidden">
+          <div id="admin-detail-orders" class="admin-bins"></div>
         </section>
 
-        <section id="admin-view-completadas" class="admin-view hidden">
+        <section id="admin-view-terminadas" class="admin-view hidden">
           <div id="completed-summary" class="kpi-grid"></div>
           <div class="charts-grid">
             <article class="chart-card">
@@ -276,19 +268,19 @@
           <div id="completed-sales-list" class="admin-bins"></div>
         </section>
 
-        <section id="admin-view-crm" class="admin-view hidden">
-          <div id="crm-kpis" class="kpi-grid"></div>
+        <section id="admin-view-financiero" class="admin-view hidden">
+          <div id="financial-kpis" class="kpi-grid"></div>
           <div class="charts-grid">
             <article class="chart-card">
-              <h5>Embudo CRM mayorista</h5>
-              <div id="crm-funnel" class="bars-chart"></div>
+              <h5>Ingresos por canal</h5>
+              <div id="financial-channel-chart" class="bars-chart"></div>
             </article>
             <article class="chart-card">
-              <h5>Próximas acciones comerciales</h5>
-              <div id="crm-next-actions" class="bars-chart"></div>
+              <h5>Ingresos por estado</h5>
+              <div id="financial-status-chart" class="bars-chart"></div>
             </article>
           </div>
-          <div id="crm-list" class="admin-bins"></div>
+          <div id="financial-list" class="admin-bins"></div>
         </section>
       </section>
     </div>
