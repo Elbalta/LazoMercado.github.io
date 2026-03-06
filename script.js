@@ -36,6 +36,7 @@ const ORDER_LABELS = {
 };
 
 const el = {
+  header: document.querySelector('.header'),
   chooseDetail: document.getElementById('choose-detail'),
   chooseCrowd: document.getElementById('choose-crowd'),
   entryGate: document.getElementById('entry-gate'),
@@ -140,12 +141,15 @@ const el = {
   trackingView: document.getElementById('tracking-view'),
   trackingForm: document.getElementById('tracking-form'),
   trackingPhone: document.getElementById('tracking-phone'),
-  trackingResults: document.getElementById('tracking-results')
+  trackingResults: document.getElementById('tracking-results'),
+  trackingClear: document.getElementById('tracking-clear')
 };
 
 const uid = () => crypto.randomUUID();
 const CLP = new Intl.NumberFormat('es-CL');
 let currentAdminView = 'resumen';
+let currentMode = 'detail';
+let currentMainView = 'detail';
 
 function seedDB() {
   const now = new Date().toISOString();
@@ -187,7 +191,7 @@ function seedDB() {
 
   const detailProducts = [
     { id: uid(), name: 'Tomate Larga Vida', price_per_kg: 1490, stock_kg: 180, image_url: 'https://images.unsplash.com/photo-1546470427-e212b94d5c32?auto=format&fit=crop&w=1200&q=80' },
-    { id: uid(), name: 'Cebolla Amarilla', price_per_kg: 990, stock_kg: 240, image_url: 'https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=1200&q=80' }
+    { id: uid(), name: 'Cebolla Morada', price_per_kg: 990, stock_kg: 240, image_url: 'https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=1200&q=80' }
   ];
 
   const orders = [
@@ -418,24 +422,55 @@ function showPurchaseAlert(message) {
 function hidePurchaseAlert() { el.purchaseAlert.classList.add('hidden'); }
 function statusTag(status) { return `<span class="bin-status ${status}">${status}</span>`; }
 
-function setMode(mode) {
-  localStorage.setItem(MODE_KEY, mode);
+
+function updateStickyOffsets() {
+  if (!el.header) return;
+  const headerHeight = Math.ceil(el.header.getBoundingClientRect().height);
+  document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+}
+
+function scrollToModeView(view = currentMainView) {
+  const target = view === 'tracking'
+    ? el.trackingView
+    : (view === 'crowd' ? el.crowdView : el.detailView);
+  if (!target || window.innerWidth > 768) return;
+  requestAnimationFrame(() => {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+function updateMainPanels() {
+  el.detailView.classList.toggle('hidden', currentMainView !== 'detail');
+  el.crowdView.classList.toggle('hidden', currentMainView !== 'crowd');
+  el.trackingView.classList.toggle('hidden', currentMainView !== 'tracking');
+}
+
+function setMainView(view, { shouldScroll = true } = {}) {
+  const normalized = ['detail', 'crowd', 'tracking'].includes(view) ? view : 'detail';
+  currentMainView = normalized;
+  if (normalized !== 'tracking') {
+    currentMode = normalized;
+    localStorage.setItem(MODE_KEY, currentMode);
+  }
+
   el.entryGate.classList.add('hidden');
   el.modeTabsWrap.classList.remove('hidden');
-  el.modeTabs.forEach((btn) => btn.classList.toggle('active', btn.dataset.mode === mode));
-  el.detailView.classList.toggle('hidden', mode !== 'detail');
-  el.crowdView.classList.toggle('hidden', mode !== 'crowd');
-  el.trackingView.classList.remove('hidden');
-  document.body.classList.toggle('wholesale-mode', mode === 'crowd');
+  el.modeTabs.forEach((btn) => btn.classList.toggle('active', btn.dataset.mode === currentMainView));
+  document.body.classList.toggle('wholesale-mode', currentMainView === 'crowd');
+  updateMainPanels();
+  if (shouldScroll) scrollToModeView(currentMainView);
 }
 
 function initMode() {
   localStorage.removeItem(MODE_KEY);
+  currentMode = 'detail';
+  currentMainView = 'detail';
   el.entryGate.classList.remove('hidden');
   el.modeTabsWrap.classList.add('hidden');
   el.detailView.classList.add('hidden');
   el.crowdView.classList.add('hidden');
   el.trackingView.classList.add('hidden');
+  resetTrackingResults();
   document.body.classList.remove('wholesale-mode');
 }
 
@@ -682,6 +717,10 @@ function renderTrackingResults(phone) {
   }).join('');
 }
 
+function resetTrackingResults() {
+  el.trackingResults.innerHTML = '<p class="hint">Ingresa tu teléfono y presiona "Buscar pedidos" para ver tus compras.</p>';
+}
+
 function renderKpisAndCharts() {
   const db = getDB();
   const bins = db.bins;
@@ -914,15 +953,14 @@ el.detailOrderForm.addEventListener('submit', (event) => {
   } catch (error) { toast(error.message, true); }
 });
 
-el.chooseDetail.addEventListener('click', () => setMode('detail'));
-el.chooseCrowd.addEventListener('click', () => setMode('crowd'));
-el.modeTabs.forEach((tab) => tab.addEventListener('click', () => setMode(tab.dataset.mode)));
+el.chooseDetail.addEventListener('click', () => setMainView('detail'));
+el.chooseCrowd.addEventListener('click', () => setMainView('crowd'));
+el.modeTabs.forEach((tab) => tab.addEventListener('click', () => setMainView(tab.dataset.mode)));
 
 el.openTracking.addEventListener('click', () => {
-  el.entryGate.classList.add('hidden');
-  el.modeTabsWrap.classList.remove('hidden');
-  el.trackingView.classList.remove('hidden');
-  el.trackingView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setMainView('tracking', { shouldScroll: false });
+  if (!normalizePhone(el.trackingPhone.value)) resetTrackingResults();
+  scrollToModeView('tracking');
 });
 
 el.openAdmin.addEventListener('click', () => { syncAdminView(); el.adminModal.showModal(); });
@@ -938,6 +976,18 @@ el.trackingForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const phone = normalizePhone(el.trackingPhone.value);
   renderTrackingResults(phone);
+});
+
+el.trackingPhone.addEventListener('input', () => {
+  if (!normalizePhone(el.trackingPhone.value)) {
+    resetTrackingResults();
+  }
+});
+
+el.trackingClear.addEventListener('click', () => {
+  el.trackingPhone.value = '';
+  resetTrackingResults();
+  el.trackingPhone.focus();
 });
 
 el.adminLoginForm.addEventListener('submit', (event) => {
@@ -990,6 +1040,9 @@ el.detailProductForm.addEventListener('submit', (event) => {
 el.clearBinForm.addEventListener('click', clearAdminForm);
 el.clearDetailForm.addEventListener('click', clearDetailAdminForm);
 el.mainTabs.forEach((tab) => tab.addEventListener('click', () => switchAdminView(tab.dataset.view)));
+
+updateStickyOffsets();
+window.addEventListener('resize', updateStickyOffsets);
 
 initMode();
 renderAll();
