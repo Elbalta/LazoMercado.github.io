@@ -282,7 +282,7 @@ const api = {
 
     const requestedKg = Number(payload.kg);
     const available = Math.max(0, bin.capacity_kg - bin.sold_kg);
-    if (requestedKg < CROWD_MIN_KG) throw new Error(`La compra colaborativa es desde ${CROWD_MIN_KG} kg.`);
+    if (requestedKg < CROWD_MIN_KG) throw new Error(`La compra mayorista es desde ${CROWD_MIN_KG} kg por pedido.`);
     if (requestedKg > available) throw new Error(`Stock insuficiente. Solo quedan ${available} kg.`);
 
     const customer = { id: uid(), name: payload.name, email: payload.email, phone: payload.phone, role: 'CUSTOMER', created_at: new Date().toISOString() };
@@ -539,7 +539,7 @@ function openOrderModal(binId) {
   el.orderKg.min = String(CROWD_MIN_KG);
   el.orderKg.max = String(available);
   el.orderKg.value = String(Math.min(Math.max(CROWD_MIN_KG, 0), available));
-  el.orderStockHelp.textContent = `${available} kg disponibles para ${bin.product_name}. Mínimo mayorista por compra colaborativa: ${CROWD_MIN_KG} kg.`;
+  el.orderStockHelp.textContent = `${available} kg disponibles para ${bin.product_name}. Mínimo mayorista por pedido: ${CROWD_MIN_KG} kg.`;
   updateSummary(bin, 0);
   el.orderTotal.textContent = `Total: ${money(0)}`;
   el.summaryPanel.classList.remove('hidden');
@@ -717,7 +717,7 @@ function renderTrackingResults(phone) {
 }
 
 function resetTrackingResults() {
-  el.trackingResults.innerHTML = '<p class="hint">Ingresa tu teléfono y presiona "Buscar pedidos" para ver tus compras.</p>';
+  el.trackingResults.innerHTML = '<p class="hint">Ingresa tu teléfono y presiona "Buscar pedidos" para consultar tus pedidos.</p>';
 }
 
 function renderKpisAndCharts() {
@@ -739,7 +739,7 @@ function renderKpisAndCharts() {
 
   el.kpiGrid.innerHTML = `
     <article class="kpi-card"><p>Mayoristas activos</p><strong>${bins.filter((b) => b.status === 'OPEN').length}</strong></article>
-    <article class="kpi-card"><p>Mayoristas recaudados</p><strong>${bins.filter((b) => b.status === 'SOLD_OUT').length}</strong></article>
+    <article class="kpi-card"><p>Mayoristas completados</p><strong>${bins.filter((b) => b.status === 'SOLD_OUT').length}</strong></article>
     <article class="kpi-card"><p>Pedidos mayorista</p><strong>${crowdOrders}</strong></article>
     <article class="kpi-card"><p>Pedidos detalle</p><strong>${detailOrders}</strong></article>
   `;
@@ -879,7 +879,7 @@ function renderAdminBins() {
   const selling = bins.filter((b) => b.status === 'OPEN' || b.status === 'CLOSED');
   const recaudados = bins.filter((b) => b.status === 'SOLD_OUT');
   el.adminBinsOpen.innerHTML = selling.length ? selling.map((bin) => renderAdminBinCard(bin, false)).join('') : '<p class="hint">No hay mayoristas en venta.</p>';
-  el.adminBinsSold.innerHTML = recaudados.length ? recaudados.map((bin) => renderAdminBinCard(bin, true)).join('') : '<p class="hint">No hay mayoristas recaudados todavía.</p>';
+  el.adminBinsSold.innerHTML = recaudados.length ? recaudados.map((bin) => renderAdminBinCard(bin, true)).join('') : '<p class="hint">No hay mayoristas completados todavía.</p>';
   renderDetailOrdersAdmin();
   renderDetailProductsAdmin();
   renderKpisAndCharts();
@@ -937,7 +937,7 @@ el.orderForm.addEventListener('submit', (event) => {
     const bin = api.getBin(el.orderBinId.value);
     closeOrderFlow();
     renderAll();
-    showPurchaseAlert(`Pedido crowdbuying registrado: ${order.kg} kg de ${bin.product_name} por ${money(order.total_price)}.`);
+    showPurchaseAlert(`Pedido mayorista registrado: ${order.kg} kg de ${bin.product_name} por ${money(order.total_price)}.`);
   } catch (error) { toast(error.message, true); }
 });
 
@@ -989,7 +989,7 @@ el.trackingClear.addEventListener('click', () => {
 
 el.adminLoginForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  try { api.login(el.adminEmail.value.trim(), el.adminPassword.value.trim()); syncAdminView(); toast('Login de administrador exitoso.'); }
+  try { api.login(el.adminEmail.value.trim(), el.adminPassword.value.trim()); syncAdminView(); toast('Inicio de sesión de administrador exitoso.'); }
   catch (error) { toast(error.message, true); }
 });
 el.adminLogout.addEventListener('click', () => { api.logout(); syncAdminView(); toast('Sesión cerrada.'); });
