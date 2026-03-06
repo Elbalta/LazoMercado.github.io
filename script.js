@@ -2,10 +2,8 @@ const STORAGE_KEY = 'crowdbuying-db-v5';
 const ADMIN_SESSION_KEY = 'crowdbuying-admin-session';
 const MODE_KEY = 'crowdbuying-mode';
 
-const WHOLESALE_ORDER_STATES = ['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'ESPERA_CIERRE_BIN', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'];
-const DETAIL_ORDER_STATES = ['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'];
-
-const NEXT_WHOLESALE_STATE = {
+const ORDER_STATES = ['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'ESPERA_CIERRE_BIN', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'];
+const NEXT_STATE_CROWD = {
   PENDIENTE_PAGO: 'PAGO_CONFIRMADO',
   PAGO_CONFIRMADO: 'ESPERA_CIERRE_BIN',
   ESPERA_CIERRE_BIN: 'EN_TRANSITO',
@@ -15,9 +13,10 @@ const NEXT_WHOLESALE_STATE = {
   CANCELADO: 'PENDIENTE_PAGO'
 };
 
-const NEXT_DETAIL_STATE = {
+const NEXT_STATE_DETAIL = {
   PENDIENTE_PAGO: 'PAGO_CONFIRMADO',
   PAGO_CONFIRMADO: 'EN_TRANSITO',
+  ESPERA_CIERRE_BIN: 'EN_TRANSITO',
   EN_TRANSITO: 'ENTREGADO',
   ENTREGADO: 'COMPLETADO',
   COMPLETADO: null,
@@ -29,16 +28,12 @@ const CROWD_MIN_KG = 50;
 const ORDER_LABELS = {
   PENDIENTE_PAGO: 'Pendiente de pago',
   PAGO_CONFIRMADO: 'Pago confirmado',
-  ESPERA_CIERRE_BIN: 'Pagado · esperando cierre del contenedor',
+  ESPERA_CIERRE_BIN: 'Pagado · esperando cierre mayorista',
   EN_TRANSITO: 'En tránsito',
   ENTREGADO: 'Entregado',
   COMPLETADO: 'Completado',
   CANCELADO: 'Cancelado'
 };
-
-const REALIZED_STATES = new Set(['ENTREGADO', 'COMPLETADO']);
-const ACTIVE_WHOLESALE_STATES = new Set(['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'ESPERA_CIERRE_BIN', 'EN_TRANSITO']);
-const ACTIVE_DETAIL_STATES = new Set(['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'EN_TRANSITO']);
 
 const el = {
   chooseDetail: document.getElementById('choose-detail'),
@@ -82,6 +77,7 @@ const el = {
   detailCustomerPhone: document.getElementById('detail-customer-phone'),
 
   openAdmin: document.getElementById('open-admin'),
+  openTracking: document.getElementById('open-tracking'),
   adminModal: document.getElementById('admin-modal'),
   closeAdmin: document.getElementById('close-admin'),
   adminLoginSection: document.getElementById('admin-login-section'),
@@ -94,12 +90,11 @@ const el = {
   mainTabs: Array.from(document.querySelectorAll('.main-tab')),
   adminViews: {
     resumen: document.getElementById('admin-view-resumen'),
-    nuevo: document.getElementById('admin-view-nuevo'),
-    seguimiento: document.getElementById('admin-view-seguimiento'),
-    recaudado: document.getElementById('admin-view-recaudado'),
-    detalle: document.getElementById('admin-view-detalle'),
-    completadas: document.getElementById('admin-view-completadas'),
-    crm: document.getElementById('admin-view-crm')
+    crear: document.getElementById('admin-view-crear'),
+    'seguimiento-mayorista': document.getElementById('admin-view-seguimiento-mayorista'),
+    'seguimiento-detalle': document.getElementById('admin-view-seguimiento-detalle'),
+    terminadas: document.getElementById('admin-view-terminadas'),
+    financiero: document.getElementById('admin-view-financiero')
   },
 
   binForm: document.getElementById('bin-form'),
@@ -118,22 +113,19 @@ const el = {
   detailAdminPrice: document.getElementById('detail-admin-price'),
   detailAdminStock: document.getElementById('detail-admin-stock'),
   detailAdminImage: document.getElementById('detail-admin-image'),
-  clearDetailProductForm: document.getElementById('clear-detail-product-form'),
-  adminWholesaleProducts: document.getElementById('admin-wholesale-products'),
-  adminDetailProducts: document.getElementById('admin-detail-products'),
+  clearDetailForm: document.getElementById('clear-detail-form'),
   adminBinsOpen: document.getElementById('admin-bins-open'),
   adminBinsSold: document.getElementById('admin-bins-sold'),
-  adminDetailPendingOrders: document.getElementById('admin-detail-pending-orders'),
-  adminDetailCompletedOrders: document.getElementById('admin-detail-completed-orders'),
-  detailStatusChart: document.getElementById('detail-status-chart'),
+  adminDetailOrders: document.getElementById('admin-detail-orders'),
+  adminDetailProducts: document.getElementById('admin-detail-products'),
   completedSummary: document.getElementById('completed-summary'),
   completedChannelChart: document.getElementById('completed-channel-chart'),
   completedProductChart: document.getElementById('completed-product-chart'),
   completedSalesList: document.getElementById('completed-sales-list'),
-  crmKpis: document.getElementById('crm-kpis'),
-  crmFunnel: document.getElementById('crm-funnel'),
-  crmNextActions: document.getElementById('crm-next-actions'),
-  crmList: document.getElementById('crm-list'),
+  financialKpis: document.getElementById('financial-kpis'),
+  financialChannelChart: document.getElementById('financial-channel-chart'),
+  financialStatusChart: document.getElementById('financial-status-chart'),
+  financialList: document.getElementById('financial-list'),
 
   kpiGrid: document.getElementById('kpi-grid'),
   kgChart: document.getElementById('kg-chart'),
@@ -144,9 +136,14 @@ const el = {
   purchaseAlertText: document.getElementById('purchase-alert-text'),
   purchaseAlertClose: document.getElementById('purchase-alert-close'),
   toast: document.getElementById('toast')
+  ,
+  trackingView: document.getElementById('tracking-view'),
+  trackingForm: document.getElementById('tracking-form'),
+  trackingPhone: document.getElementById('tracking-phone'),
+  trackingResults: document.getElementById('tracking-results')
 };
 
-const uid = () => (globalThis.crypto?.randomUUID?.() || `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
+const uid = () => crypto.randomUUID();
 const CLP = new Intl.NumberFormat('es-CL');
 let currentAdminView = 'resumen';
 
@@ -178,7 +175,7 @@ function seedDB() {
       id: naranjaId,
       product_name: 'Naranja Valencia',
       variety: 'Valencia tardía',
-      notes: 'Lote uniforme para jugo y mesa. Venta por contenedor completo.',
+      notes: 'Lote uniforme para jugo y mesa. Venta mayorista completa.',
       price_per_kg: 1290,
       capacity_kg: 500,
       sold_kg: 500,
@@ -216,20 +213,69 @@ function saveDB(db) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
 }
 
+function normalizePhone(value = '') {
+  return String(value).replace(/\s+/g, '').trim();
+}
+
 const api = {
   getBins() { return getDB().bins; },
   getBin(id) { return getDB().bins.find((b) => b.id === id); },
   getDetailProducts() { return getDB().detailProducts; },
   getDetailProduct(id) { return getDB().detailProducts.find((p) => p.id === id); },
+  createDetailProduct(payload) {
+    const db = getDB();
+    const product = {
+      id: uid(),
+      name: payload.name,
+      price_per_kg: Number(payload.price_per_kg),
+      stock_kg: Number(payload.stock_kg),
+      image_url: payload.image_url
+    };
+    db.detailProducts.unshift(product);
+    saveDB(db);
+    return product;
+  },
+  updateDetailProduct(productId, payload) {
+    const db = getDB();
+    const product = db.detailProducts.find((p) => p.id === productId);
+    if (!product) throw new Error('Producto detalle no encontrado.');
+    Object.assign(product, {
+      name: payload.name,
+      price_per_kg: Number(payload.price_per_kg),
+      stock_kg: Number(payload.stock_kg),
+      image_url: payload.image_url
+    });
+    saveDB(db);
+    return product;
+  },
   getOrders(channel = null) {
     const orders = getDB().orders;
     return channel ? orders.filter((o) => o.channel === channel) : orders;
   },
+  getOrdersByPhone(phone) {
+    const db = getDB();
+    const needle = normalizePhone(phone);
+    if (!needle) return [];
+    const customerIds = db.users
+      .filter((u) => normalizePhone(u.phone) === needle)
+      .map((u) => u.id);
+    if (!customerIds.length) return [];
+    return db.orders
+      .filter((o) => customerIds.includes(o.customer_id))
+      .map((o) => ({
+        ...o,
+        customer: db.users.find((u) => u.id === o.customer_id),
+        product: o.channel === 'DETALLE'
+          ? db.detailProducts.find((p) => p.id === o.detail_product_id)
+          : db.bins.find((b) => b.id === o.bin_id)
+      }))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  },
   createOrder(binId, payload) {
     const db = getDB();
     const bin = db.bins.find((b) => b.id === binId);
-    if (!bin) throw new Error('Producto mayorista no encontrado.');
-    if (bin.status !== 'OPEN') throw new Error('El producto mayorista no está abierto para compra.');
+    if (!bin) throw new Error('Mayorista no encontrado.');
+    if (bin.status !== 'OPEN') throw new Error('La venta mayorista no está abierta para compra.');
 
     const requestedKg = Number(payload.kg);
     const available = Math.max(0, bin.capacity_kg - bin.sold_kg);
@@ -291,44 +337,11 @@ const api = {
   updateBin(binId, payload) {
     const db = getDB();
     const bin = db.bins.find((b) => b.id === binId);
-    if (!bin) throw new Error('Producto mayorista no encontrado.');
+    if (!bin) throw new Error('Mayorista no encontrado.');
     Object.assign(bin, { product_name: payload.product_name, variety: payload.variety || '', notes: payload.notes || '', price_per_kg: Number(payload.price_per_kg), capacity_kg: Number(payload.capacity_kg), image_url: payload.image_url, status: payload.status });
     if (bin.sold_kg >= bin.capacity_kg) { bin.sold_kg = bin.capacity_kg; bin.status = 'SOLD_OUT'; }
     saveDB(db);
     return bin;
-  },
-  createDetailProduct(payload) {
-    const db = getDB();
-    const product = {
-      id: uid(),
-      name: payload.name,
-      price_per_kg: Number(payload.price_per_kg),
-      stock_kg: Number(payload.stock_kg),
-      image_url: payload.image_url
-    };
-    db.detailProducts.unshift(product);
-    saveDB(db);
-    return product;
-  },
-  updateDetailProduct(productId, payload) {
-    const db = getDB();
-    const product = db.detailProducts.find((p) => p.id === productId);
-    if (!product) throw new Error('Producto detalle no encontrado.');
-    Object.assign(product, {
-      name: payload.name,
-      price_per_kg: Number(payload.price_per_kg),
-      stock_kg: Number(payload.stock_kg),
-      image_url: payload.image_url
-    });
-    saveDB(db);
-    return product;
-  },
-  deleteDetailProduct(productId) {
-    const db = getDB();
-    const usedInOrders = db.orders.some((o) => o.detail_product_id === productId);
-    if (usedInOrders) throw new Error('No se puede eliminar: el producto tiene pedidos asociados.');
-    db.detailProducts = db.detailProducts.filter((p) => p.id !== productId);
-    saveDB(db);
   },
   getOrdersByBin(binId) {
     const db = getDB();
@@ -342,18 +355,17 @@ const api = {
     const db = getDB();
     const order = db.orders.find((o) => o.id === orderId);
     if (!order) throw new Error('Pedido no encontrado.');
-    const allowedStates = order.channel === 'DETALLE' ? DETAIL_ORDER_STATES : WHOLESALE_ORDER_STATES;
-    if (!allowedStates.includes(status)) throw new Error('Estado inválido para este canal.');
+    if (!ORDER_STATES.includes(status)) throw new Error('Estado inválido.');
 
     if (order.channel === 'CROWDBUYING') {
       const bin = db.bins.find((b) => b.id === order.bin_id);
-      if (!bin) throw new Error('Producto mayorista asociado no encontrado.');
+      if (!bin) throw new Error('Mayorista asociado no encontrado.');
 
       const fromCancelled = order.status === 'CANCELADO' && status !== 'CANCELADO';
       const toCancelled = order.status !== 'CANCELADO' && status === 'CANCELADO';
 
       if (status === 'EN_TRANSITO' && bin.sold_kg < bin.capacity_kg) {
-        throw new Error('No puedes despachar hasta completar el contenedor (100% vendido).');
+        throw new Error('No puedes despachar hasta completar el mayorista (100% vendido).');
       }
 
       if (status === 'ESPERA_CIERRE_BIN' && bin.sold_kg >= bin.capacity_kg) {
@@ -406,15 +418,6 @@ function showPurchaseAlert(message) {
 function hidePurchaseAlert() { el.purchaseAlert.classList.add('hidden'); }
 function statusTag(status) { return `<span class="bin-status ${status}">${status}</span>`; }
 
-function nextStateForOrder(order) {
-  return order.channel === 'DETALLE' ? NEXT_DETAIL_STATE[order.status] : NEXT_WHOLESALE_STATE[order.status];
-}
-
-function isActiveOrder(order) {
-  return order.channel === 'DETALLE' ? ACTIVE_DETAIL_STATES.has(order.status) : ACTIVE_WHOLESALE_STATES.has(order.status);
-}
-
-
 function setMode(mode) {
   localStorage.setItem(MODE_KEY, mode);
   el.entryGate.classList.add('hidden');
@@ -422,25 +425,17 @@ function setMode(mode) {
   el.modeTabs.forEach((btn) => btn.classList.toggle('active', btn.dataset.mode === mode));
   el.detailView.classList.toggle('hidden', mode !== 'detail');
   el.crowdView.classList.toggle('hidden', mode !== 'crowd');
+  el.trackingView.classList.remove('hidden');
   document.body.classList.toggle('wholesale-mode', mode === 'crowd');
 }
 
 function initMode() {
-  const params = new URLSearchParams(window.location.search);
-  const queryMode = params.get('mode');
-  const hashMode = window.location.hash.replace('#', '');
-  const forcedMode = queryMode || hashMode;
-
-  if (forcedMode === 'detail' || forcedMode === 'crowd') {
-    setMode(forcedMode);
-    return;
-  }
-
   localStorage.removeItem(MODE_KEY);
   el.entryGate.classList.remove('hidden');
   el.modeTabsWrap.classList.add('hidden');
   el.detailView.classList.add('hidden');
   el.crowdView.classList.add('hidden');
+  el.trackingView.classList.add('hidden');
   document.body.classList.remove('wholesale-mode');
 }
 
@@ -510,7 +505,7 @@ function openOrderModal(binId) {
   el.orderKg.min = String(CROWD_MIN_KG);
   el.orderKg.max = String(available);
   el.orderKg.value = String(Math.min(Math.max(CROWD_MIN_KG, 0), available));
-  el.orderStockHelp.textContent = `${available} kg disponibles para ${bin.product_name}. Mínimo en mayorista: ${CROWD_MIN_KG} kg.`;
+  el.orderStockHelp.textContent = `${available} kg disponibles para ${bin.product_name}. Mínimo mayorista por compra colaborativa: ${CROWD_MIN_KG} kg.`;
   updateSummary(bin, 0);
   el.orderTotal.textContent = `Total: ${money(0)}`;
   el.summaryPanel.classList.remove('hidden');
@@ -551,29 +546,36 @@ function fillAdminForm(bin) {
 function clearAdminForm() {
   el.binForm.reset();
   el.binId.value = '';
-  el.binCapacity.value = "";
+  el.binCapacity.value = '500';
   el.binStatus.value = 'OPEN';
 }
 
+function fillDetailAdminForm(product) {
+  el.detailAdminId.value = product.id;
+  el.detailAdminName.value = product.name;
+  el.detailAdminPrice.value = product.price_per_kg;
+  el.detailAdminStock.value = product.stock_kg;
+  el.detailAdminImage.value = product.image_url;
+}
 
-function clearDetailProductForm() {
-  if (!el.detailProductForm) return;
+function clearDetailAdminForm() {
   el.detailProductForm.reset();
   el.detailAdminId.value = '';
 }
 
-function renderAdminProductCatalog() {
-  if (!el.adminWholesaleProducts || !el.adminDetailProducts) return;
-
-  const wholesale = api.getBins();
-  el.adminWholesaleProducts.innerHTML = wholesale.length
-    ? wholesale.map((p) => `<article class="admin-bin"><div class="admin-row"><div><h4>${p.product_name}</h4><p class="bin-meta">${money(p.price_per_kg)} / kg · ${p.sold_kg}/${p.capacity_kg} kg</p><p class="bin-meta">${p.variety || 'Sin variedad'}</p></div><button class="btn tiny secondary edit-bin" data-id="${p.id}">Editar</button></div></article>`).join('')
-    : '<p class="hint">Sin productos mayoristas creados.</p>';
-
-  const detail = api.getDetailProducts();
-  el.adminDetailProducts.innerHTML = detail.length
-    ? detail.map((p) => `<article class="admin-bin"><div class="admin-row"><div><h4>${p.name}</h4><p class="bin-meta">${money(p.price_per_kg)} / kg · Stock ${p.stock_kg} kg</p></div><div class="order-actions"><button class="btn tiny secondary edit-detail-product" data-id="${p.id}">Editar</button><button class="btn tiny secondary delete-detail-product" data-id="${p.id}">Eliminar</button></div></div></article>`).join('')
-    : '<p class="hint">Sin productos detalle creados.</p>';
+function renderDetailProductsAdmin() {
+  const products = api.getDetailProducts();
+  el.adminDetailProducts.innerHTML = products.length ? products.map((p) => `
+    <article class="admin-bin">
+      <div class="admin-row">
+        <div>
+          <h4>${p.name}</h4>
+          <p class="bin-meta">${money(p.price_per_kg)} / kg · Stock ${p.stock_kg} kg</p>
+        </div>
+        <div><button class="btn secondary edit-detail-product" data-id="${p.id}">Editar</button></div>
+      </div>
+    </article>
+  `).join('') : '<p class="hint">No hay productos detalle creados.</p>';
 }
 
 function computeBinSummary(bin, orders) {
@@ -589,23 +591,24 @@ function computeBinSummary(bin, orders) {
 }
 
 function orderItemTemplate(order, isSoldView) {
-  const next = nextStateForOrder(order);
-  const canMove = Boolean(next) && !REALIZED_STATES.has(order.status);
+  const nextMap = order.channel === 'DETALLE' ? NEXT_STATE_DETAIL : NEXT_STATE_CROWD;
+  const next = nextMap[order.status];
+  const canMove = Boolean(next);
   return `
     <div class="order-item">
       <div><strong>${order.customer?.name || 'Cliente'}</strong><div>${order.kg} kg · ${money(order.total_price)}</div></div>
       <div><span class="order-status ${order.status}">${ORDER_LABELS[order.status]}</span><div>${order.customer?.phone || 'Sin teléfono'} · ${order.customer?.email || ''}</div></div>
       <div class="order-actions">
         ${canMove ? `<button class="btn tiny warn order-next" data-order-id="${order.id}" data-next="${next}">Pasar a: ${ORDER_LABELS[next]}</button>` : ''}
-        ${isActiveOrder(order) ? `<button class="btn tiny secondary order-cancel" data-order-id="${order.id}">Cancelar</button>` : ''}
-        ${isSoldView ? '<span class="hint">Contenedor cerrado</span>' : ''}
+        ${order.status !== 'CANCELADO' && order.status !== 'COMPLETADO' ? `<button class="btn tiny secondary order-cancel" data-order-id="${order.id}">Cancelar</button>` : ''}
+        ${isSoldView ? '<span class="hint">Mayorista cerrado</span>' : ''}
       </div>
     </div>
   `;
 }
 
-function renderAdminBinCard(bin, { isSoldView = false, orderFilter = () => true, listTitle = 'Pedidos' } = {}) {
-  const orders = api.getOrdersByBin(bin.id).filter(orderFilter);
+function renderAdminBinCard(bin, isSoldView = false) {
+  const orders = api.getOrdersByBin(bin.id);
   const available = Math.max(0, bin.capacity_kg - bin.sold_kg);
   const pct = Math.round((bin.sold_kg / bin.capacity_kg) * 100);
   const summary = computeBinSummary(bin, orders);
@@ -619,7 +622,7 @@ function renderAdminBinCard(bin, { isSoldView = false, orderFilter = () => true,
           <p class="bin-meta">Variedad: ${bin.variety || 'No especificada'}</p>
           ${statusTag(bin.status)}
         </div>
-        <div>${isSoldView ? '<span class="hint">Producto mayorista cerrado (sin edición)</span>' : `<button class="btn secondary edit-bin" data-id="${bin.id}">Editar</button>`}</div>
+        <div>${isSoldView ? '<span class="hint">Producto recaudado (sin edición)</span>' : `<button class="btn secondary edit-bin" data-id="${bin.id}">Editar</button>`}</div>
       </div>
       <div class="progress-wrap"><div class="progress-mem" style="--sold:${pct}%"><div class="progress-sold"></div><div class="progress-available"></div></div></div>
       <div class="bin-summary-grid">
@@ -629,17 +632,14 @@ function renderAdminBinCard(bin, { isSoldView = false, orderFilter = () => true,
         <div class="summary-chip"><span>Espera despacho</span><strong>${money(summary.waitingToDispatch)}</strong></div>
       </div>
       ${bin.notes ? `<div class="bin-notes">${bin.notes}</div>` : ''}
-      <div class="order-list"><div class="order-list-title"><span>${listTitle} (${orders.length})</span><span class="badge">Filtrado</span></div>${orders.length === 0 ? '<p class="hint">Sin pedidos para esta etapa.</p>' : orders.map((order) => orderItemTemplate(order, isSoldView)).join('')}</div>
+      <div class="order-list"><strong>Pedidos (${orders.length}):</strong>${orders.length === 0 ? '<p>Sin pedidos.</p>' : orders.map((order) => orderItemTemplate(order, isSoldView)).join('')}</div>
     </article>
   `;
 }
 
 function renderDetailOrdersAdmin() {
   const orders = api.getDetailOrders();
-  const pending = orders.filter((o) => ACTIVE_DETAIL_STATES.has(o.status));
-  const realized = orders.filter((o) => REALIZED_STATES.has(o.status));
-
-  const renderDetailCard = (o) => `
+  el.adminDetailOrders.innerHTML = orders.length ? orders.map((o) => `
     <article class="admin-bin">
       <div class="admin-row">
         <div>
@@ -648,25 +648,37 @@ function renderDetailOrdersAdmin() {
           <span class="order-status ${o.status}">${ORDER_LABELS[o.status]}</span>
         </div>
         <div class="order-actions">
-          ${ACTIVE_DETAIL_STATES.has(o.status) && nextStateForOrder(o) ? `<button class="btn tiny warn order-next" data-order-id="${o.id}" data-next="${nextStateForOrder(o)}">Pasar a: ${ORDER_LABELS[nextStateForOrder(o)]}</button>` : ''}
-          ${ACTIVE_DETAIL_STATES.has(o.status) ? `<button class="btn tiny secondary order-cancel" data-order-id="${o.id}">Cancelar</button>` : ''}
+          ${NEXT_STATE_DETAIL[o.status] ? `<button class="btn tiny warn order-next" data-order-id="${o.id}" data-next="${NEXT_STATE_DETAIL[o.status]}">Pasar a: ${ORDER_LABELS[NEXT_STATE_DETAIL[o.status]]}</button>` : ''}
+          ${o.status !== 'CANCELADO' && o.status !== 'COMPLETADO' ? `<button class="btn tiny secondary order-cancel" data-order-id="${o.id}">Cancelar</button>` : ''}
         </div>
       </div>
     </article>
-  `;
+  `).join('') : '<p class="hint">Sin pedidos detalle aún.</p>';
+}
 
-  el.adminDetailPendingOrders.innerHTML = pending.length ? pending.map(renderDetailCard).join('') : '<p class="hint">Sin pedidos detalle pendientes o en proceso.</p>';
-  el.adminDetailCompletedOrders.innerHTML = realized.length ? realized.map(renderDetailCard).join('') : '<p class="hint">Sin pedidos detalle realizados todavía.</p>';
+function renderTrackingResults(phone) {
+  const orders = api.getOrdersByPhone(phone);
+  if (!orders.length) {
+    el.trackingResults.innerHTML = '<p class="hint">No encontramos pedidos con ese teléfono.</p>';
+    return;
+  }
 
-  const statusCount = orders.reduce((acc, o) => {
-    acc[o.status] = (acc[o.status] || 0) + 1;
-    return acc;
-  }, {});
-  const maxCount = Math.max(1, ...DETAIL_ORDER_STATES.map((state) => statusCount[state] || 0));
-  el.detailStatusChart.innerHTML = DETAIL_ORDER_STATES.map((state) => {
-    const value = statusCount[state] || 0;
-    const w = Math.round((value / maxCount) * 100);
-    return `<div class="bar-row"><span>${ORDER_LABELS[state]}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${value}</strong></div>`;
+  el.trackingResults.innerHTML = orders.map((o) => {
+    const productName = o.channel === 'DETALLE' ? (o.product?.name || 'Producto detalle') : (o.product?.product_name || 'Producto mayorista');
+    return `
+      <article class="tracking-card">
+        <div class="tracking-head">
+          <div>
+            <h4>${productName}</h4>
+            <p class="bin-meta">${o.kg} kg · ${money(o.total_price)} · ${new Date(o.created_at).toLocaleDateString('es-CL')}</p>
+          </div>
+          <div>
+            <span class="channel-badge">${o.channel === 'DETALLE' ? 'Detalle' : 'Mayorista'}</span>
+            <span class="order-status ${o.status}">${ORDER_LABELS[o.status]}</span>
+          </div>
+        </div>
+      </article>
+    `;
   }).join('');
 }
 
@@ -688,8 +700,8 @@ function renderKpisAndCharts() {
   }, {});
 
   el.kpiGrid.innerHTML = `
-    <article class="kpi-card"><p>Mayorista activos</p><strong>${bins.filter((b) => b.status === 'OPEN').length}</strong></article>
-    <article class="kpi-card"><p>Mayorista recaudados</p><strong>${bins.filter((b) => b.status === 'SOLD_OUT').length}</strong></article>
+    <article class="kpi-card"><p>Mayoristas activos</p><strong>${bins.filter((b) => b.status === 'OPEN').length}</strong></article>
+    <article class="kpi-card"><p>Mayoristas recaudados</p><strong>${bins.filter((b) => b.status === 'SOLD_OUT').length}</strong></article>
     <article class="kpi-card"><p>Pedidos mayorista</p><strong>${crowdOrders}</strong></article>
     <article class="kpi-card"><p>Pedidos detalle</p><strong>${detailOrders}</strong></article>
   `;
@@ -701,8 +713,8 @@ function renderKpisAndCharts() {
   el.kgChart.innerHTML = '<div></div><div></div><div></div>';
   el.kgLegend.innerHTML = `<span>Vendido: <strong>${totalSoldKg} kg (${soldPct}%)</strong></span><span>Disponible: <strong>${totalAvailable} kg</strong></span><span>Pagado sin despacho: <strong>${money(statusAmounts.ESPERA_CIERRE_BIN || 0)}</strong></span>`;
 
-  const maxAmount = Math.max(1, ...WHOLESALE_ORDER_STATES.map((state) => statusAmounts[state] || 0));
-  el.amountChart.innerHTML = WHOLESALE_ORDER_STATES.map((state) => {
+  const maxAmount = Math.max(1, ...ORDER_STATES.map((state) => statusAmounts[state] || 0));
+  el.amountChart.innerHTML = ORDER_STATES.map((state) => {
     const value = statusAmounts[state] || 0;
     const w = Math.round((value / maxAmount) * 100);
     return `<div class="bar-row"><span>${ORDER_LABELS[state]}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${money(value)}</strong></div>`;
@@ -756,61 +768,63 @@ function renderCompletedSalesAdmin() {
   }).join('') : '<p class="hint">Aún no hay ventas completadas para mostrar.</p>';
 }
 
-function renderCrmAdmin() {
+function renderFinancialSummary() {
   const db = getDB();
-  const majoristaOrders = db.orders.filter((o) => o.channel === 'CROWDBUYING');
-  const leads = majoristaOrders.filter((o) => o.status === 'PENDIENTE_PAGO').length;
-  const negociacion = majoristaOrders.filter((o) => o.status === 'PAGO_CONFIRMADO' || o.status === 'ESPERA_CIERRE_BIN').length;
-  const cierre = majoristaOrders.filter((o) => o.status === 'EN_TRANSITO' || o.status === 'ENTREGADO' || o.status === 'COMPLETADO').length;
-  const pipeline = leads + negociacion + cierre;
+  const orders = db.orders;
+  const total = orders.reduce((acc, o) => acc + o.total_price, 0);
+  const completed = orders.filter((o) => o.status === 'COMPLETADO' || o.status === 'ENTREGADO').reduce((acc, o) => acc + o.total_price, 0);
+  const pending = orders.filter((o) => o.status !== 'COMPLETADO' && o.status !== 'ENTREGADO' && o.status !== 'CANCELADO').reduce((acc, o) => acc + o.total_price, 0);
+  const cancelled = orders.filter((o) => o.status === 'CANCELADO').reduce((acc, o) => acc + o.total_price, 0);
 
-  el.crmKpis.innerHTML = `
-    <article class="kpi-card"><p>Clientes mayoristas activos</p><strong>${new Set(majoristaOrders.map((o) => o.customer_id)).size}</strong></article>
-    <article class="kpi-card"><p>Pipeline mayorista</p><strong>${pipeline}</strong></article>
-    <article class="kpi-card"><p>Tickets en negociación</p><strong>${negociacion}</strong></article>
-    <article class="kpi-card"><p>Cierres realizados</p><strong>${cierre}</strong></article>
+  const byChannel = orders.reduce((acc, o) => {
+    acc[o.channel] = (acc[o.channel] || 0) + o.total_price;
+    return acc;
+  }, {});
+
+  const byStatus = orders.reduce((acc, o) => {
+    acc[o.status] = (acc[o.status] || 0) + o.total_price;
+    return acc;
+  }, {});
+
+  el.financialKpis.innerHTML = `
+    <article class="kpi-card"><p>Ingresos totales registrados</p><strong>${money(total)}</strong></article>
+    <article class="kpi-card"><p>Ingresos completados</p><strong>${money(completed)}</strong></article>
+    <article class="kpi-card"><p>Ingresos en proceso</p><strong>${money(pending)}</strong></article>
+    <article class="kpi-card"><p>Monto cancelado</p><strong>${money(cancelled)}</strong></article>
   `;
 
-  const funnel = [
-    ['Leads', leads],
-    ['Negociación', negociacion],
-    ['Cierre', cierre]
-  ];
-  const funnelMax = Math.max(1, ...funnel.map(([,v]) => v));
-  el.crmFunnel.innerHTML = funnel.map(([name, value]) => {
-    const w = Math.round((value / funnelMax) * 100);
-    return `<div class="bar-row"><span>${name}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${value}</strong></div>`;
+  const channelMax = Math.max(1, ...Object.values(byChannel), 1);
+  const channels = [['CROWDBUYING', 'Mayorista'], ['DETALLE', 'Detalle']];
+  el.financialChannelChart.innerHTML = channels.map(([key, label]) => {
+    const value = byChannel[key] || 0;
+    const w = Math.round((value / channelMax) * 100);
+    return `<div class="bar-row"><span>${label}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${money(value)}</strong></div>`;
   }).join('');
 
-  const next = majoristaOrders.slice().sort((a,b)=> new Date(a.created_at)-new Date(b.created_at)).slice(0,5);
-  el.crmNextActions.innerHTML = next.length ? next.map((o) => {
-    const cust = db.users.find((u) => u.id === o.customer_id);
-    const label = o.status === 'PENDIENTE_PAGO' ? 'Contactar para cierre de pago' : (o.status === 'PAGO_CONFIRMADO' ? 'Confirmar cierre de contenedor' : 'Coordinar despacho / postventa');
-    return `<div class="bar-row"><span>${cust?.name || 'Cliente'}</span><div>${label}</div><strong>${o.kg} kg</strong></div>`;
-  }).join('') : '<p class="hint">Sin acciones pendientes.</p>';
+  const statusMax = Math.max(1, ...ORDER_STATES.map((state) => byStatus[state] || 0), 1);
+  el.financialStatusChart.innerHTML = ORDER_STATES.map((state) => {
+    const value = byStatus[state] || 0;
+    const w = Math.round((value / statusMax) * 100);
+    return `<div class="bar-row"><span>${ORDER_LABELS[state]}</span><div class="bar-track"><div class="bar-fill" style="--w:${w}%"></div></div><strong>${money(value)}</strong></div>`;
+  }).join('');
 
-  el.crmList.innerHTML = majoristaOrders.length ? majoristaOrders.map((o) => {
-    const cust = db.users.find((u) => u.id === o.customer_id);
-    const bin = db.bins.find((b) => b.id === o.bin_id);
-    return `<article class="admin-bin"><div class="admin-row"><div><h4>${bin?.product_name || 'Producto mayorista'}</h4><p class="bin-meta">${cust?.name || 'Cliente'} · ${cust?.phone || ''} · ${cust?.email || ''}</p><p class="bin-meta">${o.kg} kg · ${money(o.total_price)}</p><span class="order-status ${o.status}">${ORDER_LABELS[o.status]}</span></div><div class="hint">Creado: ${new Date(o.created_at).toLocaleDateString('es-CL')}</div></div></article>`;
-  }).join('') : '<p class="hint">No hay pedidos mayoristas para CRM.</p>';
+  el.financialList.innerHTML = orders.length ? orders.map((o) => {
+    const customer = db.users.find((u) => u.id === o.customer_id);
+    const product = o.channel === 'DETALLE'
+      ? (db.detailProducts.find((p) => p.id === o.detail_product_id)?.name || 'Detalle')
+      : (db.bins.find((b) => b.id === o.bin_id)?.product_name || 'Mayorista');
+    return `<article class="admin-bin"><div class="admin-row"><div><h4>${product}</h4><p class="bin-meta">${o.channel === 'CROWDBUYING' ? 'Mayorista' : 'Detalle'} · ${o.kg} kg · ${money(o.total_price)}</p><span class="order-status ${o.status}">${ORDER_LABELS[o.status]}</span></div><div class="hint">${customer?.name || 'Cliente'} · ${new Date(o.created_at).toLocaleDateString('es-CL')}</div></div></article>`;
+  }).join('') : '<p class="hint">Sin movimientos financieros todavía.</p>';
 }
 
 function bindAdminActions() {
-  document.querySelectorAll('.edit-bin').forEach((btn) => btn.addEventListener('click', () => { const bin = api.getBin(btn.dataset.id); if (bin) { fillAdminForm(bin); switchAdminView('nuevo'); } }));
+  document.querySelectorAll('.edit-bin').forEach((btn) => btn.addEventListener('click', () => { const bin = api.getBin(btn.dataset.id); if (bin) { fillAdminForm(bin); switchAdminView('crear'); } }));
   document.querySelectorAll('.edit-detail-product').forEach((btn) => btn.addEventListener('click', () => {
-    const p = api.getDetailProduct(btn.dataset.id);
-    if (!p) return;
-    el.detailAdminId.value = p.id;
-    el.detailAdminName.value = p.name;
-    el.detailAdminPrice.value = p.price_per_kg;
-    el.detailAdminStock.value = p.stock_kg;
-    el.detailAdminImage.value = p.image_url;
-    switchAdminView('nuevo');
-  }));
-  document.querySelectorAll('.delete-detail-product').forEach((btn) => btn.addEventListener('click', () => {
-    try { api.deleteDetailProduct(btn.dataset.id); renderAll(); toast('Producto detalle eliminado.'); }
-    catch (error) { toast(error.message, true); }
+    const product = api.getDetailProduct(btn.dataset.id);
+    if (product) {
+      fillDetailAdminForm(product);
+      switchAdminView('crear');
+    }
   }));
   document.querySelectorAll('.order-next').forEach((btn) => btn.addEventListener('click', () => {
     try { api.updateOrderStatus(btn.dataset.orderId, btn.dataset.next); renderAll(); toast(`Pedido actualizado: ${ORDER_LABELS[btn.dataset.next]}.`); }
@@ -824,31 +838,15 @@ function bindAdminActions() {
 
 function renderAdminBins() {
   const bins = api.getBins();
-  const binOrders = new Map(bins.map((b) => [b.id, api.getOrdersByBin(b.id)]));
-
-  const selling = bins.filter((b) => {
-    const orders = binOrders.get(b.id) || [];
-    return b.status === 'OPEN' || b.status === 'CLOSED' || orders.some((o) => ACTIVE_WHOLESALE_STATES.has(o.status));
-  });
-
-  const recaudados = bins.filter((b) => {
-    const orders = binOrders.get(b.id) || [];
-    return orders.some((o) => REALIZED_STATES.has(o.status));
-  });
-
-  el.adminBinsOpen.innerHTML = selling.length
-    ? selling.map((bin) => renderAdminBinCard(bin, { isSoldView: false, orderFilter: (o) => ACTIVE_WHOLESALE_STATES.has(o.status), listTitle: 'Pedidos pendientes/en proceso' })).join('')
-    : '<p class="hint">No hay productos mayoristas con pedidos pendientes.</p>';
-
-  el.adminBinsSold.innerHTML = recaudados.length
-    ? recaudados.map((bin) => renderAdminBinCard(bin, { isSoldView: true, orderFilter: (o) => REALIZED_STATES.has(o.status), listTitle: 'Pedidos realizados' })).join('')
-    : '<p class="hint">No hay productos mayoristas con pedidos realizados todavía.</p>';
-
+  const selling = bins.filter((b) => b.status === 'OPEN' || b.status === 'CLOSED');
+  const recaudados = bins.filter((b) => b.status === 'SOLD_OUT');
+  el.adminBinsOpen.innerHTML = selling.length ? selling.map((bin) => renderAdminBinCard(bin, false)).join('') : '<p class="hint">No hay mayoristas en venta.</p>';
+  el.adminBinsSold.innerHTML = recaudados.length ? recaudados.map((bin) => renderAdminBinCard(bin, true)).join('') : '<p class="hint">No hay mayoristas recaudados todavía.</p>';
   renderDetailOrdersAdmin();
+  renderDetailProductsAdmin();
   renderKpisAndCharts();
   renderCompletedSalesAdmin();
-  renderCrmAdmin();
-  renderAdminProductCatalog();
+  renderFinancialSummary();
   bindAdminActions();
 }
 
@@ -865,7 +863,6 @@ function syncAdminView() {
   el.adminPanelSection.classList.toggle('hidden', !isAdmin);
   if (isAdmin) { renderAdminBins(); switchAdminView(currentAdminView); }
 }
-
 
 function renderAll() {
   renderBins();
@@ -902,7 +899,7 @@ el.orderForm.addEventListener('submit', (event) => {
     const bin = api.getBin(el.orderBinId.value);
     closeOrderFlow();
     renderAll();
-    showPurchaseAlert(`Pedido mayorista registrado: ${order.kg} kg de ${bin.product_name} por ${money(order.total_price)}.`);
+    showPurchaseAlert(`Pedido crowdbuying registrado: ${order.kg} kg de ${bin.product_name} por ${money(order.total_price)}.`);
   } catch (error) { toast(error.message, true); }
 });
 
@@ -921,6 +918,13 @@ el.chooseDetail.addEventListener('click', () => setMode('detail'));
 el.chooseCrowd.addEventListener('click', () => setMode('crowd'));
 el.modeTabs.forEach((tab) => tab.addEventListener('click', () => setMode(tab.dataset.mode)));
 
+el.openTracking.addEventListener('click', () => {
+  el.entryGate.classList.add('hidden');
+  el.modeTabsWrap.classList.remove('hidden');
+  el.trackingView.classList.remove('hidden');
+  el.trackingView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
 el.openAdmin.addEventListener('click', () => { syncAdminView(); el.adminModal.showModal(); });
 el.closeOrder.addEventListener('click', closeOrderFlow);
 el.cancelOrderAction.addEventListener('click', closeOrderFlow);
@@ -929,6 +933,12 @@ el.cancelDetailOrderAction.addEventListener('click', closeDetailOrderFlow);
 el.closeAdmin.addEventListener('click', () => el.adminModal.close());
 el.purchaseAlertClose.addEventListener('click', hidePurchaseAlert);
 el.purchaseAlert.addEventListener('click', (event) => { if (event.target === el.purchaseAlert) hidePurchaseAlert(); });
+
+el.trackingForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const phone = normalizePhone(el.trackingPhone.value);
+  renderTrackingResults(phone);
+});
 
 el.adminLoginForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -949,14 +959,14 @@ el.binForm.addEventListener('submit', (event) => {
       image_url: el.binImage.value.trim(),
       status: el.binStatus.value
     };
-    if (el.binId.value) { api.updateBin(el.binId.value, payload); toast('Producto mayorista actualizado correctamente.'); }
-    else { api.createBin(payload); toast('Producto mayorista creado correctamente.'); }
+    if (el.binId.value) { api.updateBin(el.binId.value, payload); toast('Mayorista actualizado correctamente.'); }
+    else { api.createBin(payload); toast('Mayorista creado correctamente.'); }
     clearAdminForm();
     renderAll();
   } catch (error) { toast(error.message, true); }
 });
 
-el.detailProductForm?.addEventListener('submit', (event) => {
+el.detailProductForm.addEventListener('submit', (event) => {
   event.preventDefault();
   try {
     const payload = {
@@ -972,13 +982,13 @@ el.detailProductForm?.addEventListener('submit', (event) => {
       api.createDetailProduct(payload);
       toast('Producto detalle creado correctamente.');
     }
-    clearDetailProductForm();
+    clearDetailAdminForm();
     renderAll();
   } catch (error) { toast(error.message, true); }
 });
 
-el.clearDetailProductForm?.addEventListener('click', clearDetailProductForm);
 el.clearBinForm.addEventListener('click', clearAdminForm);
+el.clearDetailForm.addEventListener('click', clearDetailAdminForm);
 el.mainTabs.forEach((tab) => tab.addEventListener('click', () => switchAdminView(tab.dataset.view)));
 
 initMode();
