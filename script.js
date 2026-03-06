@@ -77,8 +77,7 @@ const el = {
   detailCustomerEmail: document.getElementById('detail-customer-email'),
   detailCustomerPhone: document.getElementById('detail-customer-phone'),
 
-  openAdmin: document.getElementById('open-admin'),
-  openTracking: document.getElementById('open-tracking'),
+  openAdminLink: document.getElementById('open-admin-link'),
   adminModal: document.getElementById('admin-modal'),
   closeAdmin: document.getElementById('close-admin'),
   adminLoginSection: document.getElementById('admin-login-section'),
@@ -957,13 +956,11 @@ el.chooseDetail.addEventListener('click', () => setMainView('detail'));
 el.chooseCrowd.addEventListener('click', () => setMainView('crowd'));
 el.modeTabs.forEach((tab) => tab.addEventListener('click', () => setMainView(tab.dataset.mode)));
 
-el.openTracking.addEventListener('click', () => {
-  setMainView('tracking', { shouldScroll: false });
-  if (!normalizePhone(el.trackingPhone.value)) resetTrackingResults();
-  scrollToModeView('tracking');
+el.openAdminLink.addEventListener('click', (event) => {
+  event.preventDefault();
+  syncAdminView();
+  el.adminModal.showModal();
 });
-
-el.openAdmin.addEventListener('click', () => { syncAdminView(); el.adminModal.showModal(); });
 el.closeOrder.addEventListener('click', closeOrderFlow);
 el.cancelOrderAction.addEventListener('click', closeOrderFlow);
 el.closeDetailOrder.addEventListener('click', closeDetailOrderFlow);
