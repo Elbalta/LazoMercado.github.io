@@ -382,7 +382,6 @@ const api = {
 
     product.stock_kg -= requestedKg;
     db.orders.push(order);
-    syncCrowdOrdersForBin(db, bin);
     saveDB(db);
     return order;
   },
