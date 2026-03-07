@@ -2,11 +2,12 @@ const STORAGE_KEY = 'crowdbuying-db-v5';
 const ADMIN_SESSION_KEY = 'crowdbuying-admin-session';
 const MODE_KEY = 'crowdbuying-mode';
 
-const ORDER_STATES = ['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'ESPERA_CIERRE_BIN', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'];
+const ORDER_STATES = ['PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'ESPERA_CIERRE_BIN', 'PENDIENTE_ENVIO', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'];
 const NEXT_STATE_CROWD = {
   PENDIENTE_PAGO: 'PAGO_CONFIRMADO',
   PAGO_CONFIRMADO: 'ESPERA_CIERRE_BIN',
-  ESPERA_CIERRE_BIN: 'EN_TRANSITO',
+  ESPERA_CIERRE_BIN: 'PENDIENTE_ENVIO',
+  PENDIENTE_ENVIO: 'EN_TRANSITO',
   EN_TRANSITO: 'ENTREGADO',
   ENTREGADO: 'COMPLETADO',
   COMPLETADO: null,
@@ -23,12 +24,13 @@ const NEXT_STATE_DETAIL = {
   CANCELADO: 'PENDIENTE_PAGO'
 };
 
-const CROWD_MIN_KG = 50;
+const DEFAULT_CROWD_MIN_KG = 50;
 
 const ORDER_LABELS = {
   PENDIENTE_PAGO: 'Pendiente de pago',
   PAGO_CONFIRMADO: 'Pago confirmado',
-  ESPERA_CIERRE_BIN: 'Pagado · esperando cierre mayorista',
+  ESPERA_CIERRE_BIN: 'Pago confirmado · esperando cierre mayorista',
+  PENDIENTE_ENVIO: 'Pendiente de envío',
   EN_TRANSITO: 'En tránsito',
   ENTREGADO: 'Entregado',
   COMPLETADO: 'Completado',
@@ -57,6 +59,7 @@ const el = {
   orderForm: document.getElementById('order-form'),
   orderBinId: document.getElementById('order-bin-id'),
   orderKg: document.getElementById('order-kg'),
+  orderKgLabel: document.getElementById('order-kg-label'),
   orderTotal: document.getElementById('order-total'),
   orderStockHelp: document.getElementById('order-stock-help'),
   cancelOrderAction: document.getElementById('cancel-order-action'),
@@ -103,6 +106,7 @@ const el = {
   binVariety: document.getElementById('bin-variety'),
   binPrice: document.getElementById('bin-price'),
   binCapacity: document.getElementById('bin-capacity'),
+  binMinKg: document.getElementById('bin-min-kg'),
   binImage: document.getElementById('bin-image'),
   binStatus: document.getElementById('bin-status'),
   binNotes: document.getElementById('bin-notes'),
@@ -169,6 +173,7 @@ function seedDB() {
       notes: 'Homogénea, ideal para venta por mayor. Se entrega en pallet.',
       price_per_kg: 2690,
       capacity_kg: 500,
+      min_order_kg: 50,
       sold_kg: 320,
       status: 'OPEN',
       image_url: 'https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?auto=format&fit=crop&w=1200&q=80',
@@ -181,6 +186,7 @@ function seedDB() {
       notes: 'Lote uniforme para jugo y mesa. Venta mayorista completa.',
       price_per_kg: 1290,
       capacity_kg: 500,
+      min_order_kg: 50,
       sold_kg: 500,
       status: 'SOLD_OUT',
       image_url: 'https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?auto=format&fit=crop&w=1200&q=80',
@@ -202,14 +208,68 @@ function seedDB() {
   return { users, bins, detailProducts, orders };
 }
 
+function isBinCompleted(bin) {
+  return Boolean(bin) && (bin.status === 'SOLD_OUT' || bin.sold_kg >= bin.capacity_kg);
+}
+
+function syncCrowdOrdersForBin(db, bin) {
+  if (!bin) return false;
+  const completed = isBinCompleted(bin);
+  let changed = false;
+  db.orders.forEach((order) => {
+    if (order.channel !== 'CROWDBUYING' || order.bin_id !== bin.id) return;
+    if (completed && (order.status === 'PAGO_CONFIRMADO' || order.status === 'ESPERA_CIERRE_BIN')) {
+      order.status = 'PENDIENTE_ENVIO';
+      changed = true;
+    }
+    if (!completed && order.status === 'PENDIENTE_ENVIO') {
+      order.status = 'ESPERA_CIERRE_BIN';
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+function getCrowdNextStatus(order, bin) {
+  if (!order) return null;
+  if (order.status === 'PAGO_CONFIRMADO') return isBinCompleted(bin) ? 'PENDIENTE_ENVIO' : 'ESPERA_CIERRE_BIN';
+  if (order.status === 'ESPERA_CIERRE_BIN') return isBinCompleted(bin) ? 'PENDIENTE_ENVIO' : null;
+  return NEXT_STATE_CROWD[order.status] || null;
+}
+
+function normalizeCrowdFlow(db) {
+  let changed = false;
+  db.bins.forEach((bin) => {
+    const minOrder = Number(bin.min_order_kg || DEFAULT_CROWD_MIN_KG);
+    bin.min_order_kg = Math.max(1, Number.isFinite(minOrder) ? minOrder : DEFAULT_CROWD_MIN_KG);
+
+    const clamped = Math.max(0, Math.min(bin.sold_kg, bin.capacity_kg));
+    if (clamped !== bin.sold_kg) {
+      bin.sold_kg = clamped;
+      changed = true;
+    }
+    const shouldBeSoldOut = isBinCompleted(bin);
+    const nextStatus = shouldBeSoldOut ? 'SOLD_OUT' : (bin.status === 'SOLD_OUT' ? 'OPEN' : bin.status);
+    if (bin.status !== nextStatus) {
+      bin.status = nextStatus;
+      changed = true;
+    }
+    if (syncCrowdOrdersForBin(db, bin)) changed = true;
+  });
+  return changed;
+}
+
 function getDB() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
     const initial = seedDB();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+    normalizeCrowdFlow(initial);
+    saveDB(initial);
     return initial;
   }
-  return JSON.parse(raw);
+  const parsed = JSON.parse(raw);
+  if (normalizeCrowdFlow(parsed)) saveDB(parsed);
+  return parsed;
 }
 
 function saveDB(db) {
@@ -282,7 +342,8 @@ const api = {
 
     const requestedKg = Number(payload.kg);
     const available = Math.max(0, bin.capacity_kg - bin.sold_kg);
-    if (requestedKg < CROWD_MIN_KG) throw new Error(`La compra mayorista es desde ${CROWD_MIN_KG} kg por pedido.`);
+    const minKg = Number(bin.min_order_kg || DEFAULT_CROWD_MIN_KG);
+    if (requestedKg < minKg) throw new Error(`La compra mayorista es desde ${minKg} kg por pedido.`);
     if (requestedKg > available) throw new Error(`Stock insuficiente. Solo quedan ${available} kg.`);
 
     const customer = { id: uid(), name: payload.name, email: payload.email, phone: payload.phone, role: 'CUSTOMER', created_at: new Date().toISOString() };
@@ -298,6 +359,7 @@ const api = {
     if (bin.sold_kg >= bin.capacity_kg) { bin.sold_kg = bin.capacity_kg; bin.status = 'SOLD_OUT'; }
 
     db.orders.push(order);
+    syncCrowdOrdersForBin(db, bin);
     saveDB(db);
     return order;
   },
@@ -319,6 +381,7 @@ const api = {
 
     product.stock_kg -= requestedKg;
     db.orders.push(order);
+    syncCrowdOrdersForBin(db, bin);
     saveDB(db);
     return order;
   },
@@ -332,7 +395,7 @@ const api = {
   isAdmin() { return Boolean(localStorage.getItem(ADMIN_SESSION_KEY)); },
   createBin(payload) {
     const db = getDB();
-    const bin = { id: uid(), product_name: payload.product_name, variety: payload.variety || '', notes: payload.notes || '', price_per_kg: Number(payload.price_per_kg), capacity_kg: Number(payload.capacity_kg || 500), sold_kg: 0, status: payload.status || 'OPEN', image_url: payload.image_url, created_at: new Date().toISOString() };
+    const bin = { id: uid(), product_name: payload.product_name, variety: payload.variety || '', notes: payload.notes || '', price_per_kg: Number(payload.price_per_kg), capacity_kg: Number(payload.capacity_kg || 500), min_order_kg: Number(payload.min_order_kg || DEFAULT_CROWD_MIN_KG), sold_kg: 0, status: payload.status || 'OPEN', image_url: payload.image_url, created_at: new Date().toISOString() };
     db.bins.unshift(bin);
     saveDB(db);
     return bin;
@@ -341,7 +404,7 @@ const api = {
     const db = getDB();
     const bin = db.bins.find((b) => b.id === binId);
     if (!bin) throw new Error('Mayorista no encontrado.');
-    Object.assign(bin, { product_name: payload.product_name, variety: payload.variety || '', notes: payload.notes || '', price_per_kg: Number(payload.price_per_kg), capacity_kg: Number(payload.capacity_kg), image_url: payload.image_url, status: payload.status });
+    Object.assign(bin, { product_name: payload.product_name, variety: payload.variety || '', notes: payload.notes || '', price_per_kg: Number(payload.price_per_kg), capacity_kg: Number(payload.capacity_kg), min_order_kg: Number(payload.min_order_kg || DEFAULT_CROWD_MIN_KG), image_url: payload.image_url, status: payload.status });
     if (bin.sold_kg >= bin.capacity_kg) { bin.sold_kg = bin.capacity_kg; bin.status = 'SOLD_OUT'; }
     saveDB(db);
     return bin;
@@ -367,12 +430,21 @@ const api = {
       const fromCancelled = order.status === 'CANCELADO' && status !== 'CANCELADO';
       const toCancelled = order.status !== 'CANCELADO' && status === 'CANCELADO';
 
-      if (status === 'EN_TRANSITO' && bin.sold_kg < bin.capacity_kg) {
-        throw new Error('No puedes despachar hasta completar el mayorista (100% vendido).');
+      const completed = isBinCompleted(bin);
+      if (status === 'EN_TRANSITO' && order.status !== 'PENDIENTE_ENVIO') {
+        throw new Error('Primero debes pasar el pedido a Pendiente de envío.');
       }
 
-      if (status === 'ESPERA_CIERRE_BIN' && bin.sold_kg >= bin.capacity_kg) {
-        status = 'EN_TRANSITO';
+      if (status === 'ESPERA_CIERRE_BIN' && completed) {
+        status = 'PENDIENTE_ENVIO';
+      }
+
+      if (status === 'PAGO_CONFIRMADO' && completed) {
+        status = 'PENDIENTE_ENVIO';
+      }
+
+      if (status === 'PENDIENTE_ENVIO' && !completed) {
+        throw new Error('Aún no se completa el mayorista para liberar despachos.');
       }
 
       if (toCancelled) {
@@ -386,6 +458,8 @@ const api = {
         bin.sold_kg += order.kg;
         if (bin.sold_kg >= bin.capacity_kg) { bin.sold_kg = bin.capacity_kg; bin.status = 'SOLD_OUT'; }
       }
+
+      syncCrowdOrdersForBin(db, bin);
     }
 
     if (order.channel === 'DETALLE') {
@@ -419,7 +493,10 @@ function showPurchaseAlert(message) {
   el.purchaseAlert.classList.remove('hidden');
 }
 function hidePurchaseAlert() { el.purchaseAlert.classList.add('hidden'); }
-function statusTag(status) { return `<span class="bin-status ${status}">${status}</span>`; }
+function statusTag(status) {
+  const labels = { OPEN: 'En venta', CLOSED: 'Pausado', SOLD_OUT: 'Completo 100%' };
+  return `<span class="bin-status ${status}">${labels[status] || status}</span>`;
+}
 
 
 function updateStickyOffsets() {
@@ -478,7 +555,8 @@ function renderBins() {
   el.binsList.innerHTML = bins.map((bin) => {
     const available = Math.max(0, bin.capacity_kg - bin.sold_kg);
     const pct = Math.round((bin.sold_kg / bin.capacity_kg) * 100);
-    const buyDisabled = bin.status !== 'OPEN' || available < CROWD_MIN_KG;
+    const minKg = Number(bin.min_order_kg || DEFAULT_CROWD_MIN_KG);
+    const buyDisabled = bin.status !== 'OPEN' || available < minKg;
 
     return `
       <article class="bin-card">
@@ -489,6 +567,7 @@ function renderBins() {
           <p class="bin-meta">Variedad: <strong>${bin.variety || 'No especificada'}</strong></p>
           <p class="bin-meta">Precio por kilo: <strong>${money(bin.price_per_kg)}</strong></p>
           <p class="bin-meta">Capacidad total: ${bin.capacity_kg} kg</p>
+          <p class="bin-meta">Mínimo por pedido: ${Number(bin.min_order_kg || DEFAULT_CROWD_MIN_KG)} kg</p>
           <div class="progress-wrap">
             <div class="progress-mem" style="--sold:${pct}%"><div class="progress-sold"></div><div class="progress-available"></div></div>
             <div class="progress-text"><span>${bin.sold_kg} kg vendidos</span><span>${available} kg disponibles</span><strong>${pct}% completado</strong></div>
@@ -534,12 +613,14 @@ function openOrderModal(binId) {
   const bin = api.getBin(binId);
   if (!bin) return;
   const available = Math.max(0, bin.capacity_kg - bin.sold_kg);
+  const minKg = Number(bin.min_order_kg || DEFAULT_CROWD_MIN_KG);
   el.orderForm.reset();
   el.orderBinId.value = bin.id;
-  el.orderKg.min = String(CROWD_MIN_KG);
+  el.orderKg.min = String(minKg);
   el.orderKg.max = String(available);
-  el.orderKg.value = String(Math.min(Math.max(CROWD_MIN_KG, 0), available));
-  el.orderStockHelp.textContent = `${available} kg disponibles para ${bin.product_name}. Mínimo mayorista por pedido: ${CROWD_MIN_KG} kg.`;
+  el.orderKg.value = String(Math.min(Math.max(minKg, 0), available));
+  if (el.orderKgLabel) el.orderKgLabel.textContent = `Kilos a comprar (mínimo ${minKg} kg por pedido)`;
+  el.orderStockHelp.textContent = `${available} kg disponibles para ${bin.product_name}. Mínimo por pedido: ${minKg} kg.`;
   updateSummary(bin, 0);
   el.orderTotal.textContent = `Total: ${money(0)}`;
   el.summaryPanel.classList.remove('hidden');
@@ -572,6 +653,7 @@ function fillAdminForm(bin) {
   el.binVariety.value = bin.variety || '';
   el.binPrice.value = bin.price_per_kg;
   el.binCapacity.value = bin.capacity_kg;
+  el.binMinKg.value = Number(bin.min_order_kg || DEFAULT_CROWD_MIN_KG);
   el.binImage.value = bin.image_url;
   el.binStatus.value = bin.status;
   el.binNotes.value = bin.notes || '';
@@ -581,6 +663,7 @@ function clearAdminForm() {
   el.binForm.reset();
   el.binId.value = '';
   el.binCapacity.value = '500';
+  el.binMinKg.value = String(DEFAULT_CROWD_MIN_KG);
   el.binStatus.value = 'OPEN';
 }
 
@@ -619,14 +702,13 @@ function computeBinSummary(bin, orders) {
   orders.forEach((o) => {
     soldAmount += o.total_price;
     if (o.status === 'COMPLETADO') recaudado += o.total_price;
-    if (o.status === 'ESPERA_CIERRE_BIN') waitingToDispatch += o.total_price;
+    if (o.status === 'ESPERA_CIERRE_BIN' || o.status === 'PENDIENTE_ENVIO') waitingToDispatch += o.total_price;
   });
   return { soldAmount, recaudado, waitingToDispatch };
 }
 
-function orderItemTemplate(order, isSoldView) {
-  const nextMap = order.channel === 'DETALLE' ? NEXT_STATE_DETAIL : NEXT_STATE_CROWD;
-  const next = nextMap[order.status];
+function orderItemTemplate(order, isSoldView, bin = null) {
+  const next = order.channel === 'DETALLE' ? NEXT_STATE_DETAIL[order.status] : getCrowdNextStatus(order, bin);
   const canMove = Boolean(next);
   return `
     <div class="order-item">
@@ -656,7 +738,7 @@ function renderAdminBinCard(bin, isSoldView = false) {
           <p class="bin-meta">Variedad: ${bin.variety || 'No especificada'}</p>
           ${statusTag(bin.status)}
         </div>
-        <div>${isSoldView ? '<span class="hint">Producto recaudado (sin edición)</span>' : `<button class="btn secondary edit-bin" data-id="${bin.id}">Editar</button>`}</div>
+        <div>${isSoldView ? '<span class="hint">Lote completo (sin edición)</span>' : `<button class="btn secondary edit-bin" data-id="${bin.id}">Editar</button>`}</div>
       </div>
       <div class="progress-wrap"><div class="progress-mem" style="--sold:${pct}%"><div class="progress-sold"></div><div class="progress-available"></div></div></div>
       <div class="bin-summary-grid">
@@ -666,7 +748,7 @@ function renderAdminBinCard(bin, isSoldView = false) {
         <div class="summary-chip"><span>Espera despacho</span><strong>${money(summary.waitingToDispatch)}</strong></div>
       </div>
       ${bin.notes ? `<div class="bin-notes">${bin.notes}</div>` : ''}
-      <div class="order-list"><strong>Pedidos (${orders.length}):</strong>${orders.length === 0 ? '<p>Sin pedidos.</p>' : orders.map((order) => orderItemTemplate(order, isSoldView)).join('')}</div>
+      <div class="order-list"><strong>Pedidos (${orders.length}):</strong>${orders.length === 0 ? '<p>Sin pedidos.</p>' : orders.map((order) => orderItemTemplate(order, isSoldView, bin)).join('')}</div>
     </article>
   `;
 }
@@ -745,11 +827,12 @@ function renderKpisAndCharts() {
   `;
 
   const soldPct = totalCapacity ? Math.round((totalSoldKg / totalCapacity) * 100) : 0;
-  const waitingPct = statusAmounts.ESPERA_CIERRE_BIN ? Math.min(100, Math.round((statusAmounts.ESPERA_CIERRE_BIN / Math.max(1, Object.values(statusAmounts).reduce((a, b) => a + b, 0))) * 100)) : 0;
+  const waitingAmount = (statusAmounts.ESPERA_CIERRE_BIN || 0) + (statusAmounts.PENDIENTE_ENVIO || 0);
+  const waitingPct = waitingAmount ? Math.min(100, Math.round((waitingAmount / Math.max(1, Object.values(statusAmounts).reduce((a, b) => a + b, 0))) * 100)) : 0;
   el.kgChart.style.setProperty('--part1', `${soldPct}%`);
   el.kgChart.style.setProperty('--part2', `${waitingPct}%`);
   el.kgChart.innerHTML = '<div></div><div></div><div></div>';
-  el.kgLegend.innerHTML = `<span>Vendido: <strong>${totalSoldKg} kg (${soldPct}%)</strong></span><span>Disponible: <strong>${totalAvailable} kg</strong></span><span>Pagado sin despacho: <strong>${money(statusAmounts.ESPERA_CIERRE_BIN || 0)}</strong></span>`;
+  el.kgLegend.innerHTML = `<span>Vendido: <strong>${totalSoldKg} kg (${soldPct}%)</strong></span><span>Disponible: <strong>${totalAvailable} kg</strong></span><span>Pendiente de envío: <strong>${money(waitingAmount)}</strong></span>`;
 
   const maxAmount = Math.max(1, ...ORDER_STATES.map((state) => statusAmounts[state] || 0));
   el.amountChart.innerHTML = ORDER_STATES.map((state) => {
@@ -912,8 +995,9 @@ el.orderKg.addEventListener('input', () => {
   const bin = api.getBin(el.orderBinId.value);
   if (!bin) return;
   const available = Math.max(0, bin.capacity_kg - bin.sold_kg);
+  const minKg = Number(bin.min_order_kg || DEFAULT_CROWD_MIN_KG);
   const kg = Number(el.orderKg.value || 0);
-  const safeKg = Math.min(Math.max(kg, CROWD_MIN_KG), available);
+  const safeKg = Math.min(Math.max(kg, minKg), available);
   if (kg !== safeKg) el.orderKg.value = String(safeKg);
   el.orderTotal.textContent = `Total: ${money(safeKg * bin.price_per_kg)}`;
   el.summaryProduct.textContent = bin.product_name;
@@ -1003,6 +1087,7 @@ el.binForm.addEventListener('submit', (event) => {
       notes: el.binNotes.value.trim(),
       price_per_kg: Number(el.binPrice.value),
       capacity_kg: Number(el.binCapacity.value || 500),
+      min_order_kg: Number(el.binMinKg.value || DEFAULT_CROWD_MIN_KG),
       image_url: el.binImage.value.trim(),
       status: el.binStatus.value
     };
