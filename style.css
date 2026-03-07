@@ -181,12 +181,13 @@ h1 { font-size: 1.5rem; }
 .bin-notes { padding: 0.5rem; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; color: #334155; font-size: 0.82rem; }
 .bin-status { width: fit-content; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; padding: 0.2rem 0.45rem; border-radius: 999px; background: #eff6ff; color: #1e3a8a; }
 .bin-status.CLOSED { background: #fff7ed; color: #9a3412; }
-.bin-status.SOLD_OUT { background: #fef2f2; color: #991b1b; }
+.bin-status.SOLD_OUT { background: #ecfdf5; color: #047857; }
 .order-status { font-size: 0.74rem; border-radius: 999px; padding: 0.15rem 0.45rem; font-weight: 700; }
 .order-status.PENDIENTE_PAGO { background: #eff6ff; color: #1e40af; }
 .order-status.PAGO_CONFIRMADO { background: #e0f2fe; color: #0c4a6e; }
 .order-status.ESPERA_CIERRE_BIN { background: #fef9c3; color: #854d0e; }
-.order-status.EN_TRANSITO { background: #fff7ed; color: #9a3412; }
+.order-status.PENDIENTE_ENVIO { background: #dcfce7; color: #166534; }
+.order-status.EN_TRANSITO { background: #e0f2fe; color: #075985; }
 .order-status.ENTREGADO { background: #f0fdf4; color: #166534; }
 .order-status.COMPLETADO { background: #ecfdf5; color: #047857; }
 .order-status.CANCELADO { background: #fef2f2; color: #b91c1c; }
@@ -250,22 +251,23 @@ input, select, textarea { width: 100%; padding: 0.56rem; border-radius: 8px; bor
 .bar-fill { height: 100%; border-radius: inherit; width: var(--w, 0%); background: linear-gradient(90deg, #38bdf8, #2563eb); }
 .admin-form { margin-top: 0.75rem; border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.65rem; }
 .admin-divider {
-  margin: 0.95rem 0 0.35rem;
-  border-top: 1px dashed #cbd5e1;
+  margin: 1.05rem 0 0.45rem;
+  border-top: 2px solid #94a3b8;
   position: relative;
   display: flex;
   justify-content: center;
 }
 .admin-divider span {
   position: relative;
-  top: -0.62rem;
-  padding: 0.12rem 0.65rem;
-  border: 1px solid #dbe3ef;
+  top: -0.78rem;
+  padding: 0.2rem 0.75rem;
+  border: 1px solid #94a3b8;
   border-radius: 999px;
-  background: #fff;
-  color: #475569;
-  font-size: 0.78rem;
-  font-weight: 700;
+  background: linear-gradient(120deg, #eff6ff, #dbeafe);
+  color: #1e3a8a;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
 }
 .span-all { grid-column: 1 / -1; }
 .admin-bins { margin-top: 0.75rem; display: grid; gap: 0.6rem; }
