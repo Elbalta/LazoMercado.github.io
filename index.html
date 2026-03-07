@@ -21,8 +21,8 @@
     <section id="entry-gate" class="panel gate-panel">
       <div class="gate-hero">
         <p class="gate-kicker">Elige cómo quieres comprar</p>
-        <h2>Elige tu forma de compra en 1 paso</h2>
-        <p class="hint">Tienes 2 opciones: <strong>Compra al detalle</strong> para pedidos rápidos y <strong>Compra mayorista</strong> desde 50 kg por pedido. En mayorista, compras en grupo para acceder a un mejor precio por kilo.</p>
+        <h2><strong>Elige cómo</strong> quieres comprar</h2>
+        <p class="hint">Tenemos 2 caminos para ti: <strong>Compra al detalle</strong> o <strong>Compra mayorista</strong>. Elige según la cantidad que necesitas y el tipo de compra que prefieres.</p>
       </div>
 
       <div class="gate-options">
@@ -30,11 +30,11 @@
           <div class="gate-image" style="background-image:url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80')"></div>
           <div class="gate-content">
             <h3>Compra al detalle</h3>
-            <p>Ideal para compras pequeñas y rápidas, sin depender de otros compradores.</p>
+            <p>Compra <strong>directa por kilo</strong>. Ideal si necesitas poca cantidad y despacho rápido.</p>
             <ul>
               <li>✔ Compra directa por kilo</li>
               <li>✔ Desde 1 kg</li>
-              <li>✔ Despacho inmediato según stock</li>
+              <li>✔ Entrega según disponibilidad</li>
             </ul>
             <button id="choose-detail" class="btn">Entrar a detalle</button>
           </div>
@@ -46,11 +46,11 @@
           <div class="gate-image" style="background-image:url('https://images.unsplash.com/photo-1518843875459-f738682238a6?auto=format&fit=crop&w=1200&q=80')"></div>
           <div class="gate-content">
             <h3>Compra mayorista</h3>
-            <p>Te unes a un grupo de compradores para completar una meta de kilos. Mientras la barra avanza, se suman los pedidos del grupo. Cuando la barra llega al 100%, se cierra la compra mayorista, se confirma el precio final y se liberan los despachos.</p>
+            <p>Únete a otros <strong>compradores</strong> para completar una compra grande y <strong>obtener un mejor precio por kilo</strong>. Cada persona reserva la cantidad que necesita y el sistema va <strong>sumando los pedidos</strong> del grupo.</p>
             <ul>
-              <li>✔ Mayorista = desde 50 kg por pedido</li>
-              <li>✔ Mejor precio por volumen</li>
-              <li>✔ Ves el avance del grupo en tiempo real</li>
+              <li>✔ Compra desde 50 kg</li>
+              <li>✔ Precio más bajo por volumen</li>
+              <li>✔ Avance del grupo en tiempo real</li>
             </ul>
             <button id="choose-crowd" class="btn">Entrar a mayorista</button>
           </div>
@@ -94,11 +94,11 @@
     <section id="tracking-view" class="panel hidden">
       <div class="panel-header centered">
         <h2>Seguimiento de pedidos</h2>
-        <p>Consulta el estado de tus pedidos con tu teléfono.</p>
+        <p>Revisa el estado de tus pedidos usando tu número de teléfono.</p>
       </div>
       <form id="tracking-form" class="tracking-form">
         <label>Teléfono
-          <input id="tracking-phone" placeholder="Ej: +56999888777" required />
+          <input id="tracking-phone" placeholder="Ej. +5699988777" required />
         </label>
         <div class="tracking-actions">
           <button class="btn" type="submit">Buscar pedidos</button>
@@ -119,7 +119,7 @@
       <label>Nombre<input id="customer-name" required /></label>
       <label>Email<input id="customer-email" type="email" required /></label>
       <label>Teléfono<input id="customer-phone" required /></label>
-      <label>Kilos a comprar (mínimo 50 kg por pedido)<input id="order-kg" type="number" min="50" step="1" required /></label>
+      <label id="order-kg-label">Kilos a comprar<input id="order-kg" type="number" min="1" step="1" required /></label>
       <p id="order-stock-help" class="hint"></p>
       <p id="order-total" class="total-preview">Total: $0</p>
       <div class="modal-actions">
@@ -165,7 +165,6 @@
       </div>
 
       <section id="admin-login-section">
-        <p class="hint">Credenciales de prueba: admin@lazo.cl / admin123</p>
         <form id="admin-login-form" class="stack">
           <label>Email<input id="admin-email" type="email" required /></label>
           <label>Contraseña<input id="admin-password" type="password" required /></label>
@@ -204,13 +203,13 @@
         </section>
 
         <section id="admin-view-crear" class="admin-view hidden">
-          <p class="hint">Crea o edita productos para ambos canales: mayorista y detalle.</p>
           <form id="bin-form" class="admin-form">
             <input type="hidden" id="bin-id" />
             <label>Producto<input id="bin-product" required /></label>
             <label>Variedad / calibre<input id="bin-variety" placeholder="Ej: Hass, calibre 22" /></label>
             <label>Precio por kilo<input id="bin-price" type="number" min="1" required /></label>
             <label>Capacidad (kg)<input id="bin-capacity" type="number" min="1" value="500" required /></label>
+            <label>Mínimo por pedido (kg)<input id="bin-min-kg" type="number" min="1" value="50" required /></label>
             <label>Imagen URL<input id="bin-image" type="url" required /></label>
             <label>Estado
               <select id="bin-status">
@@ -244,9 +243,7 @@
         </section>
 
         <section id="admin-view-seguimiento-mayorista" class="admin-view hidden">
-          <p class="hint">Revisa los mayoristas activos y sus pedidos. Desde aquí puedes avanzar estados o cancelar pedidos.</p>
           <div id="admin-bins-open" class="admin-bins"></div>
-          <p class="hint">Mayoristas completados (sin edición de producto). Si hubo un error, puedes corregir los estados de los pedidos.</p>
           <div id="admin-bins-sold" class="admin-bins"></div>
         </section>
 
