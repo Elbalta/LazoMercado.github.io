@@ -1,5 +1,5 @@
 window.APP_CONFIG = Object.freeze({
-  SUPABASE_URL: 'https://sykfeqccxqthrqjljpgx.supabase.co',
-  SUPABASE_PUBLISHABLE_KEY: 'PEGAR_AQUÍ_MI_PUBLISHABLE_KEY',
+  SUPABASE_URL: 'https://TU-PROYECTO.supabase.co',
+  SUPABASE_PUBLISHABLE_KEY: 'TU_CLAVE_PUBLICABLE',
   WHATSAPP_NUMBER: '569XXXXXXXX'
 });
