@@ -1,6 +1,6 @@
 # Lazo Mercado 2.0
 
-Aplicación web en HTML, CSS y JavaScript puro. La **Etapa 1 de migración** mantiene la interfaz y el almacenamiento local existentes, y agrega el modelo inicial de PostgreSQL para Supabase. Todavía no conecta pedidos, pagos, clientes, WhatsApp, autenticación ni administración desde el navegador.
+Aplicación web en HTML, CSS y JavaScript puro conectada a PostgreSQL mediante Supabase. La Etapa 2 elimina `localStorage` y registra en la base de datos los clientes, pedidos, pagos, entregas, productos, lotes y estados operacionales.
 
 ## Configuración del cliente Supabase
 
@@ -8,7 +8,7 @@ Aplicación web en HTML, CSS y JavaScript puro. La **Etapa 1 de migración** man
 2. Completa únicamente una clave **publicable** de Supabase. Nunca expongas `service_role`, secretos ni contraseñas de PostgreSQL en el frontend.
 3. Sirve el proyecto con un servidor HTTP estático.
 
-## Instalar la Etapa 1 en Supabase
+## Instalar en Supabase
 
 Desde **Supabase Dashboard → SQL Editor**, ejecuta los archivos completos en este orden:
 
@@ -16,8 +16,24 @@ Desde **Supabase Dashboard → SQL Editor**, ejecuta los archivos completos en e
 2. [`supabase/functions.sql`](supabase/functions.sql): funciones transaccionales para confirmar pagos mayoristas y asumir manualmente el remanente permitido de un lote.
 3. [`supabase/security.sql`](supabase/security.sql): RLS, lectura pública limitada y permisos de ejecución administrativos.
 4. [`supabase/seed.sql`](supabase/seed.sql) **opcional**: un producto y un lote publicados para comprobar lecturas.
+5. [`supabase/stage2-orders-api.sql`](supabase/stage2-orders-api.sql): stock al detalle, usuarios administradores, registro transaccional de pedidos, seguimiento por teléfono, confirmación de pagos y políticas administrativas.
 
-Los scripts están pensados para un proyecto nuevo y se ejecutan dentro de transacciones. Si una sentencia falla, revisa el error antes de volver a ejecutar; no ejecutes `schema.sql` dos veces sobre el mismo esquema sin antes preparar una migración de actualización.
+`stage2-orders-api.sql` puede aplicarse sobre una Etapa 1 existente. No vuelvas a ejecutar `schema.sql` si las tablas ya existen.
+
+## Administrador
+
+1. Crea el usuario en **Authentication → Users**.
+2. Ejecuta la inserción comentada al final de `stage2-orders-api.sql`, usando el email real del administrador.
+3. El panel usa `signInWithPassword`; ninguna contraseña queda escrita en el repositorio.
+
+## Flujo de pedidos
+
+- `place_customer_order` valida el producto, lote, cantidad, stock, pago y entrega dentro de una transacción.
+- Registra o actualiza al cliente, crea el pedido, crea el pago y guarda el detalle de entrega.
+- En ventas al detalle reserva stock inmediatamente.
+- En mayorista el cupo se consolida al confirmar el pago, usando la función transaccional original.
+- `orders_by_phone` permite al cliente consultar el estado de su solicitud.
+- Las acciones administrativas requieren una sesión incluida en `admin_users` y están protegidas con RLS.
 
 ## Seguridad inicial
 
