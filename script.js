@@ -66,11 +66,13 @@ const el = {
   },
   binForm: q('bin-form'), binId: q('bin-id'), binProduct: q('bin-product'),
   binVariety: q('bin-variety'), binPrice: q('bin-price'), binCapacity: q('bin-capacity'),
-  binMinKg: q('bin-min-kg'), binImage: q('bin-image'), binStatus: q('bin-status'),
+  binMinKg: q('bin-min-kg'), binImageFile: q('bin-image-file'),
+  binImagePreview: q('bin-image-preview'), binImageEmpty: q('bin-image-empty'), binStatus: q('bin-status'),
   binNotes: q('bin-notes'), clearBinForm: q('clear-bin-form'),
   detailProductForm: q('detail-product-form'), detailAdminId: q('detail-admin-id'),
   detailAdminName: q('detail-admin-name'), detailAdminPrice: q('detail-admin-price'),
-  detailAdminStock: q('detail-admin-stock'), detailAdminImage: q('detail-admin-image'),
+  detailAdminStock: q('detail-admin-stock'), detailAdminImageFile: q('detail-admin-image-file'),
+  detailAdminImagePreview: q('detail-admin-image-preview'), detailAdminImageEmpty: q('detail-admin-image-empty'),
   clearDetailForm: q('clear-detail-form'), adminDetailProducts: q('admin-detail-products'),
   adminBinsOpen: q('admin-bins-open'), adminBinsSold: q('admin-bins-sold'),
   adminDetailOrders: q('admin-detail-orders'), kpiGrid: q('kpi-grid'),
@@ -92,6 +94,46 @@ const safeImage = (value = '') => {
   try { const url = new URL(value); return ['https:', 'http:'].includes(url.protocol) ? url.href : ''; }
   catch { return ''; }
 };
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+function showImagePreview(image, empty, source = '') {
+  const url = safeImage(source);
+  image.src = url;
+  image.classList.toggle('hidden', !url);
+  empty.classList.toggle('hidden', Boolean(url));
+}
+
+function previewSelectedImage(input, image, empty) {
+  const file = input.files?.[0];
+  if (!file) return;
+  if (!ALLOWED_IMAGE_TYPES.has(file.type) || file.size > MAX_IMAGE_SIZE) {
+    input.value = '';
+    toast('La imagen debe ser JPG, PNG o WebP y pesar como máximo 5 MB.', true);
+    return;
+  }
+  const previewUrl = URL.createObjectURL(file);
+  image.onload = () => URL.revokeObjectURL(previewUrl);
+  image.src = previewUrl;
+  image.classList.remove('hidden');
+  empty.classList.add('hidden');
+}
+
+async function uploadProductImage(file) {
+  if (!file) return null;
+  if (!ALLOWED_IMAGE_TYPES.has(file.type) || file.size > MAX_IMAGE_SIZE) {
+    throw new Error('La imagen debe ser JPG, PNG o WebP y pesar como máximo 5 MB.');
+  }
+  const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+  const path = `${crypto.randomUUID()}.${extension}`;
+  const { error } = await db.storage.from('product-images').upload(path, file, {
+    cacheControl: '3600', upsert: false, contentType: file.type
+  });
+  if (error) throw error;
+  const { data } = db.storage.from('product-images').getPublicUrl(path);
+  return data.publicUrl;
+}
 
 function toast(message, error = false) {
   el.toast.textContent = message;
@@ -258,7 +300,7 @@ async function trackOrders(event) {
     const { data, error } = await db.rpc('orders_by_phone', { p_phone: el.trackingPhone.value });
     if (error) throw error;
     el.trackingResults.innerHTML = data?.length ? data.map((order) => `
-      <article class="tracking-card"><div class="tracking-head"><div><strong>${escapeHTML(order.product_name)}</strong><p class="bin-meta">Pedido ${escapeHTML(String(order.id).slice(0, 8))} · ${new Date(order.created_at).toLocaleString('es-CL')}</p></div><span class="channel-badge">${order.channel === 'DETALLE' ? 'Detalle' : 'Mayorista'}</span></div>
+      <article class="tracking-card"><div class="tracking-head"><div><strong>${escapeHTML(order.product_name)}</strong><p class="bin-meta">Pedido ${escapeHTML(String(order.id).slice(0, 8))} · ${new Date(order.created_at).toLocaleString('es-CL')}</p></div><span class="channel-badge">${order.channel === 'retail' ? 'Detalle' : 'Mayorista'}</span></div>
       <p>${number(order.equivalent_kg)} kg · ${money(order.total_amount)} · ${escapeHTML(order.payment_status)}</p><span class="order-status ${escapeHTML(order.operational_status)}">${escapeHTML(ORDER_LABELS[order.operational_status] || order.operational_status)}</span></article>`).join('')
       : '<p class="hint">No encontramos pedidos con ese teléfono.</p>';
   } catch (error) {
@@ -280,70 +322,12 @@ async function syncAdmin() {
   try { state.isAdmin = await isCurrentUserAdmin(); }
   catch { state.isAdmin = false; }
   el.adminLoginSection.classList.toggle('hidden', state.isAdmin);
-  el.adminPanelSection.classList.toggle('hidden', !state.isAdmin);
-  if (state.isAdmin) await loadAdminData();
-}
-
-async function loginAdmin(event) {
-  event.preventDefault();
-  setBusy(el.adminLoginForm, true);
-  try {
-    const { error } = await db.auth.signInWithPassword({ email: el.adminEmail.value.trim(), password: el.adminPassword.value });
-    if (error) throw error;
-    if (!(await isCurrentUserAdmin())) {
-      await db.auth.signOut();
-      throw new Error('La cuenta no tiene permisos de administrador.');
-    }
-    el.adminLoginForm.reset();
-    await syncAdmin();
-    toast('Sesión administrativa iniciada.');
-  } catch (error) { toast(errorMessage(error), true); }
-  finally { setBusy(el.adminLoginForm, false); }
-}
-
-async function loadAdminData() {
-  const [productsResult, lotsResult, ordersResult, customersResult] = await Promise.all([
-    db.from('products').select('*').order('created_at', { ascending: false }),
-    db.from('lots').select('*, product:products(*)').order('created_at', { ascending: false }),
-    db.from('orders').select('*, product:products(*), customer:customers(*), lot:lots(*)').order('created_at', { ascending: false }),
-    db.from('customers').select('*').order('created_at', { ascending: false })
-  ]);
-  const failed = [productsResult, lotsResult, ordersResult, customersResult].find((result) => result.error);
-  if (failed) throw failed.error;
-  const details = (productsResult.data || []).map((product) => ({
-    ...product, id: product.id, product_id: product.id, channel: 'DETALLE',
-    price_per_kg: product.detail_price, stock_kg: product.retail_stock_kg,
-    status: Number(product.retail_stock_kg) > 0 ? 'OPEN' : 'SOLD_OUT'
-  }));
-  const wholesale = (lotsResult.data || []).map((lot) => ({
-    ...lot, id: lot.id, lot_id: lot.id, channel: 'CROWDBUYING', name: lot.product?.name || 'Producto',
-    variety: lot.product?.variety || '', notes: lot.product?.description || '', image_url: lot.product?.image_url || '',
-    price_per_kg: lot.wholesale_price, capacity_kg: lot.total_capacity_kg, min_order_kg: lot.minimum_purchase_kg,
-    sold_kg: Number(lot.customer_paid_kg) + Number(lot.market_assumed_kg),
-    status: lot.status === 'open' ? 'OPEN' : ['full', 'closed'].includes(lot.status) ? 'SOLD_OUT' : 'CLOSED'
-  }));
-  state.products = [...wholesale, ...details];
-  state.orders = (ordersResult.data || []).map((order) => ({
-    ...order, channel: order.channel === 'wholesale' ? 'CROWDBUYING' : 'DETALLE',
-    kg: order.equivalent_kg, total_price: order.total_amount,
-    status: order.operational_status
-  }));
-  state.customers = customersResult.data || [];
-  renderProducts();
-  renderAdmin();
-}
-
-function orderActions(order) {
-  if (order.status === 'COMPLETADO') return '';
-  let next = NEXT_DETAIL[order.status];
-  if (order.channel === 'CROWDBUYING' && order.status === 'ESPERANDO_COMPRA_GRUPAL' && order.lot?.status !== 'full') next = null;
-  const action = next === 'CONFIRM_PAYMENT' ? 'confirm-payment' : 'order-status';
-  const label = next === 'CONFIRM_PAYMENT' ? 'Confirmar pago' : 'Avanzar';
+  el.adminPanelSection.classList.toggle('hidden', !st…874 tokens truncated…Confirmar pago' : 'Avanzar';
   return `<div class="order-actions">${next ? `<button class="btn tiny" type="button" data-action="${action}" data-id="${order.id}" data-status="${next}">${label}</button>` : ''}${order.status !== 'CANCELADO' ? `<button class="btn tiny warn" type="button" data-action="order-status" data-id="${order.id}" data-status="CANCELADO">Cancelar</button>` : ''}</div>`;
 }
 
 function orderAdminCard(order) {
-  return `<article class="admin-bin"><div class="admin-row"><div><strong>${escapeHTML(order.product?.name || 'Producto')}</strong><p class="bin-meta">${escapeHTML(order.customer?.name || '')} · ${escapeHTML(order.customer?.phone || '')} · ${number(order.kg)} kg · ${money(order.total_price)}</p></div><span class="order-status ${escapeHTML(order.status)}">${escapeHTML(ORDER_LABELS[order.status] || order.status)}</span></div>${orderActions(order)}</article>`;
+  return `<article class="admin-bin"><div class="admin-row"><div><strong>${escapeHTML(order.product?.name || 'Producto')}</strong><p class="bin-meta">${escapeHTML(order.customer?.full_name || '')} · ${escapeHTML(order.customer?.phone || '')} · ${number(order.kg)} kg · ${money(order.total_price)}</p></div><span class="order-status ${escapeHTML(order.status)}">${escapeHTML(ORDER_LABELS[order.status] || order.status)}</span></div>${orderActions(order)}</article>`;
 }
 
 function productAdminCard(product) {
@@ -401,13 +385,17 @@ function switchAdminView(view) {
   el.mainTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.view === view));
 }
 
-function clearBinForm() { el.binForm.reset(); el.binId.value = ''; el.binCapacity.value = 500; el.binMinKg.value = 50; }
-function clearDetailForm() { el.detailProductForm.reset(); el.detailAdminId.value = ''; }
+function clearBinForm() { el.binForm.reset(); el.binId.value = ''; el.binCapacity.value = 500; el.binMinKg.value = 50; showImagePreview(el.binImagePreview, el.binImageEmpty); }
+function clearDetailForm() { el.detailProductForm.reset(); el.detailAdminId.value = ''; showImagePreview(el.detailAdminImagePreview, el.detailAdminImageEmpty); }
 
 async function saveWholesale(event) {
   event.preventDefault(); setBusy(el.binForm, true);
   try {
-    const productPayload = { name: el.binProduct.value.trim(), variety: el.binVariety.value.trim(), description: el.binNotes.value.trim(), image_url: el.binImage.value.trim(), sale_unit: 'kilo', equivalent_weight_kg: 1, wholesale_price: Number(el.binPrice.value), detail_price: Number(el.binPrice.value), minimum_quantity: 1, season_status: 'available', is_published: true };
+    const current = el.binId.value ? productById(el.binId.value) : null;
+    const uploadedImage = await uploadProductImage(el.binImageFile.files?.[0]);
+    const imageUrl = uploadedImage || current?.image_url || '';
+    if (!imageUrl) throw new Error('Selecciona una imagen para el producto.');
+    const productPayload = { name: el.binProduct.value.trim(), variety: el.binVariety.value.trim(), description: el.binNotes.value.trim(), image_url: imageUrl, sale_unit: 'kilo', equivalent_weight_kg: 1, wholesale_price: Number(el.binPrice.value), detail_price: Number(el.binPrice.value), minimum_quantity: 1, season_status: 'available', is_published: true };
     const lotPayload = { total_capacity_kg: Number(el.binCapacity.value), minimum_purchase_kg: Number(el.binMinKg.value), wholesale_price: Number(el.binPrice.value), opens_at: new Date().toISOString(), initial_deadline: new Date(Date.now() + 7 * 86400000).toISOString(), market_assumption_max_percent: 20, status: el.binStatus.value === 'OPEN' ? 'open' : el.binStatus.value === 'SOLD_OUT' ? 'full' : 'closed', is_published: true };
     if (el.binId.value) {
       const item = productById(el.binId.value);
@@ -431,8 +419,11 @@ async function saveWholesale(event) {
 async function saveDetail(event) {
   event.preventDefault(); setBusy(el.detailProductForm, true);
   const current = el.detailAdminId.value ? productById(el.detailAdminId.value) : null;
-  const payload = { name: el.detailAdminName.value.trim(), variety: current?.variety || '', description: current?.notes || '', image_url: el.detailAdminImage.value.trim(), sale_unit: 'kilo', equivalent_weight_kg: 1, wholesale_price: Number(current?.wholesale_price || el.detailAdminPrice.value), detail_price: Number(el.detailAdminPrice.value), minimum_quantity: 1, retail_stock_kg: Number(el.detailAdminStock.value), season_status: 'available', is_published: true };
   try {
+    const uploadedImage = await uploadProductImage(el.detailAdminImageFile.files?.[0]);
+    const imageUrl = uploadedImage || current?.image_url || '';
+    if (!imageUrl) throw new Error('Selecciona una imagen para el producto.');
+    const payload = { name: el.detailAdminName.value.trim(), variety: current?.variety || '', description: current?.notes || '', image_url: imageUrl, sale_unit: 'kilo', equivalent_weight_kg: 1, wholesale_price: Number(current?.wholesale_price || el.detailAdminPrice.value), detail_price: Number(el.detailAdminPrice.value), minimum_quantity: 1, retail_stock_kg: Number(el.detailAdminStock.value), season_status: 'available', is_published: true };
     const query = el.detailAdminId.value ? db.from('products').update(payload).eq('id', el.detailAdminId.value) : db.from('products').insert(payload);
     const { error } = await query; if (error) throw error;
     clearDetailForm(); await loadAdminData(); toast('Producto al detalle guardado.');
@@ -445,10 +436,12 @@ function editProduct(id) {
   if (product.channel === 'CROWDBUYING') {
     el.binId.value = product.id; el.binProduct.value = product.name; el.binVariety.value = product.variety;
     el.binNotes.value = product.notes; el.binPrice.value = product.price_per_kg; el.binCapacity.value = product.capacity_kg;
-    el.binMinKg.value = product.min_order_kg; el.binImage.value = product.image_url; el.binStatus.value = product.status;
+    el.binMinKg.value = product.min_order_kg; el.binStatus.value = product.status;
+    showImagePreview(el.binImagePreview, el.binImageEmpty, product.image_url);
   } else {
     el.detailAdminId.value = product.id; el.detailAdminName.value = product.name;
-    el.detailAdminPrice.value = product.price_per_kg; el.detailAdminStock.value = product.stock_kg; el.detailAdminImage.value = product.image_url;
+    el.detailAdminPrice.value = product.price_per_kg; el.detailAdminStock.value = product.stock_kg;
+    showImagePreview(el.detailAdminImagePreview, el.detailAdminImageEmpty, product.image_url);
   }
 }
 
@@ -505,6 +498,8 @@ el.adminLogout.addEventListener('click', async () => { await db.auth.signOut(); 
 el.mainTabs.forEach((tab) => tab.addEventListener('click', () => switchAdminView(tab.dataset.view)));
 el.binForm.addEventListener('submit', saveWholesale); el.detailProductForm.addEventListener('submit', saveDetail);
 el.clearBinForm.addEventListener('click', clearBinForm); el.clearDetailForm.addEventListener('click', clearDetailForm);
+el.binImageFile.addEventListener('change', () => previewSelectedImage(el.binImageFile, el.binImagePreview, el.binImageEmpty));
+el.detailAdminImageFile.addEventListener('change', () => previewSelectedImage(el.detailAdminImageFile, el.detailAdminImagePreview, el.detailAdminImageEmpty));
 
 async function init() {
   try { await loadProducts(); }

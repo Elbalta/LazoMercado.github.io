@@ -4,41 +4,81 @@ begin;
 
 create extension if not exists pgcrypto;
 
-create type public.sale_unit as enum (
-  'kilo', 'caja', 'malla', 'bandeja', 'saco', 'unidad', 'personalizada'
-);
-create type public.product_status as enum (
-  'available', 'upcoming', 'out_of_season', 'paused'
-);
-create type public.lot_status as enum (
-  'draft', 'open', 'full', 'closed', 'cancelled'
-);
-create type public.sales_channel as enum ('wholesale', 'retail');
-create type public.payment_method as enum ('transfer', 'cash');
-create type public.payment_status as enum (
-  'PENDIENTE',
-  'COMPROBANTE_ENVIADO',
-  'PENDIENTE_EFECTIVO',
-  'CONFIRMADO',
-  'REEMBOLSO_SOLICITADO',
-  'REEMBOLSADO',
-  'CANCELADO'
-);
-create type public.order_status as enum (
-  'PENDIENTE_CONFIRMACION',
-  'ESPERANDO_COMPRA_GRUPAL',
-  'PREPARANDO',
-  'LISTO_PARA_ENTREGA',
-  'EN_TRANSITO',
-  'ENTREGADO',
-  'COMPLETADO',
-  'CANCELADO'
-);
-create type public.delivery_method as enum ('pickup', 'delivery');
-create type public.delivery_status as enum (
-  'pending', 'scheduled', 'in_transit', 'delivered', 'cancelled'
-);
-create type public.notification_status as enum ('pending', 'sent', 'cancelled');
+-- Compatibilidad con la primera integración simplificada. Conserva la tabla
+-- original como respaldo y permite instalar el modelo relacional sin perderla.
+do $$
+begin
+  if to_regclass('public.products') is not null
+     and not exists (
+       select 1
+       from information_schema.columns
+       where table_schema = 'public'
+         and table_name = 'products'
+         and column_name = 'wholesale_price'
+     ) then
+    if to_regclass('public.products_legacy') is not null then
+      raise exception 'Ya existe public.products_legacy; revisa el respaldo antes de continuar.';
+    end if;
+    alter table public.products rename to products_legacy;
+  end if;
+end;
+$$;
+
+do $$ begin
+  create type public.sale_unit as enum (
+    'kilo', 'caja', 'malla', 'bandeja', 'saco', 'unidad', 'personalizada'
+  );
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create type public.product_status as enum (
+    'available', 'upcoming', 'out_of_season', 'paused'
+  );
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create type public.lot_status as enum (
+    'draft', 'open', 'full', 'closed', 'cancelled'
+  );
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create type public.sales_channel as enum ('wholesale', 'retail');
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create type public.payment_method as enum ('transfer', 'cash');
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create type public.payment_status as enum (
+    'PENDIENTE',
+    'COMPROBANTE_ENVIADO',
+    'PENDIENTE_EFECTIVO',
+    'CONFIRMADO',
+    'REEMBOLSO_SOLICITADO',
+    'REEMBOLSADO',
+    'CANCELADO'
+  );
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create type public.order_status as enum (
+    'PENDIENTE_CONFIRMACION',
+    'ESPERANDO_COMPRA_GRUPAL',
+    'PREPARANDO',
+    'LISTO_PARA_ENTREGA',
+    'EN_TRANSITO',
+    'ENTREGADO',
+    'COMPLETADO',
+    'CANCELADO'
+  );
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create type public.delivery_method as enum ('pickup', 'delivery');
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create type public.delivery_status as enum (
+    'pending', 'scheduled', 'in_transit', 'delivered', 'cancelled'
+  );
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create type public.notification_status as enum ('pending', 'sent', 'cancelled');
+exception when duplicate_object then null; end $$;
 
 create table public.products (
   id uuid primary key default gen_random_uuid(),
@@ -61,6 +101,55 @@ create table public.products (
     or (sale_unit <> 'personalizada' and custom_sale_unit is null)
   )
 );
+
+-- Migra los ocho campos de la tabla antigua al modelo nuevo. La tabla de
+-- respaldo se mantiene con RLS y sin acceso desde el navegador.
+do $$
+begin
+  if to_regclass('public.products_legacy') is not null then
+    execute $migration$
+      insert into public.products (
+        id, name, description, sale_unit, equivalent_weight_kg,
+        wholesale_price, detail_price, minimum_quantity, season_status,
+        image_url, is_published, created_at, updated_at
+      )
+      select
+        id,
+        name,
+        description,
+        case lower(coalesce(sale_unit::text, 'kilo'))
+          when 'kilo' then 'kilo'::public.sale_unit
+          when 'kg' then 'kilo'::public.sale_unit
+          when 'caja' then 'caja'::public.sale_unit
+          when 'malla' then 'malla'::public.sale_unit
+          when 'bandeja' then 'bandeja'::public.sale_unit
+          when 'saco' then 'saco'::public.sale_unit
+          when 'unidad' then 'unidad'::public.sale_unit
+          else 'kilo'::public.sale_unit
+        end,
+        1,
+        greatest(coalesce(detail_price, 0), 0),
+        greatest(coalesce(detail_price, 0), 0),
+        1,
+        case lower(coalesce(season_status::text, 'available'))
+          when 'upcoming' then 'upcoming'::public.product_status
+          when 'out_of_season' then 'out_of_season'::public.product_status
+          when 'paused' then 'paused'::public.product_status
+          else 'available'::public.product_status
+        end,
+        image_url,
+        true,
+        coalesce(created_at, now()),
+        now()
+      from public.products_legacy
+      on conflict (id) do nothing
+    $migration$;
+
+    alter table public.products_legacy enable row level security;
+    revoke all on table public.products_legacy from anon, authenticated;
+  end if;
+end;
+$$;
 
 create table public.lots (
   id uuid primary key default gen_random_uuid(),

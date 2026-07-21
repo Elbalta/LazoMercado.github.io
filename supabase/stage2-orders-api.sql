@@ -271,6 +271,44 @@ revoke all on function public.admin_set_order_status(uuid, public.order_status) 
 grant execute on function public.admin_set_order_status(uuid, public.order_status) to authenticated;
 grant execute on function public.is_lazo_admin() to authenticated;
 
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'product-images',
+  'product-images',
+  true,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "public_can_view_product_images" on storage.objects;
+create policy "public_can_view_product_images"
+on storage.objects for select
+to public
+using (bucket_id = 'product-images');
+
+drop policy if exists "admins_can_upload_product_images" on storage.objects;
+create policy "admins_can_upload_product_images"
+on storage.objects for insert
+to authenticated
+with check (bucket_id = 'product-images' and (select public.is_lazo_admin()));
+
+drop policy if exists "admins_can_update_product_images" on storage.objects;
+create policy "admins_can_update_product_images"
+on storage.objects for update
+to authenticated
+using (bucket_id = 'product-images' and (select public.is_lazo_admin()))
+with check (bucket_id = 'product-images' and (select public.is_lazo_admin()));
+
+drop policy if exists "admins_can_delete_product_images" on storage.objects;
+create policy "admins_can_delete_product_images"
+on storage.objects for delete
+to authenticated
+using (bucket_id = 'product-images' and (select public.is_lazo_admin()));
+
 update public.products
 set retail_stock_kg = 180
 where id = '10000000-0000-4000-8000-000000000001'
