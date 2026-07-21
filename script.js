@@ -288,11 +288,444 @@ function closeOrderDialogs() {
 }
 
 function syncDeliveryFields(delivery, label, address) {
-  const needsAddress = delivery.value === ën´¶‰ËkºwµçQ•‘MÕµµ…Éä¹¥¹¹•É!Q50€ô€ñ…ÉÑ¥±”±…ÍÌô‰­Á¤µ…ÉˆøñÀùY•¹Ñ…Ì½µÁ±•Ñ…‘…Ìğ½ÀøñÍÑÉ½¹œø‘í½µÁ±•Ñ•¹±•¹Ñ¡ôğ½ÍÑÉ½¹œøğ½…ÉÑ¥±”øñ…ÉÑ¥±”±…ÍÌô‰­Á¤µ…ÉˆøñÀù5½¹Ñ¼½µÁ±•Ñ…‘¼ğ½ÀøñÍÑÉ½¹œø‘íµ½¹•ä¡½µÁ±•Ñ•‘µ½Õ¹Ğ¥ôğ½ÍÑÉ½¹œøğ½…ÉÑ¥±”ù€ì(€•°¹½µÁ±•Ñ•‘¡…¹¹•±¡…ÉĞ¹¥¹¹•É!Q50€ô‰…ÉI½İÌ¡lI=]	Ue%9œ°€Q11t¹µ…À ¡¡…¹¹•°¤€ôø€¡ì±…‰•°è¡…¹¹•°€ôôô€Q11œ€ü€•Ñ…±±”œ€è€5…å½É¥ÍÑ„œ°Ù…±Õ”è½µÁ±•Ñ•¹™¥±Ñ•È ¡¼¤€ôø¼¹¡…¹¹•°€ôôô¡…¹¹•°¤¹É•‘Õ” ¡ÍÕ´°¼¤€ôøÍÕ´€¬9Õµ‰•È¡¼¹Ñ½Ñ…±}ÁÉ¥”¤°€À¤°µ½¹•äèÑÉÕ”ô¤¤°€Q½‘…Ûµ„¹¼•á¥ÍÑ•¸Ù•¹Ñ…Ì½µÁ±•Ñ…‘…Ì¸œ¤ì(€½¹ÍĞ‰åAÉ½‘ÕĞ€ô½µÁ±•Ñ•¹É•‘Õ” ¡µ…À°½É‘•È¤€ôøì½¹ÍĞ¹…µ”€ô½É‘•È¹ÁÉ½‘ÕĞü¹¹…µ”ñğ€AÉ½‘ÕÑ¼œìµ…Ám¹…µ•t€ô€¡µ…Ám¹…µ•tñğ€À¤€¬9Õµ‰•È¡½É‘•È¹­œ¤ìÉ•ÑÕÉ¸µ…Àìô°íô¤ì(€•°¹½µÁ±•Ñ•‘AÉ½‘ÕÑ¡…ÉĞ¹¥¹¹•É!Q50€ô‰…ÉI½İÌ¡=‰©•Ğ¹•¹ÑÉ¥•Ì¡‰åAÉ½‘ÕĞ¤¹µ…À ¡m±…‰•°°Ù…±Õ•t¤€ôø€¡ì±…‰•°°Ù…±Õ”ô¤¤°€1½ÌÁÉ½‘ÕÑ½ÌÙ•¹‘¥‘½Ì…Á…É••Ë…¸…°½µÁ±•Ñ…ÈÕ¹„Ù•¹Ñ„¸œ¤ì(€•°¹½µÁ±•Ñ•‘M…±•Í1¥ÍĞ¹¥¹¹•É!Q50€ô½µÁ±•Ñ•¹µ…À¡½É‘•É‘µ¥¹…É¤¹©½¥¸ œœ¤ñğ€œñ‘¥Ø±…ÍÌô‰•µÁÑäµÍÑ…Ñ”ˆøñÍÑÉ½¹œùM¥¸Ù•¹Ñ…Ì½µÁ±•Ñ…‘…Ìğ½ÍÑÉ½¹œøñÀùÕ…¹‘¼™¥¹…±¥•ÌÕ¹„•¹ÑÉ•„…Á…É••Ë„…Å×´¸ğ½Àøğ½‘¥Øøœì((€½¹ÍĞ½¹™¥Éµ•‘=É‘•ÉÌ€ôÍÑ…Ñ”¹½É‘•ÉÌ¹™¥±Ñ•È ¡½É‘•È¤€ôø½É‘•È¹Á…åµ•¹Ñ}ÍÑ…ÑÕÌ€ôôô€=9%I5<œ¤ì(€½¹ÍĞ½¹™¥Éµ•‘µ½Õ¹Ğ€ô½¹™¥Éµ•‘=É‘•ÉÌ¹É•‘Õ” ¡ÍÕ´°½É‘•È¤€ôøÍÕ´€¬9Õµ‰•È¡½É‘•È¹Ñ½Ñ…±}ÁÉ¥”¤°€À¤ì(€½¹ÍĞÁ•¹‘¥¹µ½Õ¹Ğ€ôÍÑ…Ñ”¹½É‘•ÉÌ¹™¥±Ñ•È ¡½É‘•È¤€ôø€…l=9%I5<œ°€91<œ°€I5	=1M=}M=1%%Q<œ°€I5	=1M<t¹¥¹±Õ‘•Ì¡½É‘•È¹Á…åµ•¹Ñ}ÍÑ…ÑÕÌ¤¤¹É•‘Õ” ¡ÍÕ´°½É‘•È¤€ôøÍÕ´€¬9Õµ‰•È¡½É‘•È¹Ñ½Ñ…±}ÁÉ¥”¤°€À¤ì(€½¹ÍĞ…¹•±±•€ôÍÑ…Ñ”¹½É‘•ÉÌ¹™¥±Ñ•È ¡¼¤€ôø¼¹ÍÑ…ÑÕÌ€ôôô€91<œ¤¹É•‘Õ” ¡ÍÕ´°¼¤€ôøÍÕ´€¬9Õµ‰•È¡¼¹Ñ½Ñ…±}ÁÉ¥”¤°€À¤ì(€½¹ÍĞÉ•™Õ¹‘A•¹‘¥¹œ€ôÍÑ…Ñ”¹½É‘•ÉÌ¹™¥±Ñ•È ¡½É‘•È¤€ôø½É‘•È¹Á…åµ•¹Ñ}ÍÑ…ÑÕÌ€ôôô€I5	=1M=}M=1%%Q<œ¤¹É•‘Õ” ¡ÍÕ´°½É‘•È¤€ôøÍÕ´€¬9Õµ‰•È¡½É‘•È¹Ñ½Ñ…±}ÁÉ¥”¤°€À¤ì(€•°¹™¥¹…¹¥…±-Á¥Ì¹¥¹¹•É!Q50€ô€ñ…ÉÑ¥±”±…ÍÌô‰­Á¤µ…ÉˆøñÀùA…¼½¹™¥Éµ…‘¼ğ½ÀøñÍÑÉ½¹œø‘íµ½¹•ä¡½¹™¥Éµ•‘µ½Õ¹Ğ¥ôğ½ÍÑÉ½¹œøğ½…ÉÑ¥±”øñ…ÉÑ¥±”±…ÍÌô‰­Á¤µ…ÉˆøñÀùA•¹‘¥•¹Ñ”‘”Á…¼ğ½ÀøñÍÑÉ½¹œø‘íµ½¹•ä¡Á•¹‘¥¹µ½Õ¹Ğ¥ôğ½ÍÑÉ½¹œøğ½…ÉÑ¥±”øñ…ÉÑ¥±”±…ÍÌô‰­Á¤µ…ÉˆøñÀù½µÁ±•Ñ…‘¼ğ½ÀøñÍÑÉ½¹œø‘íµ½¹•ä¡½µÁ±•Ñ•‘µ½Õ¹Ğ¥ôğ½ÍÑÉ½¹œøğ½…ÉÑ¥±”øñ…ÉÑ¥±”±…ÍÌô‰­Á¤µ…ÉˆøñÀùI••µ‰½±Í¼Á•¹‘¥•¹Ñ”ğ½ÀøñÍÑÉ½¹œø‘íµ½¹•ä¡É•™Õ¹‘A•¹‘¥¹œ¥ôğ½ÍÑÉ½¹œøğ½…ÉÑ¥±”øñ…ÉÑ¥±”±…ÍÌô‰­Á¤µ…ÉˆøñÀù…¹•±…‘¼ğ½ÀøñÍÑÉ½¹œø‘íµ½¹•ä¡…¹•±±•¥ôğ½ÍÑÉ½¹œøğ½…ÉÑ¥±”ù€ì(€•°¹™¥¹…¹¥…±¡…¹¹•±¡…ÉĞ¹¥¹¹•É!Q50€ô‰…ÉI½İÌ¡lI=]	Ue%9œ°€Q11t¹µ…À ¡¡…¹¹•°¤€ôø€¡ì±…‰•°è¡…¹¹•°€ôôô€Q11œ€ü€•Ñ…±±”œ€è€5…å½É¥ÍÑ„œ°Ù…±Õ”è½¹™¥Éµ•‘=É‘•ÉÌ¹™¥±Ñ•È ¡¼¤€ôø¼¹¡…¹¹•°€ôôô¡…¹¹•°¤¹É•‘Õ” ¡ÍÕ´°¼¤€ôøÍÕ´€¬9Õµ‰•È¡¼¹Ñ½Ñ…±}ÁÉ¥”¤°€À¤°µ½¹•äèÑÉÕ”ô¤¤°€½¹™¥Éµ„Õ¸Á…¼Á…É„É•½¹½•É±¼½µ¼¥¹É•Í¼¸œ¤ì(€•°¹™¥¹…¹¥…±MÑ…ÑÕÍ¡…ÉĞ¹¥¹¹•É!Q50€ô•°¹…µ½Õ¹Ñ¡…ÉĞ¹¥¹¹•É!Q50ì(€•°¹™¥¹…¹¥…±1¥ÍĞ¹¥¹¹•É!Q50€ôÍÑ…Ñ”¹½É‘•ÉÌ¹µ…À¡½É‘•É‘µ¥¹…É¤¹©½¥¸ œœ¤ñğ€œñ‘¥Ø±…ÍÌô‰•µÁÑäµÍÑ…Ñ”ˆøñÍÑÉ½¹œùM¥¸µ½Ù¥µ¥•¹Ñ½Ìğ½ÍÑÉ½¹œøñÀù1½ÌÁ•‘¥‘½Ì…Á…É••Ë…¸…Å×´½¸ÍÔ•ÍÑ…‘¼‘”Á…¼¸ğ½Àøğ½‘¥Øøœì((€½¹ÍĞ¡¥‘‘•¹]¡½±•Í…±•=É‘•ÉÌ€ôİ¡½±•Í…±•=É‘•ÉÌ¹±•¹Ñ €ü€œœ€è€œñ‘¥Ø±…ÍÌô‰•µÁÑäµÍÑ…Ñ”½µÁ…ĞˆøñÍÑÉ½¹œùM¥¸Á•‘¥‘½Ìµ…å½É¥ÍÑ…Ìğ½ÍÑÉ½¹œøñÀù1½ÌÁ•‘¥‘½Ì‘•°±½Ñ”…Á…É••Ë…¸…Å×´¸ğ½Àøğ½‘¥Øøœì(€•°¹…‘µ¥¹	¥¹Í=Á•¸¹¥¹Í•ÉÑ‘©…•¹Ñ!Q50 ‰•™½É••¹œ°€ñ‘¥Ø±…ÍÌô‰…‘µ¥¸µ‘¥Ù¥‘•ÈˆøñÍÁ…¸ùA•‘¥‘½Ìµ…å½É¥ÍÑ…Ìğ½ÍÁ…¸øğ½‘¥Øø‘í¡¥‘‘•¹]¡½±•Í…±•=É‘•ÉÍô‘íİ¡½±•Í…±•=É‘•ÉÌ¹µ…À¡½É‘•É‘µ¥¹…É¤¹©½¥¸ œœ¥õ€¤ì)ô()™Õ¹Ñ¥½¸Íİ¥Ñ¡‘µ¥¹Y¥•Ü¡Ù¥•Ü¤ì(€=‰©•Ğ¹•¹ÑÉ¥•Ì¡•°¹…‘µ¥¹Y¥•İÌ¤¹™½É…  ¡m¹…µ”°Í•Ñ¥½¹t¤€ôøÍ•Ñ¥½¸¹±…ÍÍ1¥ÍĞ¹Ñ½±” ¡¥‘‘•¸œ°¹…µ”€„ôôÙ¥•Ü¤¤ì(€•°¹µ…¥¹Q…‰Ì¹™½É…  ¡Ñ…ˆ¤€ôøÑ…ˆ¹±…ÍÍ1¥ÍĞ¹Ñ½±” …Ñ¥Ù”œ°Ñ…ˆ¹‘…Ñ…Í•Ğ¹Ù¥•Ü€ôôôÙ¥•Ü¤¤ì)ô()™Õ¹Ñ¥½¸±•…É	¥¹½É´ ¤ì•°¹‰¥¹½É´¹É•Í•Ğ ¤ì•°¹‰¥¹%¹Ù…±Õ”€ô€œœì•°¹‰¥¹…Á…¥Ñä¹Ù…±Õ”€ô€ÔÀÀì•°¹‰¥¹5¥¹-œ¹Ù…±Õ”€ô€ÔÀìÍ¡½İ%µ…•AÉ•Ù¥•Ü¡•°¹‰¥¹%µ…•AÉ•Ù¥•Ü°•°¹‰¥¹%µ…•µÁÑä¤ìô)™Õ¹Ñ¥½¸±•…É•Ñ…¥±½É´ ¤ì•°¹‘•Ñ…¥±AÉ½‘ÕÑ½É´¹É•Í•Ğ ¤ì•°¹‘•Ñ…¥±‘µ¥¹%¹Ù…±Õ”€ô€œœìÍ¡½İ%µ…•AÉ•Ù¥•Ü¡•°¹‘•Ñ…¥±‘µ¥¹%µ…•AÉ•Ù¥•Ü°•°¹‘•Ñ…¥±‘µ¥¹%µ…•µÁÑä¤ìô()…Íå¹Œ™Õ¹Ñ¥½¸Í…Ù•]¡½±•Í…±”¡•Ù•¹Ğ¤ì(€•Ù•¹Ğ¹ÁÉ•Ù•¹Ñ•™…Õ±Ğ ¤ìÍ•Ñ	ÕÍä¡•°¹‰¥¹½É´°ÑÉÕ”¤ì(€ÑÉäì(€€€½¹ÍĞÕÉÉ•¹Ğ€ô•°¹‰¥¹%¹Ù…±Õ”€üÁÉ½‘ÕÑ	å%¡•°¹‰¥¹%¹Ù…±Õ”¤€è¹Õ±°ì(€€€½¹ÍĞÕÁ±½…‘•‘%µ…”€ô…İ…¥ĞÕÁ±½…‘AÉ½‘ÕÑ%µ…”¡•°¹‰¥¹%µ…•¥±”¹™¥±•Ìü¹lÁt¤ì(€€€½¹ÍĞ¥µ…•UÉ°€ôÕÁ±½…‘•‘%µ…”ñğÕÉÉ•¹Ğü¹¥µ…•}ÕÉ°ñğ€œœì(€€€¥˜€ …¥µ…•UÉ°¤Ñ¡É½Ü¹•ÜÉÉ½È M•±•¥½¹„Õ¹„¥µ…•¸Á…É„•°ÁÉ½‘ÕÑ¼¸œ¤ì(€€€½¹ÍĞì•ÉÉ½Èô€ô…İ…¥Ğ‘ˆ¹ÉÁŒ …‘µ¥¹}Í…Ù•}İ¡½±•Í…±•}ÁÉ½‘ÕĞœ°ì(€€€€€Á}±½Ñ}¥è•°¹‰¥¹%¹Ù…±Õ”ñğ¹Õ±°°(€€€€€Á}¹…µ”è•°¹‰¥¹AÉ½‘ÕĞ¹Ù…±Õ”¹ÑÉ¥´ ¤°(€€€€€Á}Ù…É¥•Ñäè•°¹‰¥¹Y…É¥•Ñä¹Ù…±Õ”¹ÑÉ¥´ ¤°(€€€€€Á}‘•ÍÉ¥ÁÑ¥½¸è•°¹‰¥¹9½Ñ•Ì¹Ù…±Õ”¹ÑÉ¥´ ¤°(€€€€€Á}¥µ…•}ÕÉ°è¥µ…•UÉ°°(€€€€€Á}ÁÉ¥”è9Õµ‰•È¡•°¹‰¥¹AÉ¥”¹Ù…±Õ”¤°(€€€€€Á}…Á…¥Ñäè9Õµ‰•È¡•°¹‰¥¹…Á…¥Ñä¹Ù…±Õ”¤°(€€€€€Á}µ¥¹¥µÕ´è9Õµ‰•È¡•°¹‰¥¹5¥¹-œ¹Ù…±Õ”¤°(€€€€€Á}ÍÑ…ÑÕÌè•°¹‰¥¹MÑ…ÑÕÌ¹Ù…±Õ”€ôôô€=A8œ€ü€½Á•¸œ€è•°¹‰¥¹MÑ…ÑÕÌ¹Ù…±Õ”€ôôô€M=1}=UPœ€ü€™Õ±°œ€è€±½Í•œ(€€€ô¤ì(€€€¥˜€¡•ÉÉ½È¤Ñ¡É½Ü•ÉÉ½Èì(€€€±•…É	¥¹½É´ ¤ì…İ…¥Ğ±½…‘‘µ¥¹…Ñ„ ¤ìÑ½…ÍĞ AÉ½‘ÕÑ¼µ…å½É¥ÍÑ„Õ…É‘…‘¼¸œ¤ì(€ô…Ñ €¡•ÉÉ½È¤ìÑ½…ÍĞ¡•ÉÉ½É5•ÍÍ…”¡•ÉÉ½È¤°ÑÉÕ”¤ìô™¥¹…±±äìÍ•Ñ	ÕÍä¡•°¹‰¥¹½É´°™…±Í”¤ìô)ô()…Íå¹Œ™Õ¹Ñ¥½¸Í…Ù••Ñ…¥°¡•Ù•¹Ğ¤ì(€•Ù•¹Ğ¹ÁÉ•Ù•¹Ñ•™…Õ±Ğ ¤ìÍ•Ñ	ÕÍä¡•°¹‘•Ñ…¥±AÉ½‘ÕÑ½É´°ÑÉÕ”¤ì(€½¹ÍĞÕÉÉ•¹Ğ€ô•°¹‘•Ñ…¥±‘µ¥¹%¹Ù…±Õ”€üÁÉ½‘ÕÑ	å%¡•°¹‘•Ñ…¥±‘µ¥¹%¹Ù…±Õ”¤€è¹Õ±°ì(€ÑÉäì(€€€½¹ÍĞÕÁ±½…‘•‘%µ…”€ô…İ…¥ĞÕÁ±½…‘AÉ½‘ÕÑ%µ…”¡•°¹‘•Ñ…¥±‘µ¥¹%µ…•¥±”¹™¥±•Ìü¹lÁt¤ì(€€€½¹ÍĞ¥µ…•UÉ°€ôÕÁ±½…‘•‘%µ…”ñğÕÉÉ•¹Ğü¹¥µ…•}ÕÉ°ñğ€œœì(€€€¥˜€ …¥µ…•UÉ°¤Ñ¡É½Ü¹•ÜÉÉ½È M•±•¥½¹„Õ¹„¥µ…•¸Á…É„•°ÁÉ½‘ÕÑ¼¸œ¤ì(€€€½¹ÍĞÁ…å±½…€ôì¹…µ”è•°¹‘•Ñ…¥±‘µ¥¹9…µ”¹Ù…±Õ”¹ÑÉ¥´ ¤°Ù…É¥•ÑäèÕÉÉ•¹Ğü¹Ù…É¥•Ñäñğ€œœ°‘•ÍÉ¥ÁÑ¥½¸èÕÉÉ•¹Ğü¹¹½Ñ•Ìñğ€œœ°¥µ…•}ÕÉ°è¥µ…•UÉ°°Í…±•}Õ¹¥Ğè€­¥±¼œ°•ÅÕ¥Ù…±•¹Ñ}İ•¥¡Ñ}­œè€Ä°İ¡½±•Í…±•}ÁÉ¥”è9Õµ‰•È¡ÕÉÉ•¹Ğü¹İ¡½±•Í…±•}ÁÉ¥”ñğ•°¹‘•Ñ…¥±‘µ¥¹AÉ¥”¹Ù…±Õ”¤°‘•Ñ…¥±}ÁÉ¥”è9Õµ‰•È¡•°¹‘•Ñ…¥±‘µ¥¹AÉ¥”¹Ù…±Õ”¤°µ¥¹¥µÕµ}ÅÕ…¹Ñ¥Ñäè€Ä°É•Ñ…¥±}ÍÑ½­}­œè9Õµ‰•È¡•°¹‘•Ñ…¥±‘µ¥¹MÑ½¬¹Ù…±Õ”¤°É•Ñ…¥±}•¹…‰±•èÑÉÕ”°…É¡¥Ù•‘}…Ğè¹Õ±°°Í•…Í½¹}ÍÑ…ÑÕÌè€…Ù…¥±…‰±”œ°¥Í}ÁÕ‰±¥Í¡•èÑÉÕ”ôì(€€€½¹ÍĞÅÕ•Éä€ô•°¹‘•Ñ…¥±‘µ¥¹%¹Ù…±Õ”€ü‘ˆ¹™É½´ ÁÉ½‘ÕÑÌœ¤¹ÕÁ‘…Ñ”¡Á…å±½…¤¹•Ä ¥œ°•°¹‘•Ñ…¥±‘µ¥¹%¹Ù…±Õ”¤€è‘ˆ¹™É½´ ÁÉ½‘ÕÑÌœ¤¹¥¹Í•ÉĞ¡Á…å±½…¤ì(€€€½¹ÍĞì•ÉÉ½Èô€ô…İ…¥ĞÅÕ•Éäì¥˜€¡•ÉÉ½È¤Ñ¡É½Ü•ÉÉ½Èì(€€€±•…É•Ñ…¥±½É´ ¤ì…İ…¥Ğ±½…‘‘µ¥¹…Ñ„ ¤ìÑ½…ÍĞ AÉ½‘ÕÑ¼…°‘•Ñ…±±”Õ…É‘…‘¼¸œ¤ì(€ô…Ñ €¡•ÉÉ½È¤ìÑ½…ÍĞ¡•ÉÉ½É5•ÍÍ…”¡•ÉÉ½È¤°ÑÉÕ”¤ìô™¥¹…±±äìÍ•Ñ	ÕÍä¡•°¹‘•Ñ…¥±AÉ½‘ÕÑ½É´°™…±Í”¤ìô)ô()™Õ¹Ñ¥½¸•‘¥ÑAÉ½‘ÕĞ¡¥¤ì(€½¹ÍĞÁÉ½‘ÕĞ€ôÁÉ½‘ÕÑ	å%¡¥¤ì¥˜€ …ÁÉ½‘ÕĞ¤É•ÑÕÉ¸ì(€Íİ¥Ñ¡‘µ¥¹Y¥•Ü É•…Èœ¤ì(€¥˜€¡ÁÉ½‘ÕĞ¹¡…¹¹•°€ôôô€I=]	Ue%9œ¤ì(€€€•°¹‰¥¹%¹Ù…±Õ”€ôÁÉ½‘ÕĞ¹¥ì•°¹‰¥¹AÉ½‘ÕĞ¹Ù…±Õ”€ôÁÉ½‘ÕĞ¹¹…µ”ì•°¹‰¥¹Y…É¥•Ñä¹Ù…±Õ”€ôÁÉ½‘ÕĞ¹Ù…É¥•Ñäì(€€€•°¹‰¥¹9½Ñ•Ì¹Ù…±Õ”€ôÁÉ½‘ÕĞ¹¹½Ñ•Ìì•°¹‰¥¹AÉ¥”¹Ù…±Õ”€ôÁÉ½‘ÕĞ¹ÁÉ¥•}Á•É}­œì•°¹‰¥¹…Á…¥Ñä¹Ù…±Õ”€ôÁÉ½‘ÕĞ¹…Á…¥Ñå}­œì(€€€•°¹‰¥¹5¥¹-œ¹Ù…±Õ”€ôÁÉ½‘ÕĞ¹µ¥¹}½É‘•É}­œì•°¹‰¥¹MÑ…ÑÕÌ¹Ù…±Õ”€ôÁÉ½‘ÕĞ¹ÍÑ…ÑÕÌì(€€€Í¡½İ%µ…•AÉ•Ù¥•Ü¡•°¹‰¥¹%µ…•AÉ•Ù¥•Ü°•°¹‰¥¹%µ…•µÁÑä°ÁÉ½‘ÕĞ¹¥µ…•}ÕÉ°¤ì(€ô•±Í”ì(€€€•°¹‘•Ñ…¥±‘µ¥¹%¹Ù…±Õ”€ôÁÉ½‘ÕĞ¹¥ì•°¹‘•Ñ…¥±‘µ¥¹9…µ”¹Ù…±Õ”€ôÁÉ½‘ÕĞ¹¹…µ”ì(€€€•°¹‘•Ñ…¥±‘µ¥¹AÉ¥”¹Ù…±Õ”€ôÁÉ½‘ÕĞ¹ÁÉ¥•}Á•É}­œì•°¹‘•Ñ…¥±‘µ¥¹MÑ½¬¹Ù…±Õ”€ôÁÉ½‘ÕĞ¹ÍÑ½­}­œì(€€€Í¡½İ%µ…•AÉ•Ù¥•Ü¡•°¹‘•Ñ…¥±‘µ¥¹%µ…•AÉ•Ù¥•Ü°•°¹‘•Ñ…¥±‘µ¥¹%µ…•µÁÑä°ÁÉ½‘ÕĞ¹¥µ…•}ÕÉ°¤ì(€ô)ô()…Íå¹Œ™Õ¹Ñ¥½¸…É¡¥Ù•AÉ½‘ÕĞ¡¥¤ì(€½¹ÍĞ¥Ñ•´€ôÁÉ½‘ÕÑ	å%¡¥¤ì(€¥˜€ …¥Ñ•´¤É•ÑÕÉ¸ì(€½¹ÍĞ±…‰•°€ô¥Ñ•´¹¡…¹¹•°€ôôô€I=]	Ue%9œ€ü€±½Ñ”µ…å½É¥ÍÑ„œ€è€ÁÉ½‘ÕÑ¼…°‘•Ñ…±±”œì(€¥˜€ …İ¥¹‘½Ü¹½¹™¥É´¡ƒ
-ıÉ¡¥Ù…È•ÍÑ”€‘í±…‰•±ôü•©…Ë„‘”…Á…É••ÈÁ…É„±½Ì±¥•¹Ñ•Ì°Á•É¼½¹Í•ÉÙ…Ë„ÍÕÌÁ•‘¥‘½Ì¹€¤¤É•ÑÕÉ¸ì(€½¹ÍĞì•ÉÉ½Èô€ô¥Ñ•´¹¡…¹¹•°€ôôô€I=]	Ue%9œ(€€€€ü…İ…¥Ğ‘ˆ¹ÉÁŒ …‘µ¥¹}…É¡¥Ù•}±½Ğœ°ìÁ}±½Ñ}¥è¥Ñ•´¹±½Ñ}¥ô¤(€€€€è…İ…¥Ğ‘ˆ¹ÉÁŒ …‘µ¥¹}…É¡¥Ù•}É•Ñ…¥±}ÁÉ½‘ÕĞœ°ìÁ}ÁÉ½‘ÕÑ}¥è¥Ñ•´¹ÁÉ½‘ÕÑ}¥ô¤ì(€¥˜€¡•ÉÉ½È¤É•ÑÕÉ¸Ñ½…ÍĞ¡•ÉÉ½É5•ÍÍ…”¡•ÉÉ½È¤°ÑÉÕ”¤ì(€…İ…¥Ğ±½…‘‘µ¥¹…Ñ„ ¤ìÑ½…ÍĞ AÉ½‘ÕÑ¼…É¡¥Ù…‘¼Í¥¸Á•É‘•ÈÍÔ¡¥ÍÑ½É¥…°¸œ¤ì)ô()™Õ¹Ñ¥½¸½É‘•ÉMÕµµ…Éä¡¥¤ì(€½¹ÍĞ½É‘•È€ôÍÑ…Ñ”¹½É‘•ÉÌ¹™¥¹ ¡¥Ñ•´¤€ôø¥Ñ•´¹¥€ôôô¥¤ì(€É•ÑÕÉ¸½É‘•È€ü€‘í½É‘•È¹ÁÉ½‘ÕĞü¹¹…µ”ñğ€AÉ½‘ÕÑ¼ôƒ
-Ü€‘í¹Õµ‰•È¡½É‘•È¹­œ¥ô­œƒ
-Ü€‘íµ½¹•ä¡½É‘•È¹Ñ½Ñ…±}ÁÉ¥”¥õ€€è€•ÍÑ”Á•‘¥‘¼œì)ô()…Íå¹Œ™Õ¹Ñ¥½¸…‘Ù…¹•=É‘•È¡¥¤ì(€¥˜€ …İ¥¹‘½Ü¹½¹™¥É´¡ƒ
-ı½¹™¥Éµ…Ì•°Í¥Õ¥•¹Ñ”…Ù…¹”Á…É„€‘í½É‘•ÉMÕµµ…Éä¡¥¥ôı€¤¤É•ÑÕÉ¸ì(€½¹ÍĞì•ÉÉ½Èô€ô…İ…¥Ğ‘ˆ¹ÉÁŒ …‘µ¥¹}…‘Ù…¹•}½É‘•Èœ°ìÁ}½É‘•É}¥è¥ô¤ì(€¥˜€¡•ÉÉ½È¤É•ÑÕÉ¸Ñ½…ÍĞ¡•ÉÉ½É5•ÍÍ…”¡•ÉÉ½È¤°ÑÉÕ”¤ì(€…İ…¥Ğ±½…‘‘µ¥¹…Ñ„ ¤ìÑ½…ÍĞ A•‘¥‘¼…ÑÕ…±¥é…‘¼¸AÕ•‘•Ì½ÉÉ•¥È•°ƒé±Ñ¥µ¼•ÍÑ…‘¼Í¤™Õ”Õ¸•ÉÉ½È¸œ¤ì)ô()…Íå¹Œ™Õ¹Ñ¥½¸½¹™¥Éµ=É‘•ÉA…åµ•¹Ğ¡¥¤ì(€¥˜€ …İ¥¹‘½Ü¹½¹™¥É´¡ƒ
-ı½¹™¥Éµ…ÌÅÕ”É•¥‰¥ÍÑ”•°Á…¼‘”€‘í½É‘•ÉMÕµµ…Éä¡¥¥ôı€¤¤É•ÑÕÉ¸ì(€½¹ÍĞì•ÉÉ½Èô€ô…İ…¥Ğ‘ˆ¹ÉÁŒ …‘µ¥¹}½¹™¥Éµ}½É‘•É}Á…åµ•¹Ğœ°ìÁ}½É‘•É}¥è¥ô¤ì(€¥˜€¡•ÉÉ½È¤É•ÑÕÉ¸Ñ½…ÍĞ¡•ÉÉ½É5•ÍÍ…”¡•ÉÉ½È¤°ÑÉÕ”¤ì(€…İ…¥Ğ±½…‘‘µ¥¹…Ñ„ ¤ìÑ½…ÍĞ A…¼½¹™¥Éµ…‘¼äÁ•‘¥‘¼…ÑÕ…±¥é…‘¼¸œ¤ì)ô()…Íå¹Œ™Õ¹Ñ¥½¸É•Ù•ÉÑ=É‘•È¡¥¤ì(€½¹ÍĞÉ•…Í½¸€ôİ¥¹‘½Ü¹ÁÉ½µÁĞ %¹‘¥„•°µ½Ñ¥Ù¼Á…É„½ÉÉ•¥È•°ƒé±Ñ¥µ¼•ÍÑ…‘¼èœ¤ì(€¥˜€ …É•…Í½¸¤É•ÑÕÉ¸ì(€½¹ÍĞì•ÉÉ½Èô€ô…İ…¥Ğ‘ˆ¹ÉÁŒ …‘µ¥¹}É•Ù•ÉÑ}½É‘•É}ÍÑ…ÑÕÌœ°ìÁ}½É‘•É}¥è¥°Á}É•…Í½¸èÉ•…Í½¸¹ÑÉ¥´ ¤ô¤ì(€¥˜€¡•ÉÉ½È¤É•ÑÕÉ¸Ñ½…ÍĞ¡•ÉÉ½É5•ÍÍ…”¡•ÉÉ½È¤°ÑÉÕ”¤ì(€…İ…¥Ğ±½…‘‘µ¥¹…Ñ„ ¤ìÑ½…ÍĞ Ÿi±Ñ¥µ¼…µ‰¥¼‘”•ÍÑ…‘¼½ÉÉ•¥‘¼¸œ¤ì)ô()…Íå¹Œ™Õ¹Ñ¥½¸É•Ù•ÉÑA…åµ•¹Ğ¡¥¤ì(€½¹ÍĞÉ•…Í½¸€ôİ¥¹‘½Ü¹ÁÉ½µÁĞ %¹‘¥„Á½ÈÅ×¤‘•‰•ÌÉ•Ù•ÉÑ¥È±„½¹™¥Éµ…§Í¸‘•°Á…¼èœ¤ì(€¥˜€ …É•…Í½¸¤É•ÑÕÉ¸ì(€¥˜€ …İ¥¹‘½Ü¹½¹™¥É´¡°Á…¼‘”€‘í½É‘•ÉMÕµµ…Éä¡¥¥ôÙ½±Ù•Ë„„Á•¹‘¥•¹Ñ”¸ƒ
-ı½¹Ñ¥¹Õ…Èı€¤¤É•ÑÕÉ¸ì(€½¹ÍĞì•ÉÉ½Èô€ô…İ…¥Ğ‘ˆ¹ÉÁŒ …‘µ¥¹}É•Ù•ÉÑ}½É‘•É}Á…åµ•¹Ğœ°ìÁ}½É‘•É}¥è¥°Á}É•…Í½¸èÉ•…Í½¸¹ÑÉ¥´ ¤ô¤ì(€¥˜€¡•ÉÉ½È¤É•ÑÕÉ¸Ñ½…ÍĞ¡•ÉÉ½É5•ÍÍ…”¡•ÉÉ½È¤°ÑÉÕ”¤ì(€…İ…¥Ğ±½…‘‘µ¥¹…Ñ„ ¤ìÑ½…ÍĞ A…¼É•Ù•ÉÑ¥‘¼„Á•¹‘¥•¹Ñ”¸œ¤ì)ô()…Íå¹Œ™Õ¹Ñ¥½¸…¹•±=É‘•È¡¥¤ì(€½¹ÍĞÉ•…Í½¸€ôİ¥¹‘½Ü¹ÁÉ½µÁĞ %¹‘¥„•°µ½Ñ¥Ù¼‘”±„…¹•±…§Í¸èœ¤ì(€¥˜€ …É•…Í½¸¤É•ÑÕÉ¸ì(€¥˜€ …İ¥¹‘½Ü¹½¹™¥É´¡ƒ
-ı…¹•±…È‘•™¥¹¥Ñ¥Ù…µ•¹Ñ”€‘í½É‘•ÉMÕµµ…Éä¡¥¥ôü°ÍÑ½¬Í”‘•Ù½±Ù•Ë„ä°Í¤•ÍÑ…‰„Á……‘¼°ÅÕ•‘…Ë„Õ¸É••µ‰½±Í¼Á•¹‘¥•¹Ñ”¹€¤¤É•ÑÕÉ¸ì(€½¹ÍĞì•ÉÉ½Èô€ô…İ…¥Ğ‘ˆ¹ÉÁŒ …‘µ¥¹}…¹•±}½É‘•Èœ°ìÁ}½É‘•É}¥è¥°Á}É•…Í½¸èÉ•…Í½¸¹ÑÉ¥´ ¤ô¤ì(€¥˜€¡•ÉÉ½È¤É•ÑÕÉ¸Ñ½…ÍĞ¡•ÉÉ½É5•ÍÍ…”¡•ÉÉ½È¤°ÑÉÕ”¤ì(€…İ…¥Ğ±½…‘‘µ¥¹…Ñ„ ¤ìÑ½…ÍĞ A•‘¥‘¼…¹•±…‘¼½¸µ½Ñ¥Ù¼É•¥ÍÑÉ…‘¼¸œ¤ì)ô()‘½Õµ•¹Ğ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°€¡•Ù•¹Ğ¤€ôøì(€½¹ÍĞ‰ÕÑÑ½¸€ô•Ù•¹Ğ¹Ñ…É•Ğ¹±½Í•ÍĞ m‘…Ñ„µ…Ñ¥½¹tœ¤ì¥˜€ …‰ÕÑÑ½¸¤É•ÑÕÉ¸ì(€½¹ÍĞì…Ñ¥½¸°¥ô€ô‰ÕÑÑ½¸¹‘…Ñ…Í•Ğì(€¥˜€¡…Ñ¥½¸€ôôô€½É‘•ÈµÉ½İœ¤½Á•¹É½İ‘=É‘•È¡¥¤ì(€¥˜€¡…Ñ¥½¸€ôôô€½É‘•Èµ‘•Ñ…¥°œ¤½Á•¹•Ñ…¥±=É‘•È¡¥¤ì(€¥˜€¡…Ñ¥½¸€ôôô€•‘¥ĞµÁÉ½‘ÕĞœ¤•‘¥ÑAÉ½‘ÕĞ¡¥¤ì(€¥˜€¡…Ñ¥½¸€ôôô€…É¡¥Ù”µÁÉ½‘ÕĞœ¤…É¡¥Ù•AÉ½‘ÕĞ¡¥¤ì(€¥˜€¡…Ñ¥½¸€ôôô€…‘Ù…¹”µ½É‘•Èœ¤…‘Ù…¹•=É‘•È¡¥¤ì(€¥˜€¡…Ñ¥½¸€ôôô€É•Ù•ÉĞµ½É‘•Èœ¤É•Ù•ÉÑ=É‘•È¡¥¤ì(€¥˜€¡…Ñ¥½¸€ôôô€É•Ù•ÉĞµÁ…åµ•¹Ğœ¤É•Ù•ÉÑA…åµ•¹Ğ¡¥¤ì(€¥˜€¡…Ñ¥½¸€ôôô€…¹•°µ½É‘•Èœ¤…¹•±=É‘•È¡¥¤ì(€¥˜€¡…Ñ¥½¸€ôôô€½¹™¥É´µÁ…åµ•¹Ğœ¤½¹™¥Éµ=É‘•ÉA…åµ•¹Ğ¡¥¤ì)ô¤ì()•°¹¡½½Í••Ñ…¥°¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°€ ¤€ôøÍ•Ñ5½‘” ‘•Ñ…¥°œ¤¤ì)•°¹¡½½Í•É½İ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°€ ¤€ôøÍ•Ñ5½‘” É½İœ¤¤ì)•°¹µ½‘•Q…‰Ì¹™½É…  ¡Ñ…ˆ¤€ôøÑ…ˆ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°€ ¤€ôøÍ•Ñ5½‘”¡Ñ…ˆ¹‘…Ñ…Í•Ğ¹µ½‘”¤¤¤ì)•°¹½É‘•É-œ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ¥¹ÁÕĞœ°€ ¤€ôøÕÁ‘…Ñ•=É‘•ÉAÉ•Ù¥•Ü¡ÁÉ½‘ÕÑ	å%¡•°¹½É‘•É	¥¹%¹Ù…±Õ”¤°•°¹½É‘•É-œ¹Ù…±Õ”°•°¹½É‘•ÉQ½Ñ…°¤¤ì)•°¹‘•Ñ…¥±=É‘•É-œ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ¥¹ÁÕĞœ°€ ¤€ôøÕÁ‘…Ñ•=É‘•ÉAÉ•Ù¥•Ü¡ÁÉ½‘ÕÑ	å%¡•°¹‘•Ñ…¥±AÉ½‘ÕÑ%¹Ù…±Õ”¤°•°¹‘•Ñ…¥±=É‘•É-œ¹Ù…±Õ”°•°¹‘•Ñ…¥±=É‘•ÉQ½Ñ…°¤¤ì)•°¹½É‘•É•±¥Ù•Éä¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ¡…¹”œ°€ ¤€ôøÍå¹•±¥Ù•Éå¥•±‘Ì¡•°¹½É‘•É•±¥Ù•Éä°•°¹½É‘•É‘‘É•ÍÍ1…‰•°°•°¹½É‘•É‘‘É•ÍÌ¤¤ì)•°¹‘•Ñ…¥±=É‘•É•±¥Ù•Éä¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ¡…¹”œ°€ ¤€ôøÍå¹•±¥Ù•Éå¥•±‘Ì¡•°¹‘•Ñ…¥±=É‘•É•±¥Ù•Éä°•°¹‘•Ñ…¥±=É‘•É‘‘É•ÍÍ1…‰•°°•°¹‘•Ñ…¥±=É‘•É‘‘É•ÍÌ¤¤ì)•°¹½É‘•ÉA…åµ•¹Ğ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ¡…¹”œ°€ ¤€ôøÍå¹A…åµ•¹Ñ!•±À¡•°¹½É‘•ÉA…åµ•¹Ğ°•°¹½É‘•ÉA…åµ•¹Ñ!•±À¤¤ì)•°¹‘•Ñ…¥±=É‘•ÉA…åµ•¹Ğ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ¡…¹”œ°€ ¤€ôøÍå¹A…åµ•¹Ñ!•±À¡•°¹‘•Ñ…¥±=É‘•ÉA…åµ•¹Ğ°•°¹‘•Ñ…¥±=É‘•ÉA…åµ•¹Ñ!•±À¤¤ì)•°¹½É‘•É½É´¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ÍÕ‰µ¥Ğœ°€¡•Ù•¹Ğ¤€ôøì•Ù•¹Ğ¹ÁÉ•Ù•¹Ñ•™…Õ±Ğ ¤ìÁ±…•=É‘•È¡•°¹½É‘•É	¥¹%¹Ù…±Õ”°ì¹…µ”è•°¹ÕÍÑ½µ•É9…µ”¹Ù…±Õ”¹ÑÉ¥´ ¤°•µ…¥°è•°¹ÕÍÑ½µ•Éµ…¥°¹Ù…±Õ”¹ÑÉ¥´ ¤°Á¡½¹”è•°¹ÕÍÑ½µ•ÉA¡½¹”¹Ù…±Õ”¹ÑÉ¥´ ¤ô°•°¹½É‘•É-œ¹Ù…±Õ”°•°¹½É‘•É½É´°ìÁ…åµ•¹Ğè•°¹½É‘•ÉA…åµ•¹Ğ¹Ù…±Õ”°‘•±¥Ù•Éäè•°¹½É‘•É•±¥Ù•Éä¹Ù…±Õ”°…‘‘É•ÍÌè•°¹½É‘•É‘‘É•ÍÌ¹Ù…±Õ”¹ÑÉ¥´ ¤ô¤ìô¤ì)•°¹‘•Ñ…¥±=É‘•É½É´¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ÍÕ‰µ¥Ğœ°€¡•Ù•¹Ğ¤€ôøì•Ù•¹Ğ¹ÁÉ•Ù•¹Ñ•™…Õ±Ğ ¤ìÁ±…•=É‘•È¡•°¹‘•Ñ…¥±AÉ½‘ÕÑ%¹Ù…±Õ”°ì¹…µ”è•°¹‘•Ñ…¥±ÕÍÑ½µ•É9…µ”¹Ù…±Õ”¹ÑÉ¥´ ¤°•µ…¥°è•°¹‘•Ñ…¥±ÕÍÑ½µ•Éµ…¥°¹Ù…±Õ”¹ÑÉ¥´ ¤°Á¡½¹”è•°¹‘•Ñ…¥±ÕÍÑ½µ•ÉA¡½¹”¹Ù…±Õ”¹ÑÉ¥´ ¤ô°•°¹‘•Ñ…¥±=É‘•É-œ¹Ù…±Õ”°•°¹‘•Ñ…¥±=É‘•É½É´°ìÁ…åµ•¹Ğè•°¹‘•Ñ…¥±=É‘•ÉA…åµ•¹Ğ¹Ù…±Õ”°‘•±¥Ù•Éäè•°¹‘•Ñ…¥±=É‘•É•±¥Ù•Éä¹Ù…±Õ”°…‘‘É•ÍÌè•°¹‘•Ñ…¥±=É‘•É‘‘É•ÍÌ¹Ù…±Õ”¹ÑÉ¥´ ¤ô¤ìô¤ì)•°¹±½Í•=É‘•È¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°±½Í•=É‘•É¥…±½Ì¤ì•°¹…¹•±=É‘•ÉÑ¥½¸¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°±½Í•=É‘•É¥…±½Ì¤ì)•°¹±½Í••Ñ…¥±=É‘•È¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°±½Í•=É‘•É¥…±½Ì¤ì•°¹…¹•±•Ñ…¥±=É‘•ÉÑ¥½¸¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°±½Í•=É‘•É¥…±½Ì¤ì)•°¹ÁÕÉ¡…Í•±•ÉÑ±½Í”¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°€ ¤€ôø•°¹ÁÕÉ¡…Í•±•ÉĞ¹±…ÍÍ1¥ÍĞ¹…‘ ¡¥‘‘•¸œ¤¤ì)•°¹ÑÉ…­¥¹½É´¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ÍÕ‰µ¥Ğœ°ÑÉ…­=É‘•ÉÌ¤ì)•°¹ÑÉ…­¥¹±•…È¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°€ ¤€ôøì•°¹ÑÉ…­¥¹½É´¹É•Í•Ğ ¤ì•°¹ÑÉ…­¥¹I•ÍÕ±ÑÌ¹¥¹¹•É!Q50€ô€œñÀ±…ÍÌô‰¡¥¹Ğˆù%¹É•Í„ÑÔÑ•³¥™½¹¼Á…É„½¹ÍÕ±Ñ…ÈÑÕÌÁ•‘¥‘½Ì¸ğ½Àøœìô¤ì)…Íå¹Œ™Õ¹Ñ¥½¸½Á•¹‘µ¥¸¡•Ù•¹Ğ¤ì•Ù•¹Ğ¹ÁÉ•Ù•¹Ñ•™…Õ±Ğ ¤ì•°¹…‘µ¥¹5½‘…°¹Í¡½İ5½‘…° ¤ì…İ…¥ĞÍå¹‘µ¥¸ ¤ìô)•°¹½Á•¹‘µ¥¹1¥¹¬¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°½Á•¹‘µ¥¸¤ì)•°¹™½½Ñ•É‘µ¥¹1¥¹¬¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°½Á•¹‘µ¥¸¤ì)•°¹±½Í•‘µ¥¸¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°€ ¤€ôø•°¹…‘µ¥¹5½‘…°¹±½Í” ¤¤ì)•°¹…‘µ¥¹1½¥¹½É´¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ÍÕ‰µ¥Ğœ°±½¥¹‘µ¥¸¤ì)•°¹…‘µ¥¹1½½ÕĞ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°…Íå¹Œ€ ¤€ôøì…İ…¥Ğ‘ˆ¹…ÕÑ ¹Í¥¹=ÕĞ ¤ìÍÑ…Ñ”¹¥Í‘µ¥¸€ô™…±Í”ì…İ…¥ĞÍå¹‘µ¥¸ ¤ìÑ½…ÍĞ M•Í§Í¸•ÉÉ…‘„¸œ¤ìô¤ì)•°¹µ…¥¹Q…‰Ì¹™½É…  ¡Ñ…ˆ¤€ôøÑ…ˆ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°€ ¤€ôøÍİ¥Ñ¡‘µ¥¹Y¥•Ü¡Ñ…ˆ¹‘…Ñ…Í•Ğ¹Ù¥•Ü¤¤¤ì)•°¹‰¥¹½É´¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ÍÕ‰µ¥Ğœ°Í…Ù•]¡½±•Í…±”¤ì•°¹‘•Ñ…¥±AÉ½‘ÕÑ½É´¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ÍÕ‰µ¥Ğœ°Í…Ù••Ñ…¥°¤ì)•°¹±•…É	¥¹½É´¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°±•…É	¥¹½É´¤ì•°¹±•…É•Ñ…¥±½É´¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ±¥¬œ°±•…É•Ñ…¥±½É´¤ì)•°¹‰¥¹%µ…•¥±”¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ¡…¹”œ°€ ¤€ôøÁÉ•Ù¥•İM•±•Ñ•‘%µ…”¡•°¹‰¥¹%µ…•¥±”°•°¹‰¥¹%µ…•AÉ•Ù¥•Ü°•°¹‰¥¹%µ…•µÁÑä¤¤ì)•°¹‘•Ñ…¥±‘µ¥¹%µ…•¥±”¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ¡…¹”œ°€ ¤€ôøÁÉ•Ù¥•İM•±•Ñ•‘%µ…”¡•°¹‘•Ñ…¥±‘µ¥¹%µ…•¥±”°•°¹‘•Ñ…¥±‘µ¥¹%µ…•AÉ•Ù¥•Ü°•°¹‘•Ñ…¥±‘µ¥¹%µ…•µÁÑä¤¤ì()…Íå¹Œ™Õ¹Ñ¥½¸¥¹¥Ğ ¤ì(€Íå¹•±¥Ù•Éå¥•±‘Ì¡•°¹½É‘•É•±¥Ù•Éä°•°¹½É‘•É‘‘É•ÍÍ1…‰•°°•°¹½É‘•É‘‘É•ÍÌ¤ì(€Íå¹•±¥Ù•Éå¥•±‘Ì¡•°¹‘•Ñ…¥±=É‘•É•±¥Ù•Éä°•°¹‘•Ñ…¥±=É‘•É‘‘É•ÍÍ1…‰•°°•°¹‘•Ñ…¥±=É‘•É‘‘É•ÍÌ¤ì(€Íå¹A…åµ•¹Ñ!•±À¡•°¹½É‘•ÉA…åµ•¹Ğ°•°¹½É‘•ÉA…åµ•¹Ñ!•±À¤ì(€Íå¹A…åµ•¹Ñ!•±À¡•°¹‘•Ñ…¥±=É‘•ÉA…åµ•¹Ğ°•°¹‘•Ñ…¥±=É‘•ÉA…åµ•¹Ñ!•±À¤ì(€ÑÉäì…İ…¥Ğ±½…‘AÉ½‘ÕÑÌ ¤ìô(€…Ñ €¡•ÉÉ½È¤ì(€€€½¹ÍĞµ•ÍÍ…”€ô€9¼™Õ”Á½Í¥‰±”…É…È±½ÌÁÉ½‘ÕÑ½Ì¸©•ÕÑ„ÍÕÁ…‰…Í”½Í¡•µ„¹ÍÅ°•¸•°ME0‘¥Ñ½È¸œì(€€€•°¹‘•Ñ…¥±AÉ½‘ÕÑÌ¹¥¹¹•É!Q50€ô€ñÀ±…ÍÌô‰¡¥¹Ğˆø‘íµ•ÍÍ…•ôğ½Àù€ì•°¹‰¥¹Í1¥ÍĞ¹¥¹¹•É!Q50€ô€ñÀ±…ÍÌô‰¡¥¹Ğˆø‘íµ•ÍÍ…•ôğ½Àù€ì(€€€Ñ½…ÍĞ¡•ÉÉ½É5•ÍÍ…”¡•ÉÉ½È¤°ÑÉÕ”¤ì(€ô)ô()¥¹¥Ğ ¤ì(
+  const needsAddress = delivery.value === 'delivery';
+  label.classList.toggle('hidden', !needsAddress);
+  address.required = needsAddress;
+  if (!needsAddress) address.value = '';
+}
+
+function syncPaymentHelp(payment, target) {
+  target.textContent = payment.value === 'transfer'
+    ? 'La solicitud quedarÃ¡ pendiente hasta que confirmemos la transferencia.'
+    : 'El pago en efectivo quedarÃ¡ pendiente hasta el retiro o la entrega.';
+}
+
+async function placeOrder(itemId, customer, kg, form, options) {
+  setBusy(form, true);
+  try {
+    const item = productById(itemId);
+    if (!item) throw new Error('Producto no encontrado.');
+    const { data, error } = await db.rpc('place_customer_order', {
+      p_product_id: item.product_id,
+      p_lot_id: item.channel === 'CROWDBUYING' ? item.lot_id : null,
+      p_channel: item.channel === 'CROWDBUYING' ? 'wholesale' : 'retail',
+      p_name: customer.name,
+      p_email: customer.email,
+      p_phone: customer.phone,
+      p_quantity: Number(kg),
+      p_payment_method: options.payment,
+      p_delivery_method: options.delivery,
+      p_address: options.address || null
+    });
+    if (error) throw error;
+    closeOrderDialogs();
+    form.reset();
+    const paymentNext = options.payment === 'transfer'
+      ? 'La transferencia debe ser confirmada por Lazo Mercado.'
+      : 'El pago en efectivo se confirmarÃ¡ al coordinar la entrega o el retiro.';
+    el.purchaseAlertText.textContent = `Pedido ${String(data.id).slice(0, 8)} registrado por ${number(data.equivalent_kg)} kg de ${data.product_name}. Total: ${money(data.total_amount)}. ${paymentNext} Guarda este cÃ³digo y consulta el avance con el mismo telÃ©fono.`;
+    el.purchaseAlert.classList.remove('hidden');
+    await loadProducts();
+  } catch (error) {
+    toast(errorMessage(error), true);
+  } finally {
+    setBusy(form, false);
+  }
+}
+
+async function trackOrders(event) {
+  event.preventDefault();
+  setBusy(el.trackingForm, true);
+  try {
+    const { data, error } = await db.rpc('orders_by_phone', { p_phone: el.trackingPhone.value });
+    if (error) throw error;
+    el.trackingResults.innerHTML = data?.length ? data.map((order) => `
+      <article class="tracking-card"><div class="tracking-head"><div><strong>${escapeHTML(order.product_name)}</strong><p class="bin-meta">Pedido ${escapeHTML(String(order.id).slice(0, 8))} Â· ${new Date(order.created_at).toLocaleString('es-CL')}</p></div><span class="channel-badge">${order.channel === 'retail' ? 'Detalle' : 'Mayorista'}</span></div>
+      <p>${number(order.equivalent_kg)} kg Â· ${money(order.total_amount)} Â· ${escapeHTML(PAYMENT_LABELS[order.payment_status] || order.payment_status)}</p><span class="order-status ${escapeHTML(order.operational_status)}">${escapeHTML(ORDER_LABELS[order.operational_status] || order.operational_status)}</span></article>`).join('')
+      : '<p class="hint">No encontramos pedidos con ese telÃ©fono.</p>';
+  } catch (error) {
+    el.trackingResults.innerHTML = `<p class="hint">${escapeHTML(errorMessage(error))}</p>`;
+  } finally {
+    setBusy(el.trackingForm, false);
+  }
+}
+
+async function isCurrentUserAdmin() {
+  const { data: sessionData } = await db.auth.getSession();
+  if (!sessionData.session) return false;
+  const { data, error } = await db.rpc('is_lazo_admin');
+  if (error) throw error;
+  return data === true;
+}
+
+async function syncAdmin() {
+  try { state.isAdmin = await isCurrentUserAdmin(); }
+  catch { state.isAdmin = false; }
+  el.adminLoginSection.classList.toggle('hidden', state.isAdmin);
+  el.adminPanelSection.classList.toggle('hidden', !state.isAdmin);
+  if (state.isAdmin) await loadAdminData();
+}
+
+async function loginAdmin(event) {
+  event.preventDefault();
+  setBusy(el.adminLoginForm, true);
+  try {
+    const { error } = await db.auth.signInWithPassword({ email: el.adminEmail.value.trim(), password: el.adminPassword.value });
+    if (error) throw error;
+    if (!(await isCurrentUserAdmin())) {
+      await db.auth.signOut();
+      throw new Error('La cuenta no tiene permisos de administrador.');
+    }
+    el.adminLoginForm.reset();
+    await syncAdmin();
+    toast('SesiÃ³n administrativa iniciada.');
+  } catch (error) { toast(errorMessage(error), true); }
+  finally { setBusy(el.adminLoginForm, false); }
+}
+
+async function loadAdminData() {
+  const [productsResult, lotsResult, ordersResult, customersResult] = await Promise.all([
+    db.from('products').select('*').order('created_at', { ascending: false }),
+    db.from('lots').select('*, product:products(*)').order('created_at', { ascending: false }),
+    db.from('orders').select('*, product:products(*), customer:customers(*), lot:lots(*), delivery:delivery_details(*), payments(*), status_history:order_status_history(*)').order('created_at', { ascending: false }),
+    db.from('customers').select('*').order('created_at', { ascending: false })
+  ]);
+  const failed = [productsResult, lotsResult, ordersResult, customersResult].find((result) => result.error);
+  if (failed) throw failed.error;
+  const rawProducts = productsResult.data || [];
+  const rawLots = lotsResult.data || [];
+  const details = rawProducts.filter((product) => product.retail_enabled !== false && !product.archived_at).map((product) => ({
+    ...product, id: product.id, product_id: product.id, channel: 'DETALLE',
+    price_per_kg: product.detail_price, stock_kg: product.retail_stock_kg,
+    status: Number(product.retail_stock_kg) > 0 ? 'OPEN' : 'SOLD_OUT'
+  }));
+  const wholesale = rawLots.filter((lot) => !lot.archived_at).map((lot) => ({
+    ...lot, id: lot.id, lot_id: lot.id, channel: 'CROWDBUYING', name: lot.product?.name || 'Producto',
+    variety: lot.product?.variety || '', notes: lot.product?.description || '', image_url: lot.product?.image_url || '',
+    price_per_kg: lot.wholesale_price, capacity_kg: lot.total_capacity_kg, min_order_kg: lot.minimum_purchase_kg,
+    sold_kg: Number(lot.customer_paid_kg) + Number(lot.market_assumed_kg),
+    lot_status: lot.status,
+    status: lot.status === 'open' ? 'OPEN' : lot.status === 'full' ? 'SOLD_OUT' : 'CLOSED'
+  }));
+  state.products = [...wholesale, ...details];
+  state.rawProducts = rawProducts;
+  state.lots = rawLots;
+  state.orders = (ordersResult.data || []).map((order) => ({
+    ...order, channel: order.channel === 'wholesale' ? 'CROWDBUYING' : 'DETALLE',
+    kg: order.equivalent_kg, total_price: order.total_amount,
+    status: order.operational_status,
+    latestPayment: [...(order.payments || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0] || null,
+    delivery: Array.isArray(order.delivery) ? order.delivery[0] : order.delivery,
+    statusHistory: [...(order.status_history || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  }));
+  state.customers = customersResult.data || [];
+  renderProducts();
+  renderAdmin();
+}
+
+function orderActions(order) {
+  if (order.status === 'CANCELADO') return '';
+  const actions = [];
+  if (order.status === 'PENDIENTE_CONFIRMACION') {
+    actions.push(`<button class="btn tiny" type="button" data-action="confirm-payment" data-id="${order.id}">Confirmar pago</button>`);
+  } else {
+    const blockedWholesale = order.channel === 'CROWDBUYING'
+      && order.status === 'ESPERANDO_COMPRA_GRUPAL'
+      && order.lot?.status !== 'full';
+    if (!blockedWholesale && order.status !== 'COMPLETADO') {
+      const label = order.status === 'LISTO_PARA_ENTREGA'
+        ? (order.delivery_method === 'pickup' ? 'Marcar como retirado' : 'Iniciar despacho')
+        : (ADVANCE_LABELS[order.status] || 'Avanzar');
+      actions.push(`<button class="btn tiny" type="button" data-action="advance-order" data-id="${order.id}">${escapeHTML(label)}</button>`);
+    }
+    if (order.statusHistory?.some((entry) => entry.from_status)) {
+      actions.push(`<button class="btn tiny secondary" type="button" data-action="revert-order" data-id="${order.id}">Corregir Ãºltimo estado</button>`);
+    }
+    if (order.payment_status === 'CONFIRMADO' && ['PREPARANDO', 'ESPERANDO_COMPRA_GRUPAL'].includes(order.status)) {
+      actions.push(`<button class="btn tiny secondary" type="button" data-action="revert-payment" data-id="${order.id}">Revertir pago</button>`);
+    }
+  }
+  if (!['EN_TRANSITO', 'ENTREGADO', 'COMPLETADO'].includes(order.status)) {
+    actions.push(`<button class="btn tiny warn" type="button" data-action="cancel-order" data-id="${order.id}">Cancelar pedido</button>`);
+  }
+  return `<div class="order-actions">${actions.join('')}</div>`;
+}
+
+function orderAdminCard(order) {
+  const delivery = DELIVERY_METHOD_LABELS[order.delivery_method] || order.delivery_method;
+  const payment = PAYMENT_LABELS[order.payment_status] || order.payment_status;
+  const address = order.delivery_method === 'delivery' && order.delivery?.address_line
+    ? `<span><strong>DirecciÃ³n:</strong> ${escapeHTML(order.delivery.address_line)}</span>` : '';
+  const cancelled = order.cancellation_reason
+    ? `<p class="order-note"><strong>Motivo:</strong> ${escapeHTML(order.cancellation_reason)}</p>` : '';
+  return `<article class="admin-bin order-admin-card">
+    <div class="admin-row"><div><strong>${escapeHTML(order.product?.name || 'Producto')}</strong><p class="bin-meta">Pedido ${escapeHTML(String(order.id).slice(0, 8))} Â· ${new Date(order.created_at).toLocaleString('es-CL')}</p></div><span class="order-status ${escapeHTML(order.status)}">${escapeHTML(ORDER_LABELS[order.status] || order.status)}</span></div>
+    <div class="order-detail-grid"><span><strong>Cliente:</strong> ${escapeHTML(order.customer?.full_name || '')}</span><span><strong>TelÃ©fono:</strong> ${escapeHTML(order.customer?.phone || '')}</span><span><strong>Cantidad:</strong> ${number(order.kg)} kg</span><span><strong>Total:</strong> ${money(order.total_price)}</span><span><strong>Pago:</strong> ${escapeHTML(PAYMENT_METHOD_LABELS[order.payment_method] || order.payment_method)} Â· ${escapeHTML(payment)}</span><span><strong>Entrega:</strong> ${escapeHTML(delivery)}</span>${address}</div>
+    ${cancelled}${orderActions(order)}
+  </article>`;
+}
+
+function productAdminCard(product) {
+  const stockText = product.channel === 'DETALLE' ? `Stock: ${number(product.stock_kg)} kg` : `Vendido: ${number(product.sold_kg)} / ${number(product.capacity_kg)} kg`;
+  return `<article class="admin-bin"><div class="admin-row"><div><strong>${escapeHTML(product.name)}</strong><p class="bin-meta">${stockText} Â· ${money(product.price_per_kg)}/kg</p></div><span class="bin-status ${escapeHTML(product.status)}">${escapeHTML(PRODUCT_STATUS_LABELS[product.status] || product.status)}</span></div><div class="order-actions"><button class="btn tiny secondary" type="button" data-action="edit-product" data-id="${product.id}">Editar</button><button class="btn tiny warn" type="button" data-action="archive-product" data-id="${product.id}">Archivar</button></div></article>`;
+}
+
+function barRows(values, emptyMessage = 'TodavÃ­a no hay datos para este grÃ¡fico.') {
+  if (!values.some((item) => Number(item.value || 0) > 0)) {
+    return `<div class="empty-state compact"><strong>Sin movimientos</strong><p>${escapeHTML(emptyMessage)}</p></div>`;
+  }
+  const max = Math.max(1, ...values.map((item) => Number(item.value || 0)));
+  return values.map((item) => `<div class="bar-row"><span>${escapeHTML(item.label)}</span><div class="bar-track"><div class="bar-fill" style="--w:${Math.round((Number(item.value || 0) / max) * 100)}%"></div></div><strong>${item.money ? money(item.value) : number(item.value)}</strong></div>`).join('');
+}
+
+function renderProcurement(detail, wholesale) {
+  const activeOrders = state.orders.filter((order) => !['CANCELADO', 'COMPLETADO'].includes(order.status));
+  const pendingKg = activeOrders.filter((order) => order.payment_status !== 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
+  const detailPrepareKg = activeOrders.filter((order) => order.channel === 'DETALLE' && order.payment_status === 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
+  const wholesaleBuyKg = wholesale.filter((lot) => lot.lot_status === 'full' && Number(lot.capacity_kg) > 0).reduce((sum, lot) => sum + Number(lot.capacity_kg), 0);
+  el.procurementSummary.innerHTML = `<article class="kpi-card"><p>Preparar al detalle</p><strong>${number(detailPrepareKg)} kg</strong></article><article class="kpi-card"><p>Comprar mayorista</p><strong>${number(wholesaleBuyKg)} kg</strong></article><article class="kpi-card"><p>Pendiente de pago</p><strong>${number(pendingKg)} kg</strong></article>`;
+
+  const detailCards = detail.map((product) => {
+    const orders = activeOrders.filter((order) => order.channel === 'DETALLE' && order.product_id === product.product_id);
+    const confirmed = orders.filter((order) => order.payment_status === 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
+    const pending = orders.filter((order) => order.payment_status !== 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
+    const action = confirmed > 0 ? `Preparar ${number(confirmed)} kg` : pending > 0 ? 'Esperar confirmaciÃ³n de pago' : 'Sin pedidos por preparar';
+    return `<article class="procurement-card"><div class="admin-row"><div><strong>${escapeHTML(product.name)}</strong><p class="bin-meta">Venta al detalle</p></div><span class="action-badge">${escapeHTML(action)}</span></div><div class="procurement-grid"><span>Confirmado<strong>${number(confirmed)} kg</strong></span><span>Pendiente pago<strong>${number(pending)} kg</strong></span><span>Stock libre<strong>${number(product.stock_kg)} kg</strong></span><span>Comprar proveedor<strong>0 kg</strong></span></div></article>`;
+  });
+
+  const wholesaleCards = wholesale.map((lot) => {
+    const orders = activeOrders.filter((order) => order.channel === 'CROWDBUYING' && order.lot_id === lot.lot_id);
+    const pending = orders.filter((order) => order.payment_status !== 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
+    const confirmed = Number(lot.sold_kg || 0);
+    const remaining = Math.max(0, Number(lot.capacity_kg) - confirmed);
+    const ready = lot.lot_status === 'full' || remaining === 0;
+    return `<article class="procurement-card"><div class="admin-row"><div><strong>${escapeHTML(lot.name)}</strong><p class="bin-meta">Lote mayorista Â· ${number(lot.capacity_kg)} kg</p></div><span class="action-badge ${ready ? 'ready' : ''}">${ready ? `Comprar ${number(lot.capacity_kg)} kg` : `Faltan ${number(remaining)} kg`}</span></div><div class="procurement-grid"><span>Confirmado<strong>${number(confirmed)} kg</strong></span><span>Pendiente pago<strong>${number(pending)} kg</strong></span><span>Disponible<strong>${number(remaining)} kg</strong></span><span>AcciÃ³n<strong>${ready ? 'Comprar al proveedor' : 'Esperar pedidos'}</strong></span></div></article>`;
+  });
+  el.procurementList.innerHTML = [...detailCards, ...wholesaleCards].join('') || '<div class="empty-state"><strong>Sin productos activos</strong><p>Crea un producto para comenzar a preparar pedidos.</p></div>';
+}
+
+function renderAdmin() {
+  const wholesale = state.products.filter((p) => p.channel === 'CROWDBUYING');
+  const detail = state.products.filter((p) => p.channel === 'DETALLE');
+  const wholesaleOrders = state.orders.filter((o) => o.channel === 'CROWDBUYING');
+  const detailOrders = state.orders.filter((o) => o.channel === 'DETALLE');
+  el.adminBinsOpen.innerHTML = wholesale.filter((p) => p.status !== 'SOLD_OUT').map(productAdminCard).join('') || '<div class="empty-state compact"><strong>Sin lotes activos</strong><p>Crea o publica un producto mayorista.</p></div>';
+  el.adminBinsSold.innerHTML = wholesale.filter((p) => p.status === 'SOLD_OUT').map(productAdminCard).join('') || '<div class="empty-state compact"><strong>Sin lotes completos</strong><p>Los lotes completos aparecerÃ¡n aquÃ­.</p></div>';
+  el.adminDetailProducts.innerHTML = detail.map(productAdminCard).join('') || '<div class="empty-state compact"><strong>Sin productos al detalle</strong><p>Crea el primer producto para publicarlo.</p></div>';
+  el.adminDetailOrders.innerHTML = detailOrders.map(orderAdminCard).join('') || '<div class="empty-state"><strong>Sin pedidos al detalle</strong><p>Los pedidos de clientes aparecerÃ¡n aquÃ­.</p></div>';
+
+  const validOrders = state.orders.filter((order) => order.status !== 'CANCELADO');
+  const totalKg = validOrders.reduce((sum, order) => sum + Number(order.kg), 0);
+  const totalAmount = state.orders.reduce((sum, order) => sum + Number(order.total_price), 0);
+  const activeProductCount = state.rawProducts.filter((product) => !product.archived_at && product.is_published).length;
+  el.kpiGrid.innerHTML = `<article class="kpi-card"><p>Productos Ãºnicos activos</p><strong>${activeProductCount}</strong></article><article class="kpi-card"><p>Clientes</p><strong>${state.customers.length}</strong></article><article class="kpi-card"><p>Pedidos</p><strong>${state.orders.length}</strong></article><article class="kpi-card"><p>Monto solicitado</p><strong>${money(totalAmount)}</strong></article>`;
+  const wholesaleCapacity = wholesale.reduce((sum, p) => sum + Number(p.capacity_kg), 0);
+  const wholesaleSold = wholesale.reduce((sum, p) => sum + Number(p.sold_kg), 0);
+  const wholesalePending = wholesaleOrders.filter((order) => order.payment_status !== 'CONFIRMADO' && order.status !== 'CANCELADO').reduce((sum, order) => sum + Number(order.kg), 0);
+  const soldPct = wholesaleCapacity ? Math.min(100, Math.round((wholesaleSold / wholesaleCapacity) * 100)) : 0;
+  const pendingPct = wholesaleCapacity ? Math.min(100 - soldPct, Math.round((wholesalePending / wholesaleCapacity) * 100)) : 0;
+  el.kgChart.classList.toggle('hidden', wholesaleCapacity === 0);
+  el.kgChart.style.setProperty('--part1', `${soldPct}%`); el.kgChart.style.setProperty('--part2', `${pendingPct}%`);
+  el.kgChart.innerHTML = '<div></div><div></div><div></div>';
+  el.kgLegend.innerHTML = wholesaleCapacity
+    ? `<span>Confirmado: <strong>${number(wholesaleSold)} kg (${soldPct}%)</strong></span><span>Pendiente de pago: <strong>${number(wholesalePending)} kg</strong></span><span>Disponible: <strong>${number(Math.max(0, wholesaleCapacity - wholesaleSold))} kg</strong></span><span>Total solicitado: <strong>${number(totalKg)} kg</strong></span>`
+    : '<div class="empty-state compact"><strong>Sin lotes mayoristas</strong><p>Crea un lote para visualizar su avance.</p></div>';
+  el.amountChart.innerHTML = barRows(ORDER_STATES.map((status) => ({ label: ORDER_LABELS[status], value: state.orders.filter((o) => o.status === status).reduce((sum, o) => sum + Number(o.total_price), 0), money: true })));
+
+  renderProcurement(detail, wholesale);
+
+  const completed = state.orders.filter((o) => o.status === 'COMPLETADO');
+  const completedAmount = completed.reduce((sum, o) => sum + Number(o.total_price), 0);
+  el.completedSummary.innerHTML = `<article class="kpi-card"><p>Ventas completadas</p><strong>${completed.length}</strong></article><article class="kpi-card"><p>Monto completado</p><strong>${money(completedAmount)}</strong></article>`;
+  el.completedChannelChart.innerHTML = barRows(['CROWDBUYING', 'DETALLE'].map((channel) => ({ label: channel === 'DETALLE' ? 'Detalle' : 'Mayorista', value: completed.filter((o) => o.channel === channel).reduce((sum, o) => sum + Number(o.total_price), 0), money: true })), 'TodavÃ­a no existen ventas completadas.');
+  const byProduct = completed.reduce((map, order) => { const name = order.product?.name || 'Producto'; map[name] = (map[name] || 0) + Number(order.kg); return map; }, {});
+  el.completedProductChart.innerHTML = barRows(Object.entries(byProduct).map(([label, value]) => ({ label, value })), 'Los productos vendidos aparecerÃ¡n al completar una venta.');
+  el.completedSalesList.innerHTML = completed.map(orderAdminCard).join('') || '<div class="empty-state"><strong>Sin ventas completadas</strong><p>Cuando finalices una entrega aparecerÃ¡ aquÃ­.</p></div>';
+
+  const confirmedOrders = state.orders.filter((order) => order.payment_status === 'CONFIRMADO');
+  const confirmedAmount = confirmedOrders.reduce((sum, order) => sum + Number(order.total_price), 0);
+  const pendingAmount = state.orders.filter((order) => !['CONFIRMADO', 'CANCELADO', 'REEMBOLSO_SOLICITADO', 'REEMBOLSADO'].includes(order.payment_status)).reduce((sum, order) => sum + Number(order.total_price), 0);
+  const cancelled = state.orders.filter((o) => o.status === 'CANCELADO').reduce((sum, o) => sum + Number(o.total_price), 0);
+  const refundPending = state.orders.filter((order) => order.payment_status === 'REEMBOLSO_SOLICITADO').reduce((sum, order) => sum + Number(order.total_price), 0);
+  el.financialKpis.innerHTML = `<article class="kpi-card"><p>Pago confirmado</p><strong>${money(confirmedAmount)}</strong></article><article class="kpi-card"><p>Pendiente de pago</p><strong>${money(pendingAmount)}</strong></article><article class="kpi-card"><p>Completado</p><strong>${money(completedAmount)}</strong></article><article class="kpi-card"><p>Reembolso pendiente</p><strong>${money(refundPending)}</strong></article><article class="kpi-card"><p>Cancelado</p><strong>${money(cancelled)}</strong></article>`;
+  el.financialChannelChart.innerHTML = barRows(['CROWDBUYING', 'DETALLE'].map((channel) => ({ label: channel === 'DETALLE' ? 'Detalle' : 'Mayorista', value: confirmedOrders.filter((o) => o.channel === channel).reduce((sum, o) => sum + Number(o.total_price), 0), money: true })), 'Confirma un pago para reconocerlo como ingreso.');
+  el.financialStatusChart.innerHTML = el.amountChart.innerHTML;
+  el.financialList.innerHTML = state.orders.map(orderAdminCard).join('') || '<div class="empty-state"><strong>Sin movimientos</strong><p>Los pedidos aparecerÃ¡n aquÃ­ con su estado de pago.</p></div>';
+
+  const hiddenWholesaleOrders = wholesaleOrders.length ? '' : '<div class="empty-state compact"><strong>Sin pedidos mayoristas</strong><p>Los pedidos del lote aparecerÃ¡n aquÃ­.</p></div>';
+  el.adminBinsOpen.insertAdjacentHTML('beforeend', `<div class="admin-divider"><span>Pedidos mayoristas</span></div>${hiddenWholesaleOrders}${wholesaleOrders.map(orderAdminCard).join('')}`);
+}
+
+function switchAdminView(view) {
+  Object.entries(el.adminViews).forEach(([name, section]) => section.classList.toggle('hidden', name !== view));
+  el.mainTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.view === view));
+}
+
+function clearBinForm() { el.binForm.reset(); el.binId.value = ''; el.binCapacity.value = 500; el.binMinKg.value = 50; showImagePreview(el.binImagePreview, el.binImageEmpty); }
+function clearDetailForm() { el.detailProductForm.reset(); el.detailAdminId.value = ''; showImagePreview(el.detailAdminImagePreview, el.detailAdminImageEmpty); }
+
+async function saveWholesale(event) {
+  event.preventDefault(); setBusy(el.binForm, true);
+  try {
+    const current = el.binId.value ? productById(el.binId.value) : null;
+    const uploadedImage = await uploadProductImage(el.binImageFile.files?.[0]);
+    const imageUrl = uploadedImage || current?.image_url || '';
+    if (!imageUrl) throw new Error('Selecciona una imagen para el producto.');
+    const { error } = await db.rpc('admin_save_wholesale_product', {
+      p_lot_id: el.binId.value || null,
+      p_name: el.binProduct.value.trim(),
+      p_variety: el.binVariety.value.trim(),
+      p_description: el.binNotes.value.trim(),
+      p_image_url: imageUrl,
+      p_price: Number(el.binPrice.value),
+      p_capacity: Number(el.binCapacity.value),
+      p_minimum: Number(el.binMinKg.value),
+      p_status: el.binStatus.value === 'OPEN' ? 'open' : el.binStatus.value === 'SOLD_OUT' ? 'full' : 'closed'
+    });
+    if (error) throw error;
+    clearBinForm(); await loadAdminData(); toast('Producto mayorista guardado.');
+  } catch (error) { toast(errorMessage(error), true); } finally { setBusy(el.binForm, false); }
+}
+
+async function saveDetail(event) {
+  event.preventDefault(); setBusy(el.detailProductForm, true);
+  const current = el.detailAdminId.value ? productById(el.detailAdminId.value) : null;
+  try {
+    const uploadedImage = await uploadProductImage(el.detailAdminImageFile.files?.[0]);
+    const imageUrl = uploadedImage || current?.image_url || '';
+    if (!imageUrl) throw new Error('Selecciona una imagen para el producto.');
+    const payload = { name: el.detailAdminName.value.trim(), variety: current?.variety || '', description: current?.notes || '', image_url: imageUrl, sale_unit: 'kilo', equivalent_weight_kg: 1, wholesale_price: Number(current?.wholesale_price || el.detailAdminPrice.value), detail_price: Number(el.detailAdminPrice.value), minimum_quantity: 1, retail_stock_kg: Number(el.detailAdminStock.value), retail_enabled: true, archived_at: null, season_status: 'available', is_published: true };
+    const query = el.detailAdminId.value ? db.from('products').update(payload).eq('id', el.detailAdminId.value) : db.from('products').insert(payload);
+    const { error } = await query; if (error) throw error;
+    clearDetailForm(); await loadAdminData(); toast('Producto al detalle guardado.');
+  } catch (error) { toast(errorMessage(error), true); } finally { setBusy(el.detailProductForm, false); }
+}
+
+function editProduct(id) {
+  const product = productById(id); if (!product) return;
+  switchAdminView('crear');
+  if (product.channel === 'CROWDBUYING') {
+    el.binId.value = product.id; el.binProduct.value = product.name; el.binVariety.value = product.variety;
+    el.binNotes.value = product.notes; el.binPrice.value = product.price_per_kg; el.binCapacity.value = product.capacity_kg;
+    el.binMinKg.value = product.min_order_kg; el.binStatus.value = product.status;
+    showImagePreview(el.binImagePreview, el.binImageEmpty, product.image_url);
+  } else {
+    el.detailAdminId.value = product.id; el.detailAdminName.value = product.name;
+    el.detailAdminPrice.value = product.price_per_kg; el.detailAdminStock.value = product.stock_kg;
+    showImagePreview(el.detailAdminImagePreview, el.detailAdminImageEmpty, product.image_url);
+  }
+}
+
+async function archiveProduct(id) {
+  const item = productById(id);
+  if (!item) return;
+  const label = item.channel === 'CROWDBUYING' ? 'lote mayorista' : 'producto al detalle';
+  if (!window.confirm(`Â¿Archivar este ${label}? DejarÃ¡ de aparecer para los clientes, pero conservarÃ¡ sus pedidos.`)) return;
+  const { error } = item.channel === 'CROWDBUYING'
+    ? await db.rpc('admin_archive_lot', { p_lot_id: item.lot_id })
+    : await db.rpc('admin_archive_retail_product', { p_product_id: item.product_id });
+  if (error) return toast(errorMessage(error), true);
+  await loadAdminData(); toast('Producto archivado sin perder su historial.');
+}
+
+function orderSummary(id) {
+  const order = state.orders.find((item) => item.id === id);
+  return order ? `${order.product?.name || 'Producto'} Â· ${number(order.kg)} kg Â· ${money(order.total_price)}` : 'este pedido';
+}
+
+async function advanceOrder(id) {
+  if (!window.confirm(`Â¿Confirmas el siguiente avance para ${orderSummary(id)}?`)) return;
+  const { error } = await db.rpc('admin_advance_order', { p_order_id: id });
+  if (error) return toast(errorMessage(error), true);
+  await loadAdminData(); toast('Pedido actualizado. Puedes corregir el Ãºltimo estado si fue un error.');
+}
+
+async function confirmOrderPayment(id) {
+  if (!window.confirm(`Â¿Confirmas que recibiste el pago de ${orderSummary(id)}?`)) return;
+  const { error } = await db.rpc('admin_confirm_order_payment', { p_order_id: id });
+  if (error) return toast(errorMessage(error), true);
+  await loadAdminData(); toast('Pago confirmado y pedido actualizado.');
+}
+
+async function revertOrder(id) {
+  const reason = window.prompt('Indica el motivo para corregir el Ãºltimo estado:');
+  if (!reason) return;
+  const { error } = await db.rpc('admin_revert_order_status', { p_order_id: id, p_reason: reason.trim() });
+  if (error) return toast(errorMessage(error), true);
+  await loadAdminData(); toast('Ãšltimo cambio de estado corregido.');
+}
+
+async function revertPayment(id) {
+  const reason = window.prompt('Indica por quÃ© debes revertir la confirmaciÃ³n del pago:');
+  if (!reason) return;
+  if (!window.confirm(`El pago de ${orderSummary(id)} volverÃ¡ a pendiente. Â¿Continuar?`)) return;
+  const { error } = await db.rpc('admin_revert_order_payment', { p_order_id: id, p_reason: reason.trim() });
+  if (error) return toast(errorMessage(error), true);
+  await loadAdminData(); toast('Pago revertido a pendiente.');
+}
+
+async function cancelOrder(id) {
+  const reason = window.prompt('Indica el motivo de la cancelaciÃ³n:');
+  if (!reason) return;
+  if (!window.confirm(`Â¿Cancelar definitivamente ${orderSummary(id)}? El stock se devolverÃ¡ y, si estaba pagado, quedarÃ¡ un reembolso pendiente.`)) return;
+  const { error } = await db.rpc('admin_cancel_order', { p_order_id: id, p_reason: reason.trim() });
+  if (error) return toast(errorMessage(error), true);
+  await loadAdminData(); toast('Pedido cancelado con motivo registrado.');
+}
+
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-action]'); if (!button) return;
+  const { action, id } = button.dataset;
+  if (action === 'order-crowd') openCrowdOrder(id);
+  if (action === 'order-detail') openDetailOrder(id);
+  if (action === 'edit-product') editProduct(id);
+  if (action === 'archive-product') archiveProduct(id);
+  if (action === 'advance-order') advanceOrder(id);
+  if (action === 'revert-order') revertOrder(id);
+  if (action === 'revert-payment') revertPayment(id);
+  if (action === 'cancel-order') cancelOrder(id);
+  if (action === 'confirm-payment') confirmOrderPayment(id);
+});
+
+el.chooseDetail.addEventListener('click', () => setMode('detail'));
+el.chooseCrowd.addEventListener('click', () => setMode('crowd'));
+el.modeTabs.forEach((tab) => tab.addEventListener('click', () => setMode(tab.dataset.mode)));
+el.orderKg.addEventListener('input', () => updateOrderPreview(productById(el.orderBinId.value), el.orderKg.value, el.orderTotal));
+el.detailOrderKg.addEventListener('input', () => updateOrderPreview(productById(el.detailProductId.value), el.detailOrderKg.value, el.detailOrderTotal));
+el.orderDelivery.addEventListener('change', () => syncDeliveryFields(el.orderDelivery, el.orderAddressLabel, el.orderAddress));
+el.detailOrderDelivery.addEventListener('change', () => syncDeliveryFields(el.detailOrderDelivery, el.detailOrderAddressLabel, el.detailOrderAddress));
+el.orderPayment.addEventListener('change', () => syncPaymentHelp(el.orderPayment, el.orderPaymentHelp));
+el.detailOrderPayment.addEventListener('change', () => syncPaymentHelp(el.detailOrderPayment, el.detailOrderPaymentHelp));
+el.orderForm.addEventListener('submit', (event) => { event.preventDefault(); placeOrder(el.orderBinId.value, { name: el.customerName.value.trim(), email: el.customerEmail.value.trim(), phone: el.customerPhone.value.trim() }, el.orderKg.value, el.orderForm, { payment: el.orderPayment.value, delivery: el.orderDelivery.value, address: el.orderAddress.value.trim() }); });
+el.detailOrderForm.addEventListener('submit', (event) => { event.preventDefault(); placeOrder(el.detailProductId.value, { name: el.detailCustomerName.value.trim(), email: el.detailCustomerEmail.value.trim(), phone: el.detailCustomerPhone.value.trim() }, el.detailOrderKg.value, el.detailOrderForm, { payment: el.detailOrderPayment.value, delivery: el.detailOrderDelivery.value, address: el.detailOrderAddress.value.trim() }); });
+el.closeOrder.addEventListener('click', closeOrderDialogs); el.cancelOrderAction.addEventListener('click', closeOrderDialogs);
+el.closeDetailOrder.addEventListener('click', closeOrderDialogs); el.cancelDetailOrderAction.addEventListener('click', closeOrderDialogs);
+el.purchaseAlertClose.addEventListener('click', () => el.purchaseAlert.classList.add('hidden'));
+el.trackingForm.addEventListener('submit', trackOrders);
+el.trackingClear.addEventListener('click', () => { el.trackingForm.reset(); el.trackingResults.innerHTML = '<p class="hint">Ingresa tu telÃ©fono para consultar tus pedidos.</p>'; });
+async function openAdmin(event) { event.preventDefault(); el.adminModal.showModal(); await syncAdmin(); }
+el.openAdminLink.addEventListener('click', openAdmin);
+el.footerAdminLink.addEventListener('click', openAdmin);
+el.closeAdmin.addEventListener('click', () => el.adminModal.close());
+el.adminLoginForm.addEventListener('submit', loginAdmin);
+el.adminLogout.addEventListener('click', async () => { await db.auth.signOut(); state.isAdmin = false; await syncAdmin(); toast('SesiÃ³n cerrada.'); });
+el.mainTabs.forEach((tab) => tab.addEventListener('click', () => switchAdminView(tab.dataset.view)));
+el.binForm.addEventListener('submit', saveWholesale); el.detailProductForm.addEventListener('submit', saveDetail);
+el.clearBinForm.addEventListener('click', clearBinForm); el.clearDetailForm.addEventListener('click', clearDetailForm);
+el.binImageFile.addEventListener('change', () => previewSelectedImage(el.binImageFile, el.binImagePreview, el.binImageEmpty));
+el.detailAdminImageFile.addEventListener('change', () => previewSelectedImage(el.detailAdminImageFile, el.detailAdminImagePreview, el.detailAdminImageEmpty));
+
+async function init() {
+  syncDeliveryFields(el.orderDelivery, el.orderAddressLabel, el.orderAddress);
+  syncDeliveryFields(el.detailOrderDelivery, el.detailOrderAddressLabel, el.detailOrderAddress);
+  syncPaymentHelp(el.orderPayment, el.orderPaymentHelp);
+  syncPaymentHelp(el.detailOrderPayment, el.detailOrderPaymentHelp);
+  try { await loadProducts(); }
+  catch (error) {
+    const message = 'No fue posible cargar los productos. Ejecuta supabase/schema.sql en el SQL Editor.';
+    el.detailProducts.innerHTML = `<p class="hint">${message}</p>`; el.binsList.innerHTML = `<p class="hint">${message}</p>`;
+    toast(errorMessage(error), true);
+  }
+}
+
+init();
