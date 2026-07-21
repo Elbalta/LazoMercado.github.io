@@ -17,8 +17,11 @@ Desde **Supabase Dashboard → SQL Editor**, ejecuta los archivos completos en e
 3. [`supabase/security.sql`](supabase/security.sql): RLS, lectura pública limitada y permisos de ejecución administrativos.
 4. [`supabase/seed.sql`](supabase/seed.sql) **opcional**: un producto y un lote publicados para comprobar lecturas.
 5. [`supabase/stage2-orders-api.sql`](supabase/stage2-orders-api.sql): stock al detalle, usuarios administradores, registro transaccional de pedidos, seguimiento por teléfono, confirmación de pagos, bucket `product-images` y políticas administrativas.
+6. [`supabase/stage3-admin-operations.sql`](supabase/stage3-admin-operations.sql): separación de canales, archivado seguro, historial de estados, corrección de errores administrativos, cancelaciones con motivo y creación transaccional de productos mayoristas.
 
 `stage2-orders-api.sql` puede aplicarse sobre una Etapa 1 existente. No vuelvas a ejecutar `schema.sql` si las tablas ya existen.
+
+Si ya instalaste la Etapa 2, ejecuta solamente `stage3-admin-operations.sql`. La migración conserva productos y pedidos existentes. Los productos con stock al detalle cero que estén asociados a un lote se clasifican como mayoristas para evitar que aparezcan duplicados en el catálogo al detalle.
 
 ## Administrador
 
@@ -33,6 +36,8 @@ Desde **Supabase Dashboard → SQL Editor**, ejecuta los archivos completos en e
 - Solo un usuario registrado en `admin_users` puede crear, reemplazar o eliminar archivos del bucket.
 - Al editar sin seleccionar otro archivo se conserva la imagen actual.
 - Cada producto al detalle administra nombre, precio, stock e imagen. Cada compra mayorista administra además variedad, capacidad, compra mínima, estado y descripción.
+- Los productos se archivan en lugar de eliminarse cuando deben conservar historial. Archivar los oculta de la tienda sin borrar pedidos.
+- Un producto mayorista ya no aparece automáticamente como producto al detalle con stock cero.
 - Los productos heredados se migran con stock inicial cero para evitar ventas sobre una cantidad inventada; define el stock real desde el panel antes de publicarlos para compra.
 
 ## Flujo de pedidos
@@ -43,6 +48,10 @@ Desde **Supabase Dashboard → SQL Editor**, ejecuta los archivos completos en e
 - En mayorista el cupo se consolida al confirmar el pago, usando la función transaccional original.
 - `orders_by_phone` permite al cliente consultar el estado de su solicitud.
 - Las acciones administrativas requieren una sesión incluida en `admin_users` y están protegidas con RLS.
+- La pestaña **Preparación** agrupa kilos confirmados, pendientes y listos para comprar al proveedor.
+- Confirmar, avanzar y cancelar requieren confirmación. Las correcciones quedan registradas en `order_status_history`.
+- Los pedidos para retiro saltan de **Listo para entrega** a **Entregado**; los despachos pasan primero por **En tránsito**.
+- Una cancelación pagada queda como reembolso solicitado, en vez de confundirse con un pedido nunca pagado.
 
 ## Seguridad inicial
 
