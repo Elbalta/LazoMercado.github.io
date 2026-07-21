@@ -473,33 +473,3 @@ input, select, textarea { width: 100%; padding: 0.56rem; border-radius: 8px; bor
   .admin-main-tabs { grid-template-columns: 1fr; }
   .main-tab { font-size: 0.8rem; }
 }
-
-.products-status {
-  margin: 1rem 0 0;
-  padding: 0.8rem;
-  border-radius: 10px;
-  background: #eff6ff;
-  color: #1e40af;
-  text-align: center;
-  font-weight: 600;
-}
-.products-status-error {
-  background: #fef2f2;
-  color: var(--danger);
-}
-.product-price {
-  color: var(--brand-strong);
-  font-size: 1.2rem;
-  font-weight: 800;
-}
-.season-status {
-  width: fit-content;
-  border-radius: 999px;
-  padding: 0.25rem 0.55rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-.season-status.out-of-season {
-  background: #fff7ed;
-  color: #9a3412;
-}
