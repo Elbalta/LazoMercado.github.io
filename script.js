@@ -322,7 +322,65 @@ async function syncAdmin() {
   try { state.isAdmin = await isCurrentUserAdmin(); }
   catch { state.isAdmin = false; }
   el.adminLoginSection.classList.toggle('hidden', state.isAdmin);
-  el.adminPanelSection.classList.toggle('hidden', !st…874 tokens truncated…Confirmar pago' : 'Avanzar';
+  el.adminPanelSection.classList.toggle('hidden', !state.isAdmin);
+  if (state.isAdmin) await loadAdminData();
+}
+
+async function loginAdmin(event) {
+  event.preventDefault();
+  setBusy(el.adminLoginForm, true);
+  try {
+    const { error } = await db.auth.signInWithPassword({ email: el.adminEmail.value.trim(), password: el.adminPassword.value });
+    if (error) throw error;
+    if (!(await isCurrentUserAdmin())) {
+      await db.auth.signOut();
+      throw new Error('La cuenta no tiene permisos de administrador.');
+    }
+    el.adminLoginForm.reset();
+    await syncAdmin();
+    toast('Sesión administrativa iniciada.');
+  } catch (error) { toast(errorMessage(error), true); }
+  finally { setBusy(el.adminLoginForm, false); }
+}
+
+async function loadAdminData() {
+  const [productsResult, lotsResult, ordersResult, customersResult] = await Promise.all([
+    db.from('products').select('*').order('created_at', { ascending: false }),
+    db.from('lots').select('*, product:products(*)').order('created_at', { ascending: false }),
+    db.from('orders').select('*, product:products(*), customer:customers(*), lot:lots(*)').order('created_at', { ascending: false }),
+    db.from('customers').select('*').order('created_at', { ascending: false })
+  ]);
+  const failed = [productsResult, lotsResult, ordersResult, customersResult].find((result) => result.error);
+  if (failed) throw failed.error;
+  const details = (productsResult.data || []).map((product) => ({
+    ...product, id: product.id, product_id: product.id, channel: 'DETALLE',
+    price_per_kg: product.detail_price, stock_kg: product.retail_stock_kg,
+    status: Number(product.retail_stock_kg) > 0 ? 'OPEN' : 'SOLD_OUT'
+  }));
+  const wholesale = (lotsResult.data || []).map((lot) => ({
+    ...lot, id: lot.id, lot_id: lot.id, channel: 'CROWDBUYING', name: lot.product?.name || 'Producto',
+    variety: lot.product?.variety || '', notes: lot.product?.description || '', image_url: lot.product?.image_url || '',
+    price_per_kg: lot.wholesale_price, capacity_kg: lot.total_capacity_kg, min_order_kg: lot.minimum_purchase_kg,
+    sold_kg: Number(lot.customer_paid_kg) + Number(lot.market_assumed_kg),
+    status: lot.status === 'open' ? 'OPEN' : ['full', 'closed'].includes(lot.status) ? 'SOLD_OUT' : 'CLOSED'
+  }));
+  state.products = [...wholesale, ...details];
+  state.orders = (ordersResult.data || []).map((order) => ({
+    ...order, channel: order.channel === 'wholesale' ? 'CROWDBUYING' : 'DETALLE',
+    kg: order.equivalent_kg, total_price: order.total_amount,
+    status: order.operational_status
+  }));
+  state.customers = customersResult.data || [];
+  renderProducts();
+  renderAdmin();
+}
+
+function orderActions(order) {
+  if (order.status === 'COMPLETADO') return '';
+  let next = NEXT_DETAIL[order.status];
+  if (order.channel === 'CROWDBUYING' && order.status === 'ESPERANDO_COMPRA_GRUPAL' && order.lot?.status !== 'full') next = null;
+  const action = next === 'CONFIRM_PAYMENT' ? 'confirm-payment' : 'order-status';
+  const label = next === 'CONFIRM_PAYMENT' ? 'Confirmar pago' : 'Avanzar';
   return `<div class="order-actions">${next ? `<button class="btn tiny" type="button" data-action="${action}" data-id="${order.id}" data-status="${next}">${label}</button>` : ''}${order.status !== 'CANCELADO' ? `<button class="btn tiny warn" type="button" data-action="order-status" data-id="${order.id}" data-status="CANCELADO">Cancelar</button>` : ''}</div>`;
 }
 
