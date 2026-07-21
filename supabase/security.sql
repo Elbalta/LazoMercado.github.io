@@ -41,3 +41,4 @@ grant execute on function public.confirm_payment_manually(uuid, uuid) to service
 grant execute on function public.assume_lot_remainder(uuid, numeric) to service_role;
 
 commit;
+

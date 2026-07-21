@@ -1,12 +1,20 @@
-codex/connect-lazo-mercado-2.0-with-supabase-upgf0r
-window.lazoSupabase = window.supabase.createClient(
-  window.APP_CONFIG.SUPABASE_URL,
-  window.APP_CONFIG.SUPABASE_PUBLISHABLE_KEY
-);
-
-window.supabaseClient = window.lazoSupabase;
-window.supabaseClient = window.supabase.createClient(
-  window.APP_CONFIG.SUPABASE_URL,
-  window.APP_CONFIG.SUPABASE_PUBLISHABLE_KEY
-);
- main
+(function initializeSupabase() {
+  const config = window.APP_CONFIG;
+  if (!config?.SUPABASE_URL || !config?.SUPABASE_PUBLISHABLE_KEY) {
+    throw new Error('Falta la configuración pública de Supabase.');
+  }
+  if (!window.supabase?.createClient) {
+    throw new Error('No fue posible cargar la biblioteca de Supabase.');
+  }
+  window.lazoSupabase = window.supabase.createClient(
+    config.SUPABASE_URL,
+    config.SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    }
+  );
+})();
