@@ -6,11 +6,11 @@ const ORDER_STATES = [
 ];
 
 const ORDER_LABELS = {
-  PENDIENTE_CONFIRMACION: 'Pendiente de confirmaciÃ³n',
+  PENDIENTE_CONFIRMACION: 'Pendiente de confirmación',
   ESPERANDO_COMPRA_GRUPAL: 'Esperando compra grupal',
   PREPARANDO: 'Preparando pedido',
   LISTO_PARA_ENTREGA: 'Listo para entrega',
-  EN_TRANSITO: 'En trÃ¡nsito',
+  EN_TRANSITO: 'En tránsito',
   ENTREGADO: 'Entregado',
   COMPLETADO: 'Completado',
   CANCELADO: 'Cancelado'
@@ -36,7 +36,7 @@ const PAYMENT_METHOD_LABELS = { transfer: 'Transferencia', cash: 'Efectivo' };
 const DELIVERY_METHOD_LABELS = { pickup: 'Retiro', delivery: 'Despacho' };
 
 const ADVANCE_LABELS = {
-  ESPERANDO_COMPRA_GRUPAL: 'Iniciar preparaciÃ³n',
+  ESPERANDO_COMPRA_GRUPAL: 'Iniciar preparación',
   PREPARANDO: 'Marcar como listo',
   LISTO_PARA_ENTREGA: 'Despachar o entregar',
   EN_TRANSITO: 'Marcar como entregado',
@@ -72,7 +72,7 @@ const el = {
   cancelDetailOrderAction: q('cancel-detail-order-action'),
   purchaseAlert: q('purchase-alert'), purchaseAlertText: q('purchase-alert-text'),
   purchaseAlertClose: q('purchase-alert-close'), toast: q('toast'),
-  openAdminLink: q('open-admin-link'), footerAdminLink: q('footer-admin-link'),
+  footerAdminLink: q('footer-admin-link'),
   adminModal: q('admin-modal'), closeAdmin: q('close-admin'),
   adminLoginSection: q('admin-login-section'), adminPanelSection: q('admin-panel-section'),
   adminLoginForm: q('admin-login-form'), adminEmail: q('admin-email'),
@@ -135,7 +135,7 @@ function previewSelectedImage(input, image, empty) {
   if (!file) return;
   if (!ALLOWED_IMAGE_TYPES.has(file.type) || file.size > MAX_IMAGE_SIZE) {
     input.value = '';
-    toast('La imagen debe ser JPG, PNG o WebP y pesar como mÃ¡ximo 5 MB.', true);
+    toast('La imagen debe ser JPG, PNG o WebP y pesar como máximo 5 MB.', true);
     return;
   }
   const previewUrl = URL.createObjectURL(file);
@@ -148,7 +148,7 @@ function previewSelectedImage(input, image, empty) {
 async function uploadProductImage(file) {
   if (!file) return null;
   if (!ALLOWED_IMAGE_TYPES.has(file.type) || file.size > MAX_IMAGE_SIZE) {
-    throw new Error('La imagen debe ser JPG, PNG o WebP y pesar como mÃ¡ximo 5 MB.');
+    throw new Error('La imagen debe ser JPG, PNG o WebP y pesar como máximo 5 MB.');
   }
   const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
   const path = `${crypto.randomUUID()}.${extension}`;
@@ -168,7 +168,7 @@ function toast(message, error = false) {
 }
 
 function errorMessage(error) {
-  return error?.message || error?.details || 'OcurriÃ³ un error inesperado.';
+  return error?.message || error?.details || 'Ocurrió un error inesperado.';
 }
 
 function setBusy(form, busy) {
@@ -224,7 +224,7 @@ function productCard(product) {
         <strong>${money(product.price_per_kg)} / kg</strong>
         ${isDetail ? `<p class="bin-meta">Stock: ${number(available)} kg</p>` : `
           <div class="progress-wrap"><div class="progress-mem" style="--sold:${soldPct}%"><div class="progress-sold"></div><div class="progress-available"></div></div>
-          <p class="bin-meta">${number(product.sold_kg)} de ${number(product.capacity_kg)} kg vendidos Â· mÃ­nimo ${number(product.min_order_kg)} kg</p></div>`}
+          <p class="bin-meta">${number(product.sold_kg)} de ${number(product.capacity_kg)} kg vendidos · mínimo ${number(product.min_order_kg)} kg</p></div>`}
         <button class="btn" type="button" data-action="${isDetail ? 'order-detail' : 'order-crowd'}" data-id="${product.id}" ${disabled ? 'disabled' : ''}>
           ${disabled ? 'Sin disponibilidad' : 'Solicitar pedido'}
         </button>
@@ -235,8 +235,8 @@ function productCard(product) {
 function renderProducts() {
   const detail = state.products.filter((p) => p.channel === 'DETALLE');
   const crowd = state.products.filter((p) => p.channel === 'CROWDBUYING');
-  el.detailProducts.innerHTML = detail.length ? detail.map(productCard).join('') : '<div class="empty-state"><strong>TodavÃ­a no hay productos al detalle</strong><p>Vuelve pronto para revisar el nuevo stock disponible.</p></div>';
-  el.binsList.innerHTML = crowd.length ? crowd.map(productCard).join('') : '<div class="empty-state"><strong>TodavÃ­a no hay compras mayoristas</strong><p>Los nuevos lotes aparecerÃ¡n aquÃ­ cuando estÃ©n abiertos.</p></div>';
+  el.detailProducts.innerHTML = detail.length ? detail.map(productCard).join('') : '<div class="empty-state"><strong>Todavía no hay productos al detalle</strong><p>Vuelve pronto para revisar el nuevo stock disponible.</p></div>';
+  el.binsList.innerHTML = crowd.length ? crowd.map(productCard).join('') : '<div class="empty-state"><strong>Todavía no hay compras mayoristas</strong><p>Los nuevos lotes aparecerán aquí cuando estén abiertos.</p></div>';
 }
 
 function setMode(mode) {
@@ -252,7 +252,7 @@ function setMode(mode) {
 function updateOrderPreview(product, kg, target) {
   const quantity = Number(kg || 0);
   target.textContent = `Total: ${money(quantity * Number(product?.price_per_kg || 0))}`;
-  el.summaryProduct.textContent = product?.name || 'â€”';
+  el.summaryProduct.textContent = product?.name || '—';
   el.summaryKg.textContent = number(quantity);
   el.summaryUnit.textContent = money(product?.price_per_kg || 0);
   el.summaryTotal.textContent = money(quantity * Number(product?.price_per_kg || 0));
@@ -266,7 +266,7 @@ function openCrowdOrder(id) {
   el.orderKg.min = product.min_order_kg;
   el.orderKg.max = available;
   el.orderKg.value = product.min_order_kg;
-  el.orderKgLabelText.textContent = `Kilos a comprar (mÃ­nimo ${number(product.min_order_kg)})`;
+  el.orderKgLabelText.textContent = `Kilos a comprar (mínimo ${number(product.min_order_kg)})`;
   el.orderStockHelp.textContent = `Disponibles: ${number(available)} kg.`;
   updateOrderPreview(product, el.orderKg.value, el.orderTotal);
   el.summaryPanel.classList.remove('hidden');
@@ -300,8 +300,8 @@ function syncDeliveryFields(delivery, label, address) {
 
 function syncPaymentHelp(payment, target) {
   target.textContent = payment.value === 'transfer'
-    ? 'La solicitud quedarÃ¡ pendiente hasta que confirmemos la transferencia.'
-    : 'El pago en efectivo quedarÃ¡ pendiente hasta el retiro o la entrega.';
+    ? 'La solicitud quedará pendiente hasta que confirmemos la transferencia.'
+    : 'El pago en efectivo quedará pendiente hasta el retiro o la entrega.';
 }
 
 async function placeOrder(itemId, customer, kg, form, options) {
@@ -326,8 +326,8 @@ async function placeOrder(itemId, customer, kg, form, options) {
     form.reset();
     const paymentNext = options.payment === 'transfer'
       ? 'La transferencia debe ser confirmada por Lazo Mercado.'
-      : 'El pago en efectivo se confirmarÃ¡ al coordinar la entrega o el retiro.';
-    el.purchaseAlertText.textContent = `Pedido ${String(data.id).slice(0, 8)} registrado por ${number(data.equivalent_kg)} kg de ${data.product_name}. Total: ${money(data.total_amount)}. ${paymentNext} Guarda este cÃ³digo y consulta el avance con el mismo telÃ©fono.`;
+      : 'El pago en efectivo se confirmará al coordinar la entrega o el retiro.';
+    el.purchaseAlertText.textContent = `Pedido ${String(data.id).slice(0, 8)} registrado por ${number(data.equivalent_kg)} kg de ${data.product_name}. Total: ${money(data.total_amount)}. ${paymentNext} Guarda este código y consulta el avance con el mismo teléfono.`;
     el.purchaseAlert.classList.remove('hidden');
     await loadProducts();
   } catch (error) {
@@ -344,9 +344,9 @@ async function trackOrders(event) {
     const { data, error } = await db.rpc('orders_by_phone', { p_phone: el.trackingPhone.value });
     if (error) throw error;
     el.trackingResults.innerHTML = data?.length ? data.map((order) => `
-      <article class="tracking-card"><div class="tracking-head"><div><strong>${escapeHTML(order.product_name)}</strong><p class="bin-meta">Pedido ${escapeHTML(String(order.id).slice(0, 8))} Â· ${new Date(order.created_at).toLocaleString('es-CL')}</p></div><span class="channel-badge">${order.channel === 'retail' ? 'Detalle' : 'Mayorista'}</span></div>
-      <p>${number(order.equivalent_kg)} kg Â· ${money(order.total_amount)} Â· ${escapeHTML(PAYMENT_LABELS[order.payment_status] || order.payment_status)}</p><span class="order-status ${escapeHTML(order.operational_status)}">${escapeHTML(ORDER_LABELS[order.operational_status] || order.operational_status)}</span></article>`).join('')
-      : '<p class="hint">No encontramos pedidos con ese telÃ©fono.</p>';
+      <article class="tracking-card"><div class="tracking-head"><div><strong>${escapeHTML(order.product_name)}</strong><p class="bin-meta">Pedido ${escapeHTML(String(order.id).slice(0, 8))} · ${new Date(order.created_at).toLocaleString('es-CL')}</p></div><span class="channel-badge">${order.channel === 'retail' ? 'Detalle' : 'Mayorista'}</span></div>
+      <p>${number(order.equivalent_kg)} kg · ${money(order.total_amount)} · ${escapeHTML(PAYMENT_LABELS[order.payment_status] || order.payment_status)}</p><span class="order-status ${escapeHTML(order.operational_status)}">${escapeHTML(ORDER_LABELS[order.operational_status] || order.operational_status)}</span></article>`).join('')
+      : '<p class="hint">No encontramos pedidos con ese teléfono.</p>';
   } catch (error) {
     el.trackingResults.innerHTML = `<p class="hint">${escapeHTML(errorMessage(error))}</p>`;
   } finally {
@@ -382,7 +382,7 @@ async function loginAdmin(event) {
     }
     el.adminLoginForm.reset();
     await syncAdmin();
-    toast('SesiÃ³n administrativa iniciada.');
+    toast('Sesión administrativa iniciada.');
   } catch (error) { toast(errorMessage(error), true); }
   finally { setBusy(el.adminLoginForm, false); }
 }
@@ -390,13 +390,154 @@ async function loginAdmin(event) {
 async function loadAdminData() {
   const [productsResult, lotsResult, procurementResult, ordersResult, customersResult] = await Promise.all([
     db.from('products').select('*').order('created_at', { ascending: false }),
- …3643 tokens truncated…pedidos completados y cancelados estÃ¡n en Terminadas.</p></div>';
+    db.from('lots').select('*, product:products(*)').order('created_at', { ascending: false }),
+    db.from('lot_procurement').select('*').order('updated_at', { ascending: false }),
+    db.from('orders').select('*, product:products(*), customer:customers(*), lot:lots(*), delivery:delivery_details(*), payments(*), status_history:order_status_history(*)').order('created_at', { ascending: false }),
+    db.from('customers').select('*').order('created_at', { ascending: false })
+  ]);
+  const procurementMissing = ['42P01', 'PGRST205'].includes(procurementResult.error?.code);
+  const failed = [productsResult, lotsResult, ordersResult, customersResult, ...(procurementMissing ? [] : [procurementResult])].find((result) => result.error);
+  if (failed) throw failed.error;
+  const rawProducts = productsResult.data || [];
+  const rawLots = lotsResult.data || [];
+  const procurementByLot = new Map((procurementResult.data || []).map((item) => [item.lot_id, item]));
+  const details = rawProducts.filter((product) => product.retail_enabled !== false && !product.archived_at).map((product) => ({
+    ...product, id: product.id, product_id: product.id, channel: 'DETALLE',
+    price_per_kg: product.detail_price, stock_kg: product.retail_stock_kg,
+    status: Number(product.retail_stock_kg) > 0 ? 'OPEN' : 'SOLD_OUT'
+  }));
+  const wholesale = rawLots.filter((lot) => !lot.archived_at).map((lot) => ({
+    ...lot, id: lot.id, lot_id: lot.id, channel: 'CROWDBUYING', name: lot.product?.name || 'Producto',
+    variety: lot.product?.variety || '', notes: lot.product?.description || '', image_url: lot.product?.image_url || '',
+    price_per_kg: lot.wholesale_price, supplier_cost_per_kg: Number(procurementByLot.get(lot.id)?.supplier_cost_per_kg || 0), capacity_kg: lot.total_capacity_kg, min_order_kg: lot.minimum_purchase_kg,
+    sold_kg: Number(lot.customer_paid_kg) + Number(lot.market_assumed_kg),
+    lot_status: lot.status,
+    status: lot.status === 'open' ? 'OPEN' : lot.status === 'full' ? 'SOLD_OUT' : 'CLOSED'
+  }));
+  state.products = [...wholesale, ...details];
+  state.rawProducts = rawProducts;
+  state.lots = rawLots;
+  state.procurement = procurementResult.data || [];
+  state.orders = (ordersResult.data || []).map((order) => ({
+    ...order, channel: order.channel === 'wholesale' ? 'CROWDBUYING' : 'DETALLE',
+    kg: order.equivalent_kg, total_price: order.total_amount,
+    status: order.operational_status,
+    latestPayment: [...(order.payments || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0] || null,
+    delivery: Array.isArray(order.delivery) ? order.delivery[0] : order.delivery,
+    statusHistory: [...(order.status_history || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  }));
+  state.customers = customersResult.data || [];
+  renderProducts();
+  renderAdmin();
+}
+
+function orderActions(order) {
+  if (order.status === 'CANCELADO') return '';
+  const actions = [];
+  if (order.status === 'PENDIENTE_CONFIRMACION') {
+    actions.push(`<button class="btn tiny" type="button" data-action="confirm-payment" data-id="${order.id}">Confirmar pago</button>`);
+  } else {
+    const blockedWholesale = order.channel === 'CROWDBUYING'
+      && order.status === 'ESPERANDO_COMPRA_GRUPAL'
+      && order.lot?.status !== 'full';
+    if (!blockedWholesale && order.status !== 'COMPLETADO') {
+      const label = order.status === 'LISTO_PARA_ENTREGA'
+        ? (order.delivery_method === 'pickup' ? 'Marcar como retirado' : 'Iniciar despacho')
+        : (ADVANCE_LABELS[order.status] || 'Avanzar');
+      actions.push(`<button class="btn tiny" type="button" data-action="advance-order" data-id="${order.id}">${escapeHTML(label)}</button>`);
+    }
+    if (order.statusHistory?.some((entry) => entry.from_status)) {
+      actions.push(`<button class="btn tiny secondary" type="button" data-action="revert-order" data-id="${order.id}">Corregir último estado</button>`);
+    }
+    if (order.payment_status === 'CONFIRMADO' && ['PREPARANDO', 'ESPERANDO_COMPRA_GRUPAL'].includes(order.status)) {
+      actions.push(`<button class="btn tiny secondary" type="button" data-action="revert-payment" data-id="${order.id}">Revertir pago</button>`);
+    }
+  }
+  if (!['EN_TRANSITO', 'ENTREGADO', 'COMPLETADO'].includes(order.status)) {
+    actions.push(`<button class="btn tiny warn" type="button" data-action="cancel-order" data-id="${order.id}">Cancelar pedido</button>`);
+  }
+  return `<div class="order-actions">${actions.join('')}</div>`;
+}
+
+function orderAdminCard(order) {
+  const delivery = DELIVERY_METHOD_LABELS[order.delivery_method] || order.delivery_method;
+  const payment = PAYMENT_LABELS[order.payment_status] || order.payment_status;
+  const address = order.delivery_method === 'delivery' && order.delivery?.address_line
+    ? `<span><strong>Dirección:</strong> ${escapeHTML(order.delivery.address_line)}</span>` : '';
+  const cancelled = order.cancellation_reason
+    ? `<p class="order-note"><strong>Motivo:</strong> ${escapeHTML(order.cancellation_reason)}</p>` : '';
+  return `<article class="admin-bin order-admin-card">
+    <div class="admin-row"><div><strong>${escapeHTML(order.product?.name || 'Producto')}</strong><p class="bin-meta">Pedido ${escapeHTML(String(order.id).slice(0, 8))} · ${new Date(order.created_at).toLocaleString('es-CL')}</p></div><span class="order-status ${escapeHTML(order.status)}">${escapeHTML(ORDER_LABELS[order.status] || order.status)}</span></div>
+    <div class="order-detail-grid"><span><strong>Cliente:</strong> ${escapeHTML(order.customer?.full_name || '')}</span><span><strong>Teléfono:</strong> ${escapeHTML(order.customer?.phone || '')}</span><span><strong>Cantidad:</strong> ${number(order.kg)} kg</span><span><strong>Total:</strong> ${money(order.total_price)}</span><span><strong>Pago:</strong> ${escapeHTML(PAYMENT_METHOD_LABELS[order.payment_method] || order.payment_method)} · ${escapeHTML(payment)}</span><span><strong>Entrega:</strong> ${escapeHTML(delivery)}</span>${address}</div>
+    ${cancelled}${orderActions(order)}
+  </article>`;
+}
+
+function productAdminCard(product) {
+  const stockText = product.channel === 'DETALLE' ? `Stock: ${number(product.stock_kg)} kg` : `Vendido: ${number(product.sold_kg)} / ${number(product.capacity_kg)} kg`;
+  return `<article class="admin-bin"><div class="admin-row"><div><strong>${escapeHTML(product.name)}</strong><p class="bin-meta">${stockText} · ${money(product.price_per_kg)}/kg</p></div><span class="bin-status ${escapeHTML(product.status)}">${escapeHTML(PRODUCT_STATUS_LABELS[product.status] || product.status)}</span></div><div class="order-actions"><button class="btn tiny secondary" type="button" data-action="edit-product" data-id="${product.id}">Editar</button><button class="btn tiny warn" type="button" data-action="archive-product" data-id="${product.id}">Archivar</button></div></article>`;
+}
+
+function barRows(values, emptyMessage = 'Todavía no hay datos para este gráfico.') {
+  if (!values.some((item) => Number(item.value || 0) > 0)) {
+    return `<div class="empty-state compact"><strong>Sin movimientos</strong><p>${escapeHTML(emptyMessage)}</p></div>`;
+  }
+  const max = Math.max(1, ...values.map((item) => Number(item.value || 0)));
+  return values.map((item) => `<div class="bar-row"><span>${escapeHTML(item.label)}</span><div class="bar-track"><div class="bar-fill ${Number(item.value || 0) > 0 ? '' : 'zero'}" style="--w:${Math.round((Number(item.value || 0) / max) * 100)}%"></div></div><strong>${item.money ? money(item.value) : number(item.value)}</strong></div>`).join('');
+}
+
+function renderProcurement(detail, wholesale) {
+  const activeOrders = state.orders.filter((order) => !['CANCELADO', 'COMPLETADO'].includes(order.status));
+  const pendingKg = activeOrders.filter((order) => order.payment_status !== 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
+  const detailPrepareKg = activeOrders.filter((order) => order.channel === 'DETALLE' && order.payment_status === 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
+  const readyLots = wholesale.filter((lot) => lot.lot_status === 'full' && Number(lot.capacity_kg) > 0);
+  const wholesaleBuyKg = readyLots.reduce((sum, lot) => sum + Number(lot.capacity_kg), 0);
+  const supplierBudget = readyLots.reduce((sum, lot) => sum + (Number(lot.capacity_kg) * Number(lot.supplier_cost_per_kg || 0)), 0);
+  const missingSupplierCosts = readyLots.filter((lot) => Number(lot.supplier_cost_per_kg || 0) <= 0).length;
+  el.procurementSummary.innerHTML = `<article class="kpi-card"><p>Preparar al detalle</p><strong>${number(detailPrepareKg)} kg</strong></article><article class="kpi-card"><p>Comprar mayorista</p><strong>${number(wholesaleBuyKg)} kg</strong></article><article class="kpi-card ${missingSupplierCosts ? 'needs-attention' : ''}"><p>Presupuesto proveedor</p><strong>${money(supplierBudget)}</strong>${missingSupplierCosts ? `<small>Falta definir costo en ${missingSupplierCosts} lote(s)</small>` : ''}</article><article class="kpi-card"><p>Pendiente de pago</p><strong>${number(pendingKg)} kg</strong></article>`;
+
+  const detailCards = detail.map((product) => {
+    const orders = activeOrders.filter((order) => order.channel === 'DETALLE' && order.product_id === product.product_id);
+    const confirmed = orders.filter((order) => order.payment_status === 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
+    const pending = orders.filter((order) => order.payment_status !== 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
+    const action = confirmed > 0 ? `Preparar ${number(confirmed)} kg` : pending > 0 ? 'Esperar confirmación de pago' : 'Sin pedidos por preparar';
+    return `<article class="procurement-card"><div class="admin-row"><div><strong>${escapeHTML(product.name)}</strong><p class="bin-meta">Venta al detalle</p></div><span class="action-badge">${escapeHTML(action)}</span></div><div class="procurement-grid"><span>Confirmado<strong>${number(confirmed)} kg</strong></span><span>Pendiente pago<strong>${number(pending)} kg</strong></span><span>Stock libre<strong>${number(product.stock_kg)} kg</strong></span><span>Comprar proveedor<strong>0 kg</strong></span></div></article>`;
+  });
+
+  const wholesaleCards = wholesale.map((lot) => {
+    const orders = activeOrders.filter((order) => order.channel === 'CROWDBUYING' && order.lot_id === lot.lot_id);
+    const pending = orders.filter((order) => order.payment_status !== 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
+    const confirmed = Number(lot.sold_kg || 0);
+    const remaining = Math.max(0, Number(lot.capacity_kg) - confirmed);
+    const ready = lot.lot_status === 'full' || remaining === 0;
+    const supplierCost = Number(lot.supplier_cost_per_kg || 0);
+    const purchaseBudget = supplierCost * Number(lot.capacity_kg);
+    return `<article class="procurement-card"><div class="admin-row"><div><strong>${escapeHTML(lot.name)}</strong><p class="bin-meta">Lote mayorista · ${number(lot.capacity_kg)} kg</p></div><span class="action-badge ${ready ? 'ready' : ''}">${ready ? `Comprar ${number(lot.capacity_kg)} kg` : `Faltan ${number(remaining)} kg`}</span></div><div class="procurement-grid"><span>Confirmado<strong>${number(confirmed)} kg</strong></span><span>Pendiente pago<strong>${number(pending)} kg</strong></span><span>Disponible<strong>${number(remaining)} kg</strong></span><span>Acción<strong>${ready ? 'Comprar al proveedor' : 'Esperar pedidos'}</strong></span><span>Costo proveedor/kg<strong>${supplierCost > 0 ? money(supplierCost) : 'Sin definir'}</strong></span><span>Dinero estimado<strong>${supplierCost > 0 ? money(purchaseBudget) : 'Configurar costo'}</strong></span></div></article>`;
+  });
+
+  const deliveries = activeOrders.filter((order) => order.payment_status === 'CONFIRMADO' && order.delivery_method === 'delivery');
+  const deliveryBoard = `<section class="dispatch-board"><div class="admin-row"><div><strong>Despachos por coordinar</strong><p class="bin-meta">${deliveries.length} destino(s) con pago confirmado</p></div><span class="action-badge ${deliveries.length ? 'ready' : ''}">${deliveries.length ? `${number(deliveries.reduce((sum, order) => sum + Number(order.kg), 0))} kg por despachar` : 'Sin despachos'}</span></div>${deliveries.length ? `<div class="dispatch-list">${deliveries.map((order) => `<article><strong>${escapeHTML(order.product?.name || 'Producto')} · ${number(order.kg)} kg</strong><span>${escapeHTML(order.customer?.full_name || '')} · ${escapeHTML(order.customer?.phone || '')}</span><span>${escapeHTML(order.delivery?.address_line || 'Dirección pendiente')} · ${escapeHTML(ORDER_LABELS[order.status] || order.status)}</span></article>`).join('')}</div>` : '<p class="hint">Los pedidos con despacho aparecerán aquí cuando el pago esté confirmado.</p>'}</section>`;
+  const productCards = [...detailCards, ...wholesaleCards].join('') || '<div class="empty-state"><strong>Sin productos activos</strong><p>Crea un producto para comenzar a preparar pedidos.</p></div>';
+  el.procurementList.innerHTML = `${productCards}${deliveryBoard}`;
+}
+
+function renderAdmin() {
+  const wholesale = state.products.filter((p) => p.channel === 'CROWDBUYING');
+  const detail = state.products.filter((p) => p.channel === 'DETALLE');
+  const wholesaleOrders = state.orders.filter((o) => o.channel === 'CROWDBUYING');
+  const detailOrders = state.orders.filter((o) => o.channel === 'DETALLE');
+  const activeWholesaleOrders = wholesaleOrders.filter((order) => !['CANCELADO', 'COMPLETADO'].includes(order.status));
+  const activeDetailOrders = detailOrders.filter((order) => !['CANCELADO', 'COMPLETADO'].includes(order.status));
+  el.adminBinsOpen.innerHTML = wholesale.filter((p) => p.status !== 'SOLD_OUT').map(productAdminCard).join('') || '<div class="empty-state compact"><strong>Sin lotes activos</strong><p>Crea o publica un producto mayorista.</p></div>';
+  el.adminBinsSold.innerHTML = wholesale.filter((p) => p.status === 'SOLD_OUT').map(productAdminCard).join('') || '<div class="empty-state compact"><strong>Sin lotes completos</strong><p>Los lotes completos aparecerán aquí.</p></div>';
+  el.adminDetailProducts.innerHTML = detail.map(productAdminCard).join('') || '<div class="empty-state compact"><strong>Sin productos al detalle</strong><p>Crea el primer producto para publicarlo.</p></div>';
+  el.adminDetailOrders.innerHTML = activeDetailOrders.map(orderAdminCard).join('') || '<div class="empty-state"><strong>Sin pedidos al detalle pendientes</strong><p>Los pedidos completados y cancelados están en Terminadas.</p></div>';
 
   const validOrders = state.orders.filter((order) => order.status !== 'CANCELADO');
   const totalKg = validOrders.reduce((sum, order) => sum + Number(order.kg), 0);
   const totalAmount = validOrders.reduce((sum, order) => sum + Number(order.total_price), 0);
   const activeProductCount = state.rawProducts.filter((product) => !product.archived_at && product.is_published).length;
-  el.kpiGrid.innerHTML = `<article class="kpi-card"><p>Productos Ãºnicos activos</p><strong>${activeProductCount}</strong></article><article class="kpi-card"><p>Clientes</p><strong>${state.customers.length}</strong></article><article class="kpi-card"><p>Pedidos activos</p><strong>${validOrders.filter((order) => order.status !== 'COMPLETADO').length}</strong></article><article class="kpi-card"><p>Monto activo y completado</p><strong>${money(totalAmount)}</strong></article>`;
+  el.kpiGrid.innerHTML = `<article class="kpi-card"><p>Productos únicos activos</p><strong>${activeProductCount}</strong></article><article class="kpi-card"><p>Clientes</p><strong>${state.customers.length}</strong></article><article class="kpi-card"><p>Pedidos activos</p><strong>${validOrders.filter((order) => order.status !== 'COMPLETADO').length}</strong></article><article class="kpi-card"><p>Monto activo y completado</p><strong>${money(totalAmount)}</strong></article>`;
   const wholesaleCapacity = wholesale.reduce((sum, p) => sum + Number(p.capacity_kg), 0);
   const wholesaleSold = wholesale.reduce((sum, p) => sum + Number(p.sold_kg), 0);
   const wholesalePending = wholesaleOrders.filter((order) => order.payment_status !== 'CONFIRMADO' && order.status !== 'CANCELADO').reduce((sum, order) => sum + Number(order.kg), 0);
@@ -417,10 +558,10 @@ async function loadAdminData() {
   const terminalOrders = state.orders.filter((o) => ['COMPLETADO', 'CANCELADO'].includes(o.status));
   const completedAmount = completed.reduce((sum, o) => sum + Number(o.total_price), 0);
   el.completedSummary.innerHTML = `<article class="kpi-card"><p>Ventas completadas</p><strong>${completed.length}</strong></article><article class="kpi-card"><p>Monto vendido</p><strong>${money(completedAmount)}</strong></article><article class="kpi-card"><p>Solicitudes canceladas</p><strong>${cancelledOrders.length}</strong></article>`;
-  el.completedChannelChart.innerHTML = barRows(['CROWDBUYING', 'DETALLE'].map((channel) => ({ label: channel === 'DETALLE' ? 'Detalle' : 'Mayorista', value: completed.filter((o) => o.channel === channel).reduce((sum, o) => sum + Number(o.total_price), 0), money: true })), 'TodavÃ­a no existen ventas completadas.');
+  el.completedChannelChart.innerHTML = barRows(['CROWDBUYING', 'DETALLE'].map((channel) => ({ label: channel === 'DETALLE' ? 'Detalle' : 'Mayorista', value: completed.filter((o) => o.channel === channel).reduce((sum, o) => sum + Number(o.total_price), 0), money: true })), 'Todavía no existen ventas completadas.');
   const byProduct = completed.reduce((map, order) => { const name = order.product?.name || 'Producto'; map[name] = (map[name] || 0) + Number(order.kg); return map; }, {});
-  el.completedProductChart.innerHTML = barRows(Object.entries(byProduct).map(([label, value]) => ({ label, value })), 'Los productos vendidos aparecerÃ¡n al completar una venta.');
-  el.completedSalesList.innerHTML = terminalOrders.map(orderAdminCard).join('') || '<div class="empty-state"><strong>Sin historial finalizado</strong><p>Las ventas completadas y cancelaciones aparecerÃ¡n aquÃ­.</p></div>';
+  el.completedProductChart.innerHTML = barRows(Object.entries(byProduct).map(([label, value]) => ({ label, value })), 'Los productos vendidos aparecerán al completar una venta.');
+  el.completedSalesList.innerHTML = terminalOrders.map(orderAdminCard).join('') || '<div class="empty-state"><strong>Sin historial finalizado</strong><p>Las ventas completadas y cancelaciones aparecerán aquí.</p></div>';
 
   const confirmedOrders = state.orders.filter((order) => order.payment_status === 'CONFIRMADO');
   const confirmedAmount = confirmedOrders.reduce((sum, order) => sum + Number(order.total_price), 0);
@@ -429,10 +570,10 @@ async function loadAdminData() {
   const cancelledWithoutCharge = state.orders.filter((order) => order.status === 'CANCELADO' && order.payment_status === 'CANCELADO').reduce((sum, order) => sum + Number(order.total_price), 0);
   el.financialKpis.innerHTML = `<article class="kpi-card"><p>Ingresos confirmados</p><strong>${money(confirmedAmount)}</strong></article><article class="kpi-card"><p>Pendiente de cobro</p><strong>${money(pendingAmount)}</strong></article><article class="kpi-card"><p>Ventas completadas</p><strong>${money(completedAmount)}</strong></article><article class="kpi-card ${refundPending ? 'needs-attention' : ''}"><p>Reembolsos por resolver</p><strong>${money(refundPending)}</strong></article><article class="kpi-card"><p>Cancelado sin cobro</p><strong>${money(cancelledWithoutCharge)}</strong></article>`;
   el.financialChannelChart.innerHTML = barRows(['CROWDBUYING', 'DETALLE'].map((channel) => ({ label: channel === 'DETALLE' ? 'Detalle' : 'Mayorista', value: confirmedOrders.filter((o) => o.channel === channel).reduce((sum, o) => sum + Number(o.total_price), 0), money: true })), 'Confirma un pago para reconocerlo como ingreso.');
-  el.financialStatusChart.innerHTML = barRows(ORDER_STATES.filter((status) => status !== 'CANCELADO').map((status) => ({ label: ORDER_LABELS[status], value: state.orders.filter((o) => o.status === status).reduce((sum, o) => sum + Number(o.total_price), 0), money: true })), 'TodavÃ­a no existen movimientos financieros activos.');
-  el.financialList.innerHTML = state.orders.map(orderAdminCard).join('') || '<div class="empty-state"><strong>Sin movimientos</strong><p>Los pedidos aparecerÃ¡n aquÃ­ con su estado de pago.</p></div>';
+  el.financialStatusChart.innerHTML = barRows(ORDER_STATES.filter((status) => status !== 'CANCELADO').map((status) => ({ label: ORDER_LABELS[status], value: state.orders.filter((o) => o.status === status).reduce((sum, o) => sum + Number(o.total_price), 0), money: true })), 'Todavía no existen movimientos financieros activos.');
+  el.financialList.innerHTML = state.orders.map(orderAdminCard).join('') || '<div class="empty-state"><strong>Sin movimientos</strong><p>Los pedidos aparecerán aquí con su estado de pago.</p></div>';
 
-  const hiddenWholesaleOrders = activeWholesaleOrders.length ? '' : '<div class="empty-state compact"><strong>Sin pedidos mayoristas pendientes</strong><p>Los pedidos completados y cancelados estÃ¡n en Terminadas.</p></div>';
+  const hiddenWholesaleOrders = activeWholesaleOrders.length ? '' : '<div class="empty-state compact"><strong>Sin pedidos mayoristas pendientes</strong><p>Los pedidos completados y cancelados están en Terminadas.</p></div>';
   el.adminBinsOpen.insertAdjacentHTML('beforeend', `<div class="admin-divider"><span>Pedidos mayoristas activos</span></div>${hiddenWholesaleOrders}${activeWholesaleOrders.map(orderAdminCard).join('')}`);
 }
 
@@ -501,7 +642,7 @@ async function archiveProduct(id) {
   const item = productById(id);
   if (!item) return;
   const label = item.channel === 'CROWDBUYING' ? 'lote mayorista' : 'producto al detalle';
-  if (!window.confirm(`Â¿Archivar este ${label}? DejarÃ¡ de aparecer para los clientes, pero conservarÃ¡ sus pedidos.`)) return;
+  if (!window.confirm(`¿Archivar este ${label}? Dejará de aparecer para los clientes, pero conservará sus pedidos.`)) return;
   const { error } = item.channel === 'CROWDBUYING'
     ? await db.rpc('admin_archive_lot', { p_lot_id: item.lot_id })
     : await db.rpc('admin_archive_retail_product', { p_product_id: item.product_id });
@@ -511,18 +652,18 @@ async function archiveProduct(id) {
 
 function orderSummary(id) {
   const order = state.orders.find((item) => item.id === id);
-  return order ? `${order.product?.name || 'Producto'} Â· ${number(order.kg)} kg Â· ${money(order.total_price)}` : 'este pedido';
+  return order ? `${order.product?.name || 'Producto'} · ${number(order.kg)} kg · ${money(order.total_price)}` : 'este pedido';
 }
 
 async function advanceOrder(id) {
-  if (!window.confirm(`Â¿Confirmas el siguiente avance para ${orderSummary(id)}?`)) return;
+  if (!window.confirm(`¿Confirmas el siguiente avance para ${orderSummary(id)}?`)) return;
   const { error } = await db.rpc('admin_advance_order', { p_order_id: id });
   if (error) return toast(errorMessage(error), true);
-  await loadAdminData(); toast('Pedido actualizado. Puedes corregir el Ãºltimo estado si fue un error.');
+  await loadAdminData(); toast('Pedido actualizado. Puedes corregir el último estado si fue un error.');
 }
 
 async function confirmOrderPayment(id) {
-  if (!window.confirm(`Â¿Confirmas que recibiste el pago de ${orderSummary(id)}?`)) return;
+  if (!window.confirm(`¿Confirmas que recibiste el pago de ${orderSummary(id)}?`)) return;
   const { error } = await db.rpc('admin_confirm_order_payment', { p_order_id: id });
   if (error) return toast(errorMessage(error), true);
   await loadAdminData(); toast('Pago confirmado y pedido actualizado.');
@@ -530,20 +671,20 @@ async function confirmOrderPayment(id) {
 
 const ADMIN_REASON_ACTIONS = {
   'revert-status': {
-    title: 'Corregir Ãºltimo estado',
-    message: (id) => `El pedido ${orderSummary(id)} volverÃ¡ al estado anterior.`,
+    title: 'Corregir último estado',
+    message: (id) => `El pedido ${orderSummary(id)} volverá al estado anterior.`,
     rpc: 'admin_revert_order_status',
-    success: 'Ãšltimo cambio de estado corregido.'
+    success: 'Último cambio de estado corregido.'
   },
   'revert-payment': {
     title: 'Revertir pago confirmado',
-    message: (id) => `El pago de ${orderSummary(id)} volverÃ¡ a pendiente y se ajustarÃ¡ la capacidad del lote.`,
+    message: (id) => `El pago de ${orderSummary(id)} volverá a pendiente y se ajustará la capacidad del lote.`,
     rpc: 'admin_revert_order_payment',
     success: 'Pago revertido a pendiente.'
   },
   'cancel-order': {
     title: 'Cancelar pedido',
-    message: (id) => `Se cancelarÃ¡ ${orderSummary(id)}. El stock se devolverÃ¡ y, si estaba pagado, quedarÃ¡ un reembolso por resolver.`,
+    message: (id) => `Se cancelará ${orderSummary(id)}. El stock se devolverá y, si estaba pagado, quedará un reembolso por resolver.`,
     rpc: 'admin_cancel_order',
     success: 'Pedido cancelado con motivo registrado.'
   }
@@ -561,7 +702,7 @@ function openAdminActionDialog(type, id) {
   state.pendingAdminAction = { type, id };
   el.adminActionTitle.textContent = config.title;
   el.adminActionMessage.textContent = config.message(id);
-  el.confirmAdminAction.textContent = type === 'cancel-order' ? 'Cancelar pedido' : 'Confirmar correcciÃ³n';
+  el.confirmAdminAction.textContent = type === 'cancel-order' ? 'Cancelar pedido' : 'Confirmar corrección';
   el.adminActionReason.value = '';
   el.adminActionModal.showModal();
   el.adminActionReason.focus();
@@ -617,9 +758,8 @@ el.closeOrder.addEventListener('click', closeOrderDialogs); el.cancelOrderAction
 el.closeDetailOrder.addEventListener('click', closeOrderDialogs); el.cancelDetailOrderAction.addEventListener('click', closeOrderDialogs);
 el.purchaseAlertClose.addEventListener('click', () => el.purchaseAlert.classList.add('hidden'));
 el.trackingForm.addEventListener('submit', trackOrders);
-el.trackingClear.addEventListener('click', () => { el.trackingForm.reset(); el.trackingResults.innerHTML = '<p class="hint">Ingresa tu telÃ©fono para consultar tus pedidos.</p>'; });
+el.trackingClear.addEventListener('click', () => { el.trackingForm.reset(); el.trackingResults.innerHTML = '<p class="hint">Ingresa tu teléfono para consultar tus pedidos.</p>'; });
 async function openAdmin(event) { event.preventDefault(); el.adminModal.showModal(); await syncAdmin(); }
-el.openAdminLink.addEventListener('click', openAdmin);
 el.footerAdminLink.addEventListener('click', openAdmin);
 el.closeAdmin.addEventListener('click', () => el.adminModal.close());
 el.adminActionForm.addEventListener('submit', submitAdminAction);
@@ -627,7 +767,7 @@ el.closeAdminAction.addEventListener('click', closeAdminActionDialog);
 el.cancelAdminAction.addEventListener('click', closeAdminActionDialog);
 el.adminActionModal.addEventListener('close', () => { state.pendingAdminAction = null; el.adminActionForm.reset(); });
 el.adminLoginForm.addEventListener('submit', loginAdmin);
-el.adminLogout.addEventListener('click', async () => { await db.auth.signOut(); state.isAdmin = false; await syncAdmin(); toast('SesiÃ³n cerrada.'); });
+el.adminLogout.addEventListener('click', async () => { await db.auth.signOut(); state.isAdmin = false; await syncAdmin(); toast('Sesión cerrada.'); });
 el.mainTabs.forEach((tab) => tab.addEventListener('click', () => switchAdminView(tab.dataset.view)));
 el.binForm.addEventListener('submit', saveWholesale); el.detailProductForm.addEventListener('submit', saveDetail);
 el.clearBinForm.addEventListener('click', clearBinForm); el.clearDetailForm.addEventListener('click', clearDetailForm);
@@ -648,4 +788,3 @@ async function init() {
 }
 
 init();
-
