@@ -12,38 +12,64 @@ Aplicación web en HTML, CSS y JavaScript puro conectada a PostgreSQL mediante S
 
 Desde **Supabase Dashboard → SQL Editor**, ejecuta los archivos completos en este orden:
 
-1. [`supabase/schema.sql`](supabase/schema.sql): extensiones, tipos, siete tablas, relaciones, restricciones, índices y actualización automática de `updated_at`. Si detecta la tabla simplificada de ocho columnas, la conserva como…21023 tokens truncated…ex customers_phone_idx on public.customers (phone);
-create index products_public_catalog_idx on public.products (season_status, created_at desc) where is_published;
-create index lots_product_status_idx on public.lots (product_id, status, initial_deadline);
-create index lots_public_idx on public.lots (status, initial_deadline) where is_published;
-create index orders_customer_created_idx on public.orders (customer_id, created_at desc);
-create index orders_lot_status_idx on public.orders (lot_id, payment_status) where lot_id is not null;
-create index payments_order_status_idx on public.payments (order_id, status);
-create unique index payments_one_confirmed_per_order_idx on public.payments (order_id) where status = 'CONFIRMADO';
-create index season_notifications_product_status_idx on public.season_notifications (product_id, status);
+1. [`supabase/schema.sql`](supabase/schema.sql): extensiones, tipos, siete tablas, relaciones, restricciones, índices y actualización automática de `updated_at`. Si detecta la tabla simplificada de ocho columnas, la conserva como `products_legacy` y migra sus productos al modelo nuevo.
+2. [`supabase/functions.sql`](supabase/functions.sql): funciones transaccionales para confirmar pagos mayoristas y asumir manualmente el remanente permitido de un lote.
+3. [`supabase/security.sql`](supabase/security.sql): RLS, lectura pública limitada y permisos de ejecución administrativos.
+4. [`supabase/seed.sql`](supabase/seed.sql) **opcional**: un producto y un lote publicados para comprobar lecturas.
+5. [`supabase/stage2-orders-api.sql`](supabase/stage2-orders-api.sql): stock al detalle, usuarios administradores, registro transaccional de pedidos, seguimiento por teléfono, confirmación de pagos, bucket `product-images` y políticas administrativas.
 
-create function public.set_updated_at()
-returns trigger
-language plpgsql
-set search_path = ''
-as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$;
+`stage2-orders-api.sql` puede aplicarse sobre una Etapa 1 existente. No vuelvas a ejecutar `schema.sql` si las tablas ya existen.
 
-create trigger products_set_updated_at before update on public.products
-for each row execute function public.set_updated_at();
-create trigger lots_set_updated_at before update on public.lots
-for each row execute function public.set_updated_at();
-create trigger customers_set_updated_at before update on public.customers
-for each row execute function public.set_updated_at();
-create trigger orders_set_updated_at before update on public.orders
-for each row execute function public.set_updated_at();
-create trigger payments_set_updated_at before update on public.payments
-for each row execute function public.set_updated_at();
-create trigger delivery_details_set_updated_at before update on public.delivery_details
-for each row execute function public.set_updated_at();
+## Administrador
 
-commit;
+1. Crea el usuario en **Authentication → Users**.
+2. Ejecuta la inserción comentada al final de `stage2-orders-api.sql`, usando el email real del administrador.
+3. El panel usa `signInWithPassword`; ninguna contraseña queda escrita en el repositorio.
+
+## Productos e imágenes
+
+- En **Panel administrador → Crear productos** se puede elegir una imagen JPG, PNG o WebP de hasta 5 MB.
+- La imagen se muestra antes de guardar y se sube al bucket público `product-images` de Supabase Storage.
+- Solo un usuario registrado en `admin_users` puede crear, reemplazar o eliminar archivos del bucket.
+- Al editar sin seleccionar otro archivo se conserva la imagen actual.
+- Cada producto al detalle administra nombre, precio, stock e imagen. Cada compra mayorista administra además variedad, capacidad, compra mínima, estado y descripción.
+- Los productos heredados se migran con stock inicial cero para evitar ventas sobre una cantidad inventada; define el stock real desde el panel antes de publicarlos para compra.
+
+## Flujo de pedidos
+
+- `place_customer_order` valida el producto, lote, cantidad, stock, pago y entrega dentro de una transacción.
+- Registra o actualiza al cliente, crea el pedido, crea el pago y guarda el detalle de entrega.
+- En ventas al detalle reserva stock inmediatamente.
+- En mayorista el cupo se consolida al confirmar el pago, usando la función transaccional original.
+- `orders_by_phone` permite al cliente consultar el estado de su solicitud.
+- Las acciones administrativas requieren una sesión incluida en `admin_users` y están protegidas con RLS.
+
+## Seguridad inicial
+
+- Los roles `anon` y `authenticated` solo pueden leer productos y lotes cuyo campo `is_published` sea `true`.
+- Clientes, pedidos, pagos, detalles de entrega y notificaciones de temporada tienen RLS activo y no poseen políticas públicas.
+- `confirm_payment_manually` y `assume_lot_remainder` no se conceden al navegador; solo `service_role` puede ejecutarlas. Durante esta etapa deben invocarse desde SQL Editor o, en el futuro, desde un backend seguro.
+- Tanto transferencias como efectivo quedan pendientes hasta la confirmación manual. Solo `confirm_payment_manually` incrementa `customer_paid_kg`, por lo que únicamente un pago confirmado asegura cupo en el lote.
+
+## Comprobaciones manuales recomendadas
+
+Después de instalar los SQL:
+
+```sql
+select id, name, sale_unit, season_status
+from public.products
+where is_published = true;
+
+select id, total_capacity_kg, customer_paid_kg, market_assumed_kg, status
+from public.lots
+where is_published = true;
+```
+
+Antes de usar las funciones administrativas, crea un cliente, un pedido mayorista y su pago pendiente desde SQL Editor. Luego ejecuta:
+
+```sql
+select public.confirm_payment_manually('<payment-uuid>'::uuid, null);
+select public.assume_lot_remainder('<lot-uuid>'::uuid, 10);
+```
+
+Comprueba que una confirmación concurrente o sin capacidad suficiente falle, que el pedido pase a `ESPERANDO_COMPRA_GRUPAL` y que `market_assumed_kg` nunca supere el porcentaje configurado (20% como máximo inicial).
