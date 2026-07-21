@@ -1,5 +1,5 @@
 -- Lazo Mercado 2.0 - Etapa 4: costos privados de abastecimiento.
--- Ejecutar despuÃ©s de stage3-admin-operations.sql.
+-- Ejecutar después de stage3-admin-operations.sql.
 
 begin;
 
@@ -42,9 +42,9 @@ declare
   v_lot public.lots%rowtype;
 begin
   if not public.is_lazo_admin() then raise exception 'Acceso denegado.'; end if;
-  if char_length(trim(coalesce(p_name, ''))) < 2 then raise exception 'Ingresa un nombre vÃ¡lido.'; end if;
+  if char_length(trim(coalesce(p_name, ''))) < 2 then raise exception 'Ingresa un nombre válido.'; end if;
   if p_price <= 0 or p_supplier_cost < 0 or p_capacity <= 0 or p_minimum <= 0 or p_minimum > p_capacity then
-    raise exception 'Revisa precio, costo proveedor, capacidad y compra mÃ­nima.';
+    raise exception 'Revisa precio, costo proveedor, capacidad y compra mínima.';
   end if;
   if nullif(trim(coalesce(p_image_url, '')), '') is null then raise exception 'Selecciona una imagen.'; end if;
 
@@ -107,4 +107,3 @@ revoke all on function public.admin_save_wholesale_product(uuid, text, text, tex
 grant execute on function public.admin_save_wholesale_product(uuid, text, text, text, text, numeric, numeric, numeric, numeric, public.lot_status) to authenticated;
 
 commit;
-
