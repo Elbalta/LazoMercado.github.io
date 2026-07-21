@@ -1,625 +1,68 @@
+Exit code: 0
+Wall time: 1.1 seconds
+Output:
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>Lazo Mercado | Productos</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Compra productos al detalle y por mayor en Lazo Mercado.">
+  <title>Lazo Mercado</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  >
-
-  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
   <header class="header">
-    <div>
-      <p class="eyebrow">Compra simple, rápida y clara</p>
-      <h1>Lazo Mercado · Productos</h1>
-    </div>
+    <div><p class="eyebrow">Compra simple, rÃ¡pida y clara</p><h1><a href="#" id="open-admin-link" class="admin-secret-link">Lazo Mercado</a></h1></div>
   </header>
 
   <main class="layout">
-    <section class="panel" aria-labelledby="products-title">
-      <div class="panel-header centered">
-        <h2 id="products-title">Productos disponibles</h2>
-        <p>Conoce nuestra selección directamente desde Lazo Mercado.</p>
+    <section id="entry-gate" class="panel gate-panel" aria-labelledby="gate-title">
+      <div class="gate-hero"><span class="gate-kicker">Elige cÃ³mo comprar</span><h2 id="gate-title">Productos frescos para cada necesidad</h2><p class="hint">Compra cantidades pequeÃ±as al detalle o participa en una compra mayorista.</p></div>
+      <div class="gate-options">
+        <article class="gate-card gate-detail"><div class="gate-content"><h3>Compra al detalle</h3><p>Elige los kilos que necesitas y compra de inmediato.</p><ul><li>Desde 1 kg</li><li>Stock disponible</li></ul><button id="choose-detail" class="btn" type="button">Ver productos al detalle</button></div></article>
+        <span class="gate-vs" aria-hidden="true">o</span>
+        <article class="gate-card gate-crowd featured"><div class="gate-content"><h3>Compra mayorista</h3><p>Ãšnete a compras por volumen y accede a precios mayoristas.</p><ul><li>Pedidos desde 50 kg</li><li>Seguimiento del lote</li></ul><button id="choose-crowd" class="btn" type="button">Ver compras mayoristas</button></div></article>
       </div>
-
-      <p
-        id="products-status"
-        class="products-status"
-        role="status"
-        aria-live="polite"
-      >
-        Cargando productos…
-      </p>
-
-      <div
-        id="products-list"
-        class="bins-grid"
-        aria-live="polite"
-      ></div>
     </section>
+
+    <nav id="mode-tabs" class="mode-tabs hidden" aria-label="Secciones principales">
+      <button class="mode-tab active" data-mode="detail" type="button">Detalle</button>
+      <button class="mode-tab" data-mode="crowd" type="button">Mayorista</button>
+      <button class="mode-tab" data-mode="tracking" type="button">Seguimiento</button>
+    </nav>
+
+    <section id="detail-view" class="panel client-panel hidden" aria-labelledby="detail-title"><div class="panel-header centered"><h2 id="detail-title">Productos al detalle</h2><p>Compra desde un kilo.</p></div><div id="detail-products" class="bins-grid"></div></section>
+    <section id="crowd-view" class="panel client-panel hidden" aria-labelledby="crowd-title"><div class="panel-header centered"><h2 id="crowd-title">Compras mayoristas</h2><p>Completa un lote junto a otros compradores.</p></div><div id="bins-list" class="bins-grid"></div></section>
+    <section id="tracking-view" class="panel client-panel hidden" aria-labelledby="tracking-title"><div class="panel-header centered"><h2 id="tracking-title">Seguimiento de pedidos</h2><p>Consulta usando el telÃ©fono registrado en tu compra.</p></div><form id="tracking-form" class="tracking-form"><label>TelÃ©fono<input id="tracking-phone" type="tel" autocomplete="tel" required></label><div class="tracking-actions"><button class="btn" type="submit">Buscar pedidos</button><button id="tracking-clear" class="btn secondary" type="button">Limpiar</button></div></form><div id="tracking-results" class="admin-bins"><p class="hint">Ingresa tu telÃ©fono para consultar tus pedidos.</p></div></section>
   </main>
 
-  <dialog id="order-modal" class="modal">
-    <form id="order-form" class="modal-content" method="dialog">
-      <div class="modal-head">
-        <h3>Confirmar pedido mayorista</h3>
-
-        <button
-          type="button"
-          id="close-order"
-          class="icon-btn"
-          aria-label="Cerrar"
-        >
-          ✕
-        </button>
-      </div>
-
-      <input type="hidden" id="order-bin-id" />
-
-      <label>
-        Nombre
-        <input id="customer-name" required />
-      </label>
-
-      <label>
-        Email
-        <input id="customer-email" type="email" required />
-      </label>
-
-      <label>
-        Teléfono
-        <input id="customer-phone" required />
-      </label>
-
-      <label id="order-kg-label">
-        <span id="order-kg-label-text">Kilos a comprar</span>
-
-        <input
-          id="order-kg"
-          type="number"
-          min="1"
-          step="1"
-          required
-        />
-      </label>
-
-      <p id="order-stock-help" class="hint"></p>
-      <p id="order-total" class="total-preview">Total: $0</p>
-
-      <div class="modal-actions">
-        <button
-          type="button"
-          id="cancel-order-action"
-          class="btn secondary"
-        >
-          Cancelar
-        </button>
-
-        <button type="submit" class="btn">
-          Aceptar compra
-        </button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog id="detail-order-modal" class="modal">
-    <form
-      id="detail-order-form"
-      class="modal-content"
-      method="dialog"
-    >
-      <div class="modal-head">
-        <h3>Confirmar pedido detalle</h3>
-
-        <button
-          type="button"
-          id="close-detail-order"
-          class="icon-btn"
-          aria-label="Cerrar"
-        >
-          ✕
-        </button>
-      </div>
-
-      <input type="hidden" id="detail-product-id" />
-
-      <label>
-        Nombre
-        <input id="detail-customer-name" required />
-      </label>
-
-      <label>
-        Email
-        <input
-          id="detail-customer-email"
-          type="email"
-          required
-        />
-      </label>
-
-      <label>
-        Teléfono
-        <input id="detail-customer-phone" required />
-      </label>
-
-      <label>
-        Kilos a comprar
-
-        <input
-          id="detail-order-kg"
-          type="number"
-          min="1"
-          step="1"
-          required
-        />
-      </label>
-
-      <p id="detail-stock-help" class="hint"></p>
-      <p id="detail-order-total" class="total-preview">
-        Total: $0
-      </p>
-
-      <div class="modal-actions">
-        <button
-          type="button"
-          id="cancel-detail-order-action"
-          class="btn secondary"
-        >
-          Cancelar
-        </button>
-
-        <button type="submit" class="btn">
-          Aceptar compra
-        </button>
-      </div>
-    </form>
-  </dialog>
-
-  <div id="purchase-alert" class="purchase-alert hidden">
-    <div class="purchase-alert-card">
-      <h3>✅ Compra registrada</h3>
-
-      <p id="purchase-alert-text">
-        Tu pedido fue ingresado correctamente.
-      </p>
-
-      <button id="purchase-alert-close" class="btn">
-        Entendido
-      </button>
-    </div>
-  </div>
-
-  <dialog id="admin-modal" class="modal admin-modal">
-    <div class="modal-content admin-shell">
-      <div class="modal-head">
-        <h3>Panel administrador</h3>
-
-        <button
-          type="button"
-          id="close-admin"
-          class="icon-btn"
-          aria-label="Cerrar"
-        >
-          ✕
-        </button>
-      </div>
-
-      <section id="admin-login-section">
-        <form id="admin-login-form" class="stack">
-          <label>
-            Email
-            <input
-              id="admin-email"
-              type="email"
-              required
-            />
-          </label>
-
-          <label>
-            Contraseña
-            <input
-              id="admin-password"
-              type="password"
-              required
-            />
-          </label>
-
-          <button class="btn" type="submit">
-            Ingresar
-          </button>
-        </form>
-      </section>
-
-      <section id="admin-panel-section" class="hidden">
-        <div class="admin-toolbar">
-          <h4>Gestión de ventas (mayorista y detalle)</h4>
-
-          <button
-            id="admin-logout"
-            class="btn secondary"
-            type="button"
-          >
-            Cerrar sesión
-          </button>
-        </div>
-
-        <div class="admin-main-tabs">
-          <button
-            class="main-tab active"
-            data-view="resumen"
-            type="button"
-          >
-            Resumen general
-          </button>
-
-          <button
-            class="main-tab"
-            data-view="crear"
-            type="button"
-          >
-            Crear productos
-          </button>
-
-          <button
-            class="main-tab"
-            data-view="seguimiento-mayorista"
-            type="button"
-          >
-            Seguimiento mayorista
-          </button>
-
-          <button
-            class="main-tab"
-            data-view="seguimiento-detalle"
-            type="button"
-          >
-            Seguimiento detalle
-          </button>
-
-          <button
-            class="main-tab"
-            data-view="terminadas"
-            type="button"
-          >
-            Ventas terminadas
-          </button>
-
-          <button
-            class="main-tab"
-            data-view="financiero"
-            type="button"
-          >
-            Resumen financiero
-          </button>
-        </div>
-
-        <section
-          id="admin-view-resumen"
-          class="admin-view"
-        >
-          <div
-            class="kpi-grid"
-            id="kpi-grid"
-          ></div>
-
-          <div class="charts-grid">
-            <article class="chart-card">
-              <h5>Progreso de venta global (kg)</h5>
-
-              <div
-                id="kg-chart"
-                class="progress-chart"
-              ></div>
-
-              <div
-                id="kg-legend"
-                class="chart-legend"
-              ></div>
-            </article>
-
-            <article class="chart-card">
-              <h5>Montos por estado de pedido</h5>
-
-              <div
-                id="amount-chart"
-                class="bars-chart"
-              ></div>
-            </article>
-          </div>
-        </section>
-
-        <section
-          id="admin-view-crear"
-          class="admin-view hidden"
-        >
-          <form id="bin-form" class="admin-form">
-            <input type="hidden" id="bin-id" />
-
-            <label>
-              Producto
-              <input id="bin-product" required />
-            </label>
-
-            <label>
-              Variedad / calibre
-
-              <input
-                id="bin-variety"
-                placeholder="Ej: Hass, calibre 22"
-              />
-            </label>
-
-            <label>
-              Precio por kilo
-
-              <input
-                id="bin-price"
-                type="number"
-                min="1"
-                required
-              />
-            </label>
-
-            <label>
-              Capacidad (kg)
-
-              <input
-                id="bin-capacity"
-                type="number"
-                min="1"
-                value="500"
-                required
-              />
-            </label>
-
-            <label>
-              Mínimo por pedido (kg)
-
-              <input
-                id="bin-min-kg"
-                type="number"
-                min="1"
-                value="50"
-                required
-              />
-            </label>
-
-            <label>
-              Imagen URL
-
-              <input
-                id="bin-image"
-                type="url"
-                required
-              />
-            </label>
-
-            <label>
-              Estado
-
-              <select id="bin-status">
-                <option value="OPEN">OPEN</option>
-                <option value="CLOSED">CLOSED</option>
-                <option value="SOLD_OUT">SOLD_OUT</option>
-              </select>
-            </label>
-
-            <label class="span-all">
-              Resumen del lote
-
-              <textarea
-                id="bin-notes"
-                rows="2"
-                placeholder="Ej: Fruta homogénea, llegada semanal, venta mayorista completa."
-              ></textarea>
-            </label>
-
-            <button class="btn" type="submit">
-              Guardar mayorista
-            </button>
-
-            <button
-              id="clear-bin-form"
-              class="btn secondary"
-              type="button"
-            >
-              Limpiar
-            </button>
-          </form>
-
-          <div
-            class="admin-divider"
-            role="separator"
-            aria-label="Separador entre formularios"
-          >
-            <span>Productos al detalle</span>
-          </div>
-
-          <form
-            id="detail-product-form"
-            class="admin-form"
-          >
-            <input
-              type="hidden"
-              id="detail-admin-id"
-            />
-
-            <label>
-              Producto detalle
-
-              <input
-                id="detail-admin-name"
-                required
-              />
-            </label>
-
-            <label>
-              Precio por kilo
-
-              <input
-                id="detail-admin-price"
-                type="number"
-                min="1"
-                required
-              />
-            </label>
-
-            <label>
-              Stock (kg)
-
-              <input
-                id="detail-admin-stock"
-                type="number"
-                min="0"
-                required
-              />
-            </label>
-
-            <label>
-              Imagen URL
-
-              <input
-                id="detail-admin-image"
-                type="url"
-                required
-              />
-            </label>
-
-            <button class="btn" type="submit">
-              Guardar producto detalle
-            </button>
-
-            <button
-              id="clear-detail-form"
-              class="btn secondary"
-              type="button"
-            >
-              Limpiar
-            </button>
-          </form>
-
-          <div
-            id="admin-detail-products"
-            class="admin-bins"
-          ></div>
-        </section>
-
-        <section
-          id="admin-view-seguimiento-mayorista"
-          class="admin-view hidden"
-        >
-          <div
-            id="admin-bins-open"
-            class="admin-bins"
-          ></div>
-
-          <div
-            id="admin-bins-sold"
-            class="admin-bins"
-          ></div>
-        </section>
-
-        <section
-          id="admin-view-seguimiento-detalle"
-          class="admin-view hidden"
-        >
-          <div
-            id="admin-detail-orders"
-            class="admin-bins"
-          ></div>
-        </section>
-
-        <section
-          id="admin-view-terminadas"
-          class="admin-view hidden"
-        >
-          <div
-            id="completed-summary"
-            class="kpi-grid"
-          ></div>
-
-          <div class="charts-grid">
-            <article class="chart-card">
-              <h5>Ventas completadas por canal</h5>
-
-              <div
-                id="completed-channel-chart"
-                class="bars-chart"
-              ></div>
-            </article>
-
-            <article class="chart-card">
-              <h5>Top productos vendidos</h5>
-
-              <div
-                id="completed-product-chart"
-                class="bars-chart"
-              ></div>
-            </article>
-          </div>
-
-          <div
-            id="completed-sales-list"
-            class="admin-bins"
-          ></div>
-        </section>
-
-        <section
-          id="admin-view-financiero"
-          class="admin-view hidden"
-        >
-          <div
-            id="financial-kpis"
-            class="kpi-grid"
-          ></div>
-
-          <div class="charts-grid">
-            <article class="chart-card">
-              <h5>Ingresos por canal</h5>
-
-              <div
-                id="financial-channel-chart"
-                class="bars-chart"
-              ></div>
-            </article>
-
-            <article class="chart-card">
-              <h5>Ingresos por estado</h5>
-
-              <div
-                id="financial-status-chart"
-                class="bars-chart"
-              ></div>
-            </article>
-          </div>
-
-          <div
-            id="financial-list"
-            class="admin-bins"
-          ></div>
-        </section>
-      </section>
-    </div>
-  </dialog>
-
-  <p id="toast" class="toast"></p>
-codex/connect-lazo-mercado-2.0-with-supabase-upgf0r
-
-
-main
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
-  <script src="supabase-client.js"></script>
+  <aside id="summary-panel" class="panel summary-panel hidden" aria-label="Resumen de compra"><h3>Resumen</h3><div class="summary-item"><span>Producto</span><strong id="summary-product">â€”</strong></div><div class="summary-item"><span>Kilos</span><strong id="summary-kg">0</strong></div><div class="summary-item"><span>Precio/kg</span><strong id="summary-unit">$0</strong></div><div class="summary-item total"><span>Total</span><strong id="summary-total">$0</strong></div></aside>
+
+  <dialog id="order-modal" class="modal"><form id="order-form" class="modal-content" method="dialog"><div class="modal-head"><h3>Confirmar pedido mayorista</h3><button id="close-order" class="icon-btn" type="button" aria-label="Cerrar">âœ•</button></div><input id="order-bin-id" type="hidden"><label>Nombre<input id="customer-name" autocomplete="name" required></label><label>Email<input id="customer-email" type="email" autocomplete="email" required></label><label>TelÃ©fono<input id="customer-phone" type="tel" autocomplete="tel" required></label><label id="order-kg-label"><span id="order-kg-label-text">Kilos a comprar</span><input id="order-kg" type="number" min="1" step="1" required></label><p id="order-stock-help" class="hint"></p><p id="order-total" class="total-preview">Total: $0</p><div class="modal-actions"><button id="cancel-order-action" class="btn secondary" type="button">Cancelar</button><button class="btn" type="submit">Aceptar compra</button></div></form></dialog>
+
+  <dialog id="detail-order-modal" class="modal"><form id="detail-order-form" class="modal-content" method="dialog"><div class="modal-head"><h3>Confirmar pedido al detalle</h3><button id="close-detail-order" class="icon-btn" type="button" aria-label="Cerrar">âœ•</button></div><input id="detail-product-id" type="hidden"><label>Nombre<input id="detail-customer-name" autocomplete="name" required></label><label>Email<input id="detail-customer-email" type="email" autocomplete="email" required></label><label>TelÃ©fono<input id="detail-customer-phone" type="tel" autocomplete="tel" required></label><label>Kilos a comprar<input id="detail-order-kg" type="number" min="1" step="1" required></label><p id="detail-stock-help" class="hint"></p><p id="detail-order-total" class="total-preview">Total: $0</p><div class="modal-actions"><button id="cancel-detail-order-action" class="btn secondary" type="button">Cancelar</button><button class="btn" type="submit">Aceptar compra</button></div></form></dialog>
+
+  <div id="purchase-alert" class="purchase-alert hidden" role="alertdialog" aria-modal="true" aria-labelledby="purchase-title"><div class="purchase-alert-card"><h3 id="purchase-title">Compra registrada</h3><p id="purchase-alert-text">Tu pedido fue ingresado correctamente.</p><button id="purchase-alert-close" class="btn" type="button">Entendido</button></div></div>
+
+  <dialog id="admin-modal" class="modal admin-modal"><div class="modal-content admin-shell"><div class="modal-head"><h3>Panel administrador</h3><button id="close-admin" class="icon-btn" type="button" aria-label="Cerrar">âœ•</button></div>
+    <section id="admin-login-section"><form id="admin-login-form" class="stack"><label>Email<input id="admin-email" type="email" autocomplete="username" required></label><label>ContraseÃ±a<input id="admin-password" type="password" autocomplete="current-password" required></label><button class="btn" type="submit">Ingresar</button></form></section>
+    <section id="admin-panel-section" class="hidden"><div class="admin-toolbar"><h4>GestiÃ³n de ventas</h4><button id="admin-logout" class="btn secondary" type="button">Cerrar sesiÃ³n</button></div>
+      <nav class="admin-main-tabs" aria-label="Panel administrador"><button class="main-tab active" data-view="resumen" type="button">Resumen</button><button class="main-tab" data-view="crear" type="button">Crear productos</button><button class="main-tab" data-view="seguimiento-mayorista" type="button">Mayorista</button><button class="main-tab" data-view="seguimiento-detalle" type="button">Detalle</button><button class="main-tab" data-view="terminadas" type="button">Terminadas</button><button class="main-tab" data-view="financiero" type="button">Financiero</button></nav>
+      <section id="admin-view-resumen" class="admin-view"><div id="kpi-grid" class="kpi-grid"></div><div class="charts-grid"><article class="chart-card"><h5>Progreso global</h5><div id="kg-chart" class="progress-chart"></div><div id="kg-legend" class="chart-legend"></div></article><article class="chart-card"><h5>Montos por estado</h5><div id="amount-chart" class="bars-chart"></div></article></div></section>
+      <section id="admin-view-crear" class="admin-view hidden"><form id="bin-form" class="admin-form"><input id="bin-id" type="hidden"><label>Producto<input id="bin-product" required></label><label>Variedad<input id="bin-variety"></label><label>Precio por kilo<input id="bin-price" type="number" min="1" required></label><label>Capacidad (kg)<input id="bin-capacity" type="number" min="1" value="500" required></label><label>MÃ­nimo por pedido<input id="bin-min-kg" type="number" min="1" value="50" required></label><label>Imagen URL<input id="bin-image" type="url" required></label><label>Estado<select id="bin-status"><option value="OPEN">OPEN</option><option value="CLOSED">CLOSED</option><option value="SOLD_OUT">SOLD_OUT</option></select></label><label class="span-all">Resumen<textarea id="bin-notes" rows="2"></textarea></label><button class="btn" type="submit">Guardar mayorista</button><button id="clear-bin-form" class="btn secondary" type="button">Limpiar</button></form>
+        <div class="admin-divider"><span>Productos al detalle</span></div><form id="detail-product-form" class="admin-form"><input id="detail-admin-id" type="hidden"><label>Producto<input id="detail-admin-name" required></label><label>Precio por kilo<input id="detail-admin-price" type="number" min="1" required></label><label>Stock (kg)<input id="detail-admin-stock" type="number" min="0" required></label><label>Imagen URL<input id="detail-admin-image" type="url" required></label><button class="btn" type="submit">Guardar detalle</button><button id="clear-detail-form" class="btn secondary" type="button">Limpiar</button></form><div id="admin-detail-products" class="admin-bins"></div></section>
+      <section id="admin-view-seguimiento-mayorista" class="admin-view hidden"><div id="admin-bins-open" class="admin-bins"></div><div id="admin-bins-sold" class="admin-bins"></div></section>
+      <section id="admin-view-seguimiento-detalle" class="admin-view hidden"><div id="admin-detail-orders" class="admin-bins"></div></section>
+      <section id="admin-view-terminadas" class="admin-view hidden"><div id="completed-summary" class="kpi-grid"></div><div class="charts-grid"><article class="chart-card"><h5>Ventas por canal</h5><div id="completed-channel-chart" class="bars-chart"></div></article><article class="chart-card"><h5>Productos vendidos</h5><div id="completed-product-chart" class="bars-chart"></div></article></div><div id="completed-sales-list" class="admin-bins"></div></section>
+      <section id="admin-view-financiero" class="admin-view hidden"><div id="financial-kpis" class="kpi-grid"></div><div class="charts-grid"><article class="chart-card"><h5>Ingresos por canal</h5><div id="financial-channel-chart" class="bars-chart"></div></article><article class="chart-card"><h5>Ingresos por estado</h5><div id="financial-status-chart" class="bars-chart"></div></article></div><div id="financial-list" class="admin-bins"></div></section>
+    </section>
+  </div></dialog>
+
+  <p id="toast" class="toast" role="status" aria-live="polite"></p>
   <script src="script.js"></script>
 </body>
 </html>
+
