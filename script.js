@@ -1,15 +1,15 @@
 const db = window.lazoSupabase;
 
 const ORDER_STATES = [
-  'PENDIENTE_PAGO', 'PAGO_CONFIRMADO', 'ESPERA_CIERRE_BIN',
-  'PENDIENTE_ENVIO', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'
+  'PENDIENTE_CONFIRMACION', 'ESPERANDO_COMPRA_GRUPAL', 'PREPARANDO',
+  'LISTO_PARA_ENTREGA', 'EN_TRANSITO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO'
 ];
 
 const ORDER_LABELS = {
-  PENDIENTE_PAGO: 'Pendiente de pago',
-  PAGO_CONFIRMADO: 'Pago confirmado',
-  ESPERA_CIERRE_BIN: 'Esperando cierre mayorista',
-  PENDIENTE_ENVIO: 'Pendiente de envío',
+  PENDIENTE_CONFIRMACION: 'Pendiente de confirmación',
+  ESPERANDO_COMPRA_GRUPAL: 'Esperando compra grupal',
+  PREPARANDO: 'Preparando pedido',
+  LISTO_PARA_ENTREGA: 'Listo para entrega',
   EN_TRANSITO: 'En tránsito',
   ENTREGADO: 'Entregado',
   COMPLETADO: 'Completado',
@@ -17,13 +17,13 @@ const ORDER_LABELS = {
 };
 
 const NEXT_DETAIL = {
-  PENDIENTE_PAGO: 'PAGO_CONFIRMADO',
-  PAGO_CONFIRMADO: 'EN_TRANSITO',
-  ESPERA_CIERRE_BIN: 'EN_TRANSITO',
-  PENDIENTE_ENVIO: 'EN_TRANSITO',
+  PENDIENTE_CONFIRMACION: 'CONFIRM_PAYMENT',
+  ESPERANDO_COMPRA_GRUPAL: 'PREPARANDO',
+  PREPARANDO: 'LISTO_PARA_ENTREGA',
+  LISTO_PARA_ENTREGA: 'EN_TRANSITO',
   EN_TRANSITO: 'ENTREGADO',
   ENTREGADO: 'COMPLETADO',
-  CANCELADO: 'PENDIENTE_PAGO'
+  CANCELADO: null
 };
 
 const q = (id) => document.getElementById(id);
@@ -41,12 +41,15 @@ const el = {
   orderKg: q('order-kg'), orderKgLabelText: q('order-kg-label-text'), orderTotal: q('order-total'),
   orderStockHelp: q('order-stock-help'), customerName: q('customer-name'),
   customerEmail: q('customer-email'), customerPhone: q('customer-phone'),
+  orderPayment: q('order-payment'), orderDelivery: q('order-delivery'), orderAddress: q('order-address'),
   closeOrder: q('close-order'), cancelOrderAction: q('cancel-order-action'),
   detailOrderModal: q('detail-order-modal'), detailOrderForm: q('detail-order-form'),
   detailProductId: q('detail-product-id'), detailOrderKg: q('detail-order-kg'),
   detailOrderTotal: q('detail-order-total'), detailStockHelp: q('detail-stock-help'),
   detailCustomerName: q('detail-customer-name'), detailCustomerEmail: q('detail-customer-email'),
   detailCustomerPhone: q('detail-customer-phone'), closeDetailOrder: q('close-detail-order'),
+  detailOrderPayment: q('detail-order-payment'), detailOrderDelivery: q('detail-order-delivery'),
+  detailOrderAddress: q('detail-order-address'),
   cancelDetailOrderAction: q('cancel-detail-order-action'),
   purchaseAlert: q('purchase-alert'), purchaseAlertText: q('purchase-alert-text'),
   purchaseAlertClose: q('purchase-alert-close'), toast: q('toast'),
@@ -108,9 +111,27 @@ function setBusy(form, busy) {
 }
 
 async function loadProducts() {
-  const { data, error } = await db.from('lazo_products').select('*').order('created_at', { ascending: false });
-  if (error) throw error;
-  state.products = data || [];
+  const [productsResult, lotsResult] = await Promise.all([
+    db.from('products').select('*').eq('is_published', true).order('created_at', { ascending: false }),
+    db.from('lots').select('*, product:products(*)').eq('is_published', true).order('created_at', { ascending: false })
+  ]);
+  if (productsResult.error) throw productsResult.error;
+  if (lotsResult.error) throw lotsResult.error;
+  const details = (productsResult.data || []).filter((product) => product.season_status === 'available').map((product) => ({
+    ...product, id: product.id, product_id: product.id, channel: 'DETALLE',
+    price_per_kg: product.detail_price, stock_kg: product.retail_stock_kg,
+    status: Number(product.retail_stock_kg) > 0 ? 'OPEN' : 'SOLD_OUT'
+  }));
+  const wholesale = (lotsResult.data || []).map((lot) => ({
+    ...lot, id: lot.id, lot_id: lot.id, product_id: lot.product_id, channel: 'CROWDBUYING',
+    name: lot.product?.name || 'Producto', variety: lot.product?.variety || '',
+    notes: lot.product?.description || '', image_url: lot.product?.image_url || '',
+    price_per_kg: lot.wholesale_price, capacity_kg: lot.total_capacity_kg,
+    min_order_kg: lot.minimum_purchase_kg,
+    sold_kg: Number(lot.customer_paid_kg) + Number(lot.market_assumed_kg),
+    status: lot.status === 'open' ? 'OPEN' : ['full', 'closed'].includes(lot.status) ? 'SOLD_OUT' : 'CLOSED'
+  }));
+  state.products = [...wholesale, ...details];
   renderProducts();
 }
 
@@ -200,20 +221,27 @@ function closeOrderDialogs() {
   el.summaryPanel.classList.add('hidden');
 }
 
-async function placeOrder(productId, customer, kg, form) {
+async function placeOrder(itemId, customer, kg, form, options) {
   setBusy(form, true);
   try {
-    const { data, error } = await db.rpc('lazo_place_order', {
-      p_product_id: productId,
+    const item = productById(itemId);
+    if (!item) throw new Error('Producto no encontrado.');
+    const { data, error } = await db.rpc('place_customer_order', {
+      p_product_id: item.product_id,
+      p_lot_id: item.channel === 'CROWDBUYING' ? item.lot_id : null,
+      p_channel: item.channel === 'CROWDBUYING' ? 'wholesale' : 'retail',
       p_name: customer.name,
       p_email: customer.email,
       p_phone: customer.phone,
-      p_kg: Number(kg)
+      p_quantity: Number(kg),
+      p_payment_method: options.payment,
+      p_delivery_method: options.delivery,
+      p_address: options.address || null
     });
     if (error) throw error;
     closeOrderDialogs();
     form.reset();
-    el.purchaseAlertText.textContent = `Pedido ${String(data.id).slice(0, 8)} registrado por ${number(data.kg)} kg de ${data.product_name}. Total: ${money(data.total_price)}.`;
+    el.purchaseAlertText.textContent = `Pedido ${String(data.id).slice(0, 8)} registrado por ${number(data.equivalent_kg)} kg de ${data.product_name}. Total: ${money(data.total_amount)}.`;
     el.purchaseAlert.classList.remove('hidden');
     await loadProducts();
   } catch (error) {
@@ -227,11 +255,11 @@ async function trackOrders(event) {
   event.preventDefault();
   setBusy(el.trackingForm, true);
   try {
-    const { data, error } = await db.rpc('lazo_orders_by_phone', { p_phone: el.trackingPhone.value });
+    const { data, error } = await db.rpc('orders_by_phone', { p_phone: el.trackingPhone.value });
     if (error) throw error;
     el.trackingResults.innerHTML = data?.length ? data.map((order) => `
       <article class="tracking-card"><div class="tracking-head"><div><strong>${escapeHTML(order.product_name)}</strong><p class="bin-meta">Pedido ${escapeHTML(String(order.id).slice(0, 8))} · ${new Date(order.created_at).toLocaleString('es-CL')}</p></div><span class="channel-badge">${order.channel === 'DETALLE' ? 'Detalle' : 'Mayorista'}</span></div>
-      <p>${number(order.kg)} kg · ${money(order.total_price)}</p><span class="order-status ${escapeHTML(order.status)}">${escapeHTML(ORDER_LABELS[order.status] || order.status)}</span></article>`).join('')
+      <p>${number(order.equivalent_kg)} kg · ${money(order.total_amount)} · ${escapeHTML(order.payment_status)}</p><span class="order-status ${escapeHTML(order.operational_status)}">${escapeHTML(ORDER_LABELS[order.operational_status] || order.operational_status)}</span></article>`).join('')
       : '<p class="hint">No encontramos pedidos con ese teléfono.</p>';
   } catch (error) {
     el.trackingResults.innerHTML = `<p class="hint">${escapeHTML(errorMessage(error))}</p>`;
@@ -243,7 +271,7 @@ async function trackOrders(event) {
 async function isCurrentUserAdmin() {
   const { data: sessionData } = await db.auth.getSession();
   if (!sessionData.session) return false;
-  const { data, error } = await db.rpc('lazo_is_admin');
+  const { data, error } = await db.rpc('is_lazo_admin');
   if (error) throw error;
   return data === true;
 }
@@ -274,15 +302,32 @@ async function loginAdmin(event) {
 }
 
 async function loadAdminData() {
-  const [productsResult, ordersResult, customersResult] = await Promise.all([
-    db.from('lazo_products').select('*').order('created_at', { ascending: false }),
-    db.from('lazo_orders').select('*, product:lazo_products(*), customer:lazo_customers(*)').order('created_at', { ascending: false }),
-    db.from('lazo_customers').select('*').order('created_at', { ascending: false })
+  const [productsResult, lotsResult, ordersResult, customersResult] = await Promise.all([
+    db.from('products').select('*').order('created_at', { ascending: false }),
+    db.from('lots').select('*, product:products(*)').order('created_at', { ascending: false }),
+    db.from('orders').select('*, product:products(*), customer:customers(*), lot:lots(*)').order('created_at', { ascending: false }),
+    db.from('customers').select('*').order('created_at', { ascending: false })
   ]);
-  const failed = [productsResult, ordersResult, customersResult].find((result) => result.error);
+  const failed = [productsResult, lotsResult, ordersResult, customersResult].find((result) => result.error);
   if (failed) throw failed.error;
-  state.products = productsResult.data || [];
-  state.orders = ordersResult.data || [];
+  const details = (productsResult.data || []).map((product) => ({
+    ...product, id: product.id, product_id: product.id, channel: 'DETALLE',
+    price_per_kg: product.detail_price, stock_kg: product.retail_stock_kg,
+    status: Number(product.retail_stock_kg) > 0 ? 'OPEN' : 'SOLD_OUT'
+  }));
+  const wholesale = (lotsResult.data || []).map((lot) => ({
+    ...lot, id: lot.id, lot_id: lot.id, channel: 'CROWDBUYING', name: lot.product?.name || 'Producto',
+    variety: lot.product?.variety || '', notes: lot.product?.description || '', image_url: lot.product?.image_url || '',
+    price_per_kg: lot.wholesale_price, capacity_kg: lot.total_capacity_kg, min_order_kg: lot.minimum_purchase_kg,
+    sold_kg: Number(lot.customer_paid_kg) + Number(lot.market_assumed_kg),
+    status: lot.status === 'open' ? 'OPEN' : ['full', 'closed'].includes(lot.status) ? 'SOLD_OUT' : 'CLOSED'
+  }));
+  state.products = [...wholesale, ...details];
+  state.orders = (ordersResult.data || []).map((order) => ({
+    ...order, channel: order.channel === 'wholesale' ? 'CROWDBUYING' : 'DETALLE',
+    kg: order.equivalent_kg, total_price: order.total_amount,
+    status: order.operational_status
+  }));
   state.customers = customersResult.data || [];
   renderProducts();
   renderAdmin();
@@ -290,11 +335,11 @@ async function loadAdminData() {
 
 function orderActions(order) {
   if (order.status === 'COMPLETADO') return '';
-  const product = order.product || productById(order.product_id);
   let next = NEXT_DETAIL[order.status];
-  if (order.channel === 'CROWDBUYING' && order.status === 'PAGO_CONFIRMADO') next = product?.status === 'SOLD_OUT' ? 'PENDIENTE_ENVIO' : 'ESPERA_CIERRE_BIN';
-  if (order.channel === 'CROWDBUYING' && order.status === 'ESPERA_CIERRE_BIN') next = product?.status === 'SOLD_OUT' ? 'PENDIENTE_ENVIO' : null;
-  return `<div class="order-actions">${next ? `<button class="btn tiny" type="button" data-action="order-status" data-id="${order.id}" data-status="${next}">Avanzar</button>` : ''}${order.status !== 'CANCELADO' ? `<button class="btn tiny warn" type="button" data-action="order-status" data-id="${order.id}" data-status="CANCELADO">Cancelar</button>` : ''}</div>`;
+  if (order.channel === 'CROWDBUYING' && order.status === 'ESPERANDO_COMPRA_GRUPAL' && order.lot?.status !== 'full') next = null;
+  const action = next === 'CONFIRM_PAYMENT' ? 'confirm-payment' : 'order-status';
+  const label = next === 'CONFIRM_PAYMENT' ? 'Confirmar pago' : 'Avanzar';
+  return `<div class="order-actions">${next ? `<button class="btn tiny" type="button" data-action="${action}" data-id="${order.id}" data-status="${next}">${label}</button>` : ''}${order.status !== 'CANCELADO' ? `<button class="btn tiny warn" type="button" data-action="order-status" data-id="${order.id}" data-status="CANCELADO">Cancelar</button>` : ''}</div>`;
 }
 
 function orderAdminCard(order) {
@@ -361,20 +406,34 @@ function clearDetailForm() { el.detailProductForm.reset(); el.detailAdminId.valu
 
 async function saveWholesale(event) {
   event.preventDefault(); setBusy(el.binForm, true);
-  const payload = { channel: 'CROWDBUYING', name: el.binProduct.value.trim(), variety: el.binVariety.value.trim(), notes: el.binNotes.value.trim(), price_per_kg: Number(el.binPrice.value), capacity_kg: Number(el.binCapacity.value), min_order_kg: Number(el.binMinKg.value), stock_kg: null, status: el.binStatus.value, image_url: el.binImage.value.trim() };
   try {
-    const query = el.binId.value ? db.from('lazo_products').update(payload).eq('id', el.binId.value) : db.from('lazo_products').insert(payload);
-    const { error } = await query; if (error) throw error;
+    const productPayload = { name: el.binProduct.value.trim(), variety: el.binVariety.value.trim(), description: el.binNotes.value.trim(), image_url: el.binImage.value.trim(), sale_unit: 'kilo', equivalent_weight_kg: 1, wholesale_price: Number(el.binPrice.value), detail_price: Number(el.binPrice.value), minimum_quantity: 1, season_status: 'available', is_published: true };
+    const lotPayload = { total_capacity_kg: Number(el.binCapacity.value), minimum_purchase_kg: Number(el.binMinKg.value), wholesale_price: Number(el.binPrice.value), opens_at: new Date().toISOString(), initial_deadline: new Date(Date.now() + 7 * 86400000).toISOString(), market_assumption_max_percent: 20, status: el.binStatus.value === 'OPEN' ? 'open' : el.binStatus.value === 'SOLD_OUT' ? 'full' : 'closed', is_published: true };
+    if (el.binId.value) {
+      const item = productById(el.binId.value);
+      if (!item) throw new Error('Lote no encontrado.');
+      const [productResult, lotResult] = await Promise.all([
+        db.from('products').update(productPayload).eq('id', item.product_id),
+        db.from('lots').update(lotPayload).eq('id', item.lot_id)
+      ]);
+      if (productResult.error) throw productResult.error;
+      if (lotResult.error) throw lotResult.error;
+    } else {
+      const { data: product, error: productError } = await db.from('products').insert({ ...productPayload, retail_stock_kg: 0 }).select().single();
+      if (productError) throw productError;
+      const { error: lotError } = await db.from('lots').insert({ ...lotPayload, product_id: product.id });
+      if (lotError) throw lotError;
+    }
     clearBinForm(); await loadAdminData(); toast('Producto mayorista guardado.');
   } catch (error) { toast(errorMessage(error), true); } finally { setBusy(el.binForm, false); }
 }
 
 async function saveDetail(event) {
   event.preventDefault(); setBusy(el.detailProductForm, true);
-  const payload = { channel: 'DETALLE', name: el.detailAdminName.value.trim(), variety: '', notes: '', price_per_kg: Number(el.detailAdminPrice.value), capacity_kg: null, min_order_kg: 1, stock_kg: Number(el.detailAdminStock.value), sold_kg: 0, status: Number(el.detailAdminStock.value) > 0 ? 'OPEN' : 'SOLD_OUT', image_url: el.detailAdminImage.value.trim() };
+  const current = el.detailAdminId.value ? productById(el.detailAdminId.value) : null;
+  const payload = { name: el.detailAdminName.value.trim(), variety: current?.variety || '', description: current?.notes || '', image_url: el.detailAdminImage.value.trim(), sale_unit: 'kilo', equivalent_weight_kg: 1, wholesale_price: Number(current?.wholesale_price || el.detailAdminPrice.value), detail_price: Number(el.detailAdminPrice.value), minimum_quantity: 1, retail_stock_kg: Number(el.detailAdminStock.value), season_status: 'available', is_published: true };
   try {
-    if (el.detailAdminId.value) delete payload.sold_kg;
-    const query = el.detailAdminId.value ? db.from('lazo_products').update(payload).eq('id', el.detailAdminId.value) : db.from('lazo_products').insert(payload);
+    const query = el.detailAdminId.value ? db.from('products').update(payload).eq('id', el.detailAdminId.value) : db.from('products').insert(payload);
     const { error } = await query; if (error) throw error;
     clearDetailForm(); await loadAdminData(); toast('Producto al detalle guardado.');
   } catch (error) { toast(errorMessage(error), true); } finally { setBusy(el.detailProductForm, false); }
@@ -395,16 +454,25 @@ function editProduct(id) {
 
 async function deleteProduct(id) {
   if (!window.confirm('¿Eliminar este producto? Solo es posible si no tiene pedidos asociados.')) return;
-  const { error } = await db.from('lazo_products').delete().eq('id', id);
+  const item = productById(id);
+  const { error } = item?.channel === 'CROWDBUYING'
+    ? await db.from('lots').delete().eq('id', item.lot_id)
+    : await db.from('products').delete().eq('id', id);
   if (error) return toast(errorMessage(error), true);
   await loadAdminData(); toast('Producto eliminado.');
 }
 
 async function setOrderStatus(id, status) {
   if (!ORDER_STATES.includes(status)) return;
-  const { error } = await db.rpc('lazo_set_order_status', { p_order_id: id, p_status: status });
+  const { error } = await db.rpc('admin_set_order_status', { p_order_id: id, p_status: status });
   if (error) return toast(errorMessage(error), true);
   await loadAdminData(); toast('Estado del pedido actualizado.');
+}
+
+async function confirmOrderPayment(id) {
+  const { error } = await db.rpc('admin_confirm_order_payment', { p_order_id: id });
+  if (error) return toast(errorMessage(error), true);
+  await loadAdminData(); toast('Pago confirmado y pedido actualizado.');
 }
 
 document.addEventListener('click', (event) => {
@@ -415,6 +483,7 @@ document.addEventListener('click', (event) => {
   if (action === 'edit-product') editProduct(id);
   if (action === 'delete-product') deleteProduct(id);
   if (action === 'order-status') setOrderStatus(id, status);
+  if (action === 'confirm-payment') confirmOrderPayment(id);
 });
 
 el.chooseDetail.addEventListener('click', () => setMode('detail'));
@@ -422,8 +491,8 @@ el.chooseCrowd.addEventListener('click', () => setMode('crowd'));
 el.modeTabs.forEach((tab) => tab.addEventListener('click', () => setMode(tab.dataset.mode)));
 el.orderKg.addEventListener('input', () => updateOrderPreview(productById(el.orderBinId.value), el.orderKg.value, el.orderTotal));
 el.detailOrderKg.addEventListener('input', () => updateOrderPreview(productById(el.detailProductId.value), el.detailOrderKg.value, el.detailOrderTotal));
-el.orderForm.addEventListener('submit', (event) => { event.preventDefault(); placeOrder(el.orderBinId.value, { name: el.customerName.value.trim(), email: el.customerEmail.value.trim(), phone: el.customerPhone.value.trim() }, el.orderKg.value, el.orderForm); });
-el.detailOrderForm.addEventListener('submit', (event) => { event.preventDefault(); placeOrder(el.detailProductId.value, { name: el.detailCustomerName.value.trim(), email: el.detailCustomerEmail.value.trim(), phone: el.detailCustomerPhone.value.trim() }, el.detailOrderKg.value, el.detailOrderForm); });
+el.orderForm.addEventListener('submit', (event) => { event.preventDefault(); placeOrder(el.orderBinId.value, { name: el.customerName.value.trim(), email: el.customerEmail.value.trim(), phone: el.customerPhone.value.trim() }, el.orderKg.value, el.orderForm, { payment: el.orderPayment.value, delivery: el.orderDelivery.value, address: el.orderAddress.value.trim() }); });
+el.detailOrderForm.addEventListener('submit', (event) => { event.preventDefault(); placeOrder(el.detailProductId.value, { name: el.detailCustomerName.value.trim(), email: el.detailCustomerEmail.value.trim(), phone: el.detailCustomerPhone.value.trim() }, el.detailOrderKg.value, el.detailOrderForm, { payment: el.detailOrderPayment.value, delivery: el.detailOrderDelivery.value, address: el.detailOrderAddress.value.trim() }); });
 el.closeOrder.addEventListener('click', closeOrderDialogs); el.cancelOrderAction.addEventListener('click', closeOrderDialogs);
 el.closeDetailOrder.addEventListener('click', closeOrderDialogs); el.cancelDetailOrderAction.addEventListener('click', closeOrderDialogs);
 el.purchaseAlertClose.addEventListener('click', () => el.purchaseAlert.classList.add('hidden'));
