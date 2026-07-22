@@ -45,7 +45,7 @@ const ADVANCE_LABELS = {
 
 const q = (id) => document.getElementById(id);
 const el = {
-  header: document.querySelector('.header'),
+  header: document.querySelector('.header'), navHome: q('nav-home'),
   entryGate: q('entry-gate'), chooseDetail: q('choose-detail'), chooseCrowd: q('choose-crowd'),
   modeTabsWrap: q('mode-tabs'), modeTabs: [...document.querySelectorAll('.mode-tab')],
   detailView: q('detail-view'), crowdView: q('crowd-view'), trackingView: q('tracking-view'),
@@ -241,6 +241,7 @@ function renderProducts() {
 
 function setMode(mode) {
   state.mode = mode;
+  el.navHome.classList.remove('active');
   el.entryGate.classList.add('hidden');
   el.modeTabsWrap.classList.remove('hidden');
   el.detailView.classList.toggle('hidden', mode !== 'detail');
@@ -524,6 +525,18 @@ function renderProcurement(detail, wholesale) {
   el.procurementList.innerHTML = `${detailSection}${wholesaleSection}${deliveryBoard}`;
 }
 
+function setHome() {
+  state.mode = null;
+  el.entryGate.classList.remove('hidden');
+  el.modeTabsWrap.classList.add('hidden');
+  el.detailView.classList.add('hidden');
+  el.crowdView.classList.add('hidden');
+  el.trackingView.classList.add('hidden');
+  el.modeTabs.forEach((tab) => tab.classList.remove('active'));
+  el.navHome.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function renderAdmin() {
   const wholesale = state.products.filter((p) => p.channel === 'CROWDBUYING');
   const detail = state.products.filter((p) => p.channel === 'DETALLE');
@@ -764,6 +777,7 @@ el.trackingForm.addEventListener('submit', trackOrders);
 el.trackingClear.addEventListener('click', () => { el.trackingForm.reset(); el.trackingResults.innerHTML = '<p class="hint">Ingresa tu teléfono para consultar tus pedidos.</p>'; });
 async function openAdmin(event) { event.preventDefault(); el.adminModal.showModal(); await syncAdmin(); }
 el.footerAdminLink.addEventListener('click', openAdmin);
+el.navHome.addEventListener('click', setHome);
 el.closeAdmin.addEventListener('click', () => el.adminModal.close());
 el.adminActionForm.addEventListener('submit', submitAdminAction);
 el.closeAdminAction.addEventListener('click', closeAdminActionDialog);

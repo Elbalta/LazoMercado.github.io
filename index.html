@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260722-15">
+  <link rel="stylesheet" href="style.css?v=20260722-16">
 </head>
 <body>
   <header class="header">
@@ -16,11 +16,13 @@
       <span class="brand-mark" aria-hidden="true">LM</span>
       <span class="brand-copy"><span class="eyebrow">Compra simple, rápida y clara</span><span class="brand-name">Lazo Mercado</span><span class="brand-tagline">Del productor a tu mesa</span></span>
     </div>
+    <nav class="site-nav" aria-label="Navegación principal"><button id="nav-home" class="site-nav-link active" type="button">Inicio</button><button class="site-nav-link mode-tab" data-mode="detail" type="button">Detalle</button><button class="site-nav-link mode-tab" data-mode="crowd" type="button">Mayorista</button><button class="site-nav-link mode-tab" data-mode="tracking" type="button">Seguimiento</button></nav>
   </header>
 
   <main class="layout">
     <section id="entry-gate" class="panel gate-panel" aria-labelledby="gate-title">
-      <div class="gate-hero"><span class="gate-kicker">Elige cómo comprar</span><h2 id="gate-title">Productos frescos para cada necesidad</h2><p class="hint">Compra cantidades pequeñas al detalle o participa en una compra mayorista.</p></div>
+      <div class="gate-hero"><span class="gate-kicker">Del campo a tu mesa</span><h2 id="gate-title">Compra simple,<br><em>clara y conveniente</em></h2><p class="hint">Productos frescos al detalle o en compras mayoristas en grupo, con precios transparentes y seguimiento de cada pedido.</p></div>
+      <div class="purchase-steps" aria-label="Cómo funciona"><strong>¿Cómo funciona?</strong><span><b>1</b> Elige cómo comprar</span><span><b>2</b> Selecciona producto y kilos</span><span><b>3</b> Confirmamos tu pago</span><span><b>4</b> Preparamos tu entrega</span></div>
       <div class="gate-options">
         <article class="gate-card gate-detail"><div class="gate-content"><h3>Compra al detalle</h3><p>Elige los kilos que necesitas y compra de inmediato.</p><ul><li>Desde 1 kg</li><li>Stock disponible</li></ul><button id="choose-detail" class="btn" type="button">Ver productos al detalle</button></div></article>
         <span class="gate-vs" aria-hidden="true">o</span>
