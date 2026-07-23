@@ -34,6 +34,7 @@ const PAYMENT_LABELS = {
 
 const PAYMENT_METHOD_LABELS = { transfer: 'Transferencia', cash: 'Efectivo' };
 const DELIVERY_METHOD_LABELS = { pickup: 'Retiro', delivery: 'Despacho' };
+const DETAIL_WEEKLY_TARGET_KG = 20;
 
 const ADVANCE_LABELS = {
   ESPERANDO_COMPRA_GRUPAL: 'Iniciar preparación',
@@ -490,21 +491,24 @@ function barRows(values, emptyMessage = 'Todavía no hay datos para este gráfic
 function renderProcurement(detail, wholesale) {
   const activeOrders = state.orders.filter((order) => !['CANCELADO', 'COMPLETADO'].includes(order.status));
   const pendingKg = activeOrders.filter((order) => order.payment_status !== 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
-  const detailPrepareKg = activeOrders.filter((order) => order.channel === 'DETALLE' && order.payment_status === 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
-  const detailRestockKg = detailPrepareKg;
+  const detailBuyKg = detail.reduce((total, product) => {
+    const pendingForProduct = activeOrders.filter((order) => order.channel === 'DETALLE' && order.product_id === product.product_id && order.payment_status !== 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
+    return total + Math.max(0, DETAIL_WEEKLY_TARGET_KG - (Number(product.stock_kg) + pendingForProduct));
+  }, 0);
   const readyLots = wholesale.filter((lot) => lot.lot_status === 'full' && Number(lot.capacity_kg) > 0);
   const wholesaleBuyKg = readyLots.reduce((sum, lot) => sum + Number(lot.capacity_kg), 0);
-  const totalBuyKg = detailRestockKg + wholesaleBuyKg;
+  const totalBuyKg = detailBuyKg + wholesaleBuyKg;
   const supplierBudget = readyLots.reduce((sum, lot) => sum + (Number(lot.capacity_kg) * Number(lot.supplier_cost_per_kg || 0)), 0);
   const missingSupplierCosts = readyLots.filter((lot) => Number(lot.supplier_cost_per_kg || 0) <= 0).length;
-  el.procurementSummary.innerHTML = `<article class="kpi-card procurement-total ${totalBuyKg ? 'ready-to-buy' : ''}"><p>Total para comprar ahora</p><strong>${number(totalBuyKg)} kg</strong><small>Detalle a reponer + lotes mayoristas completos</small></article><article class="kpi-card"><p>Reponer al detalle</p><strong>${number(detailRestockKg)} kg</strong><small>Ventas activas con pago confirmado</small></article><article class="kpi-card"><p>Comprar mayorista</p><strong>${number(wholesaleBuyKg)} kg</strong><small>Solo lotes que ya se completaron</small></article><article class="kpi-card ${missingSupplierCosts ? 'needs-attention' : ''}"><p>Presupuesto mayorista</p><strong>${money(supplierBudget)}</strong>${missingSupplierCosts ? `<small>Falta definir costo en ${missingSupplierCosts} lote(s)</small>` : '<small>Calculado con el costo de proveedor registrado</small>'}</article><article class="kpi-card pending-card"><p>No comprar todavía</p><strong>${number(pendingKg)} kg</strong><small>Pedidos que todavía no tienen pago confirmado</small></article>`;
+  el.procurementSummary.innerHTML = `<article class="kpi-card procurement-total ${totalBuyKg ? 'ready-to-buy' : ''}"><p>Total para comprar esta semana</p><strong>${number(totalBuyKg)} kg</strong><small>Detalle recomendado + lotes mayoristas completos</small></article><article class="kpi-card"><p>Comprar al detalle</p><strong>${number(detailBuyKg)} kg</strong><small>Para recuperar 20 kg libres por producto</small></article><article class="kpi-card"><p>Comprar mayorista</p><strong>${number(wholesaleBuyKg)} kg</strong><small>Solo lotes que ya se completaron</small></article><article class="kpi-card ${missingSupplierCosts ? 'needs-attention' : ''}"><p>Presupuesto mayorista</p><strong>${money(supplierBudget)}</strong>${missingSupplierCosts ? `<small>Falta definir costo en ${missingSupplierCosts} lote(s)</small>` : '<small>Calculado con el costo de proveedor registrado</small>'}</article><article class="kpi-card pending-card"><p>No comprar todavía</p><strong>${number(pendingKg)} kg</strong><small>Pedidos que todavía no tienen pago confirmado</small></article>`;
 
   const detailCards = detail.map((product) => {
     const orders = activeOrders.filter((order) => order.channel === 'DETALLE' && order.product_id === product.product_id);
     const confirmed = orders.filter((order) => order.payment_status === 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
     const pending = orders.filter((order) => order.payment_status !== 'CONFIRMADO').reduce((sum, order) => sum + Number(order.kg), 0);
-    const action = confirmed > 0 ? `Comprar y preparar ${number(confirmed)} kg` : pending > 0 ? 'Esperar confirmación de pago' : 'Sin acción pendiente';
-    return `<article class="procurement-card ${confirmed > 0 ? 'requires-purchase' : ''}"><div class="admin-row"><div><strong>${escapeHTML(product.name)}</strong><p class="bin-meta">Venta al detalle · reposición por ventas confirmadas</p></div><span class="action-badge ${confirmed > 0 ? 'ready' : ''}">${escapeHTML(action)}</span></div><div class="procurement-grid"><span>Comprar para reponer<strong>${number(confirmed)} kg</strong></span><span>Preparar pedidos<strong>${number(confirmed)} kg</strong></span><span>Stock libre actual<strong>${number(product.stock_kg)} kg</strong></span><span>No confirmado<strong>${number(pending)} kg</strong></span></div></article>`;
+    const buyThisWeek = Math.max(0, DETAIL_WEEKLY_TARGET_KG - (Number(product.stock_kg) + pending));
+    const action = buyThisWeek > 0 ? `Comprar esta semana: ${number(buyThisWeek)} kg` : confirmed > 0 ? 'Completar con stock disponible' : pending > 0 ? 'Esperar confirmación de pago' : 'Reserva semanal completa';
+    return `<article class="procurement-card ${buyThisWeek > 0 ? 'requires-purchase' : ''}"><div class="admin-row"><div><strong>${escapeHTML(product.name)}</strong><p class="bin-meta">Venta al detalle · planificación semanal</p></div><span class="action-badge ${buyThisWeek > 0 ? 'ready' : ''}">${escapeHTML(action)}</span></div><div class="procurement-grid"><span>Comprar esta semana<strong>${number(buyThisWeek)} kg</strong></span><span>Pedidos pagados<strong>${number(confirmed)} kg</strong></span><span>Stock libre actual<strong>${number(product.stock_kg)} kg</strong></span><span>Reserva objetivo<strong>${number(DETAIL_WEEKLY_TARGET_KG)} kg</strong></span><span>Pendiente de pago<strong>${number(pending)} kg</strong></span></div></article>`;
   });
 
   const wholesaleCards = wholesale.map((lot) => {
@@ -520,7 +524,7 @@ function renderProcurement(detail, wholesale) {
 
   const deliveries = activeOrders.filter((order) => order.payment_status === 'CONFIRMADO' && order.delivery_method === 'delivery');
   const deliveryBoard = `<section class="dispatch-board"><div class="admin-row"><div><strong>Despachos por coordinar</strong><p class="bin-meta">${deliveries.length} destino(s) con pago confirmado</p></div><span class="action-badge ${deliveries.length ? 'ready' : ''}">${deliveries.length ? `${number(deliveries.reduce((sum, order) => sum + Number(order.kg), 0))} kg por despachar` : 'Sin despachos'}</span></div>${deliveries.length ? `<div class="dispatch-list">${deliveries.map((order) => `<article><strong>${escapeHTML(order.product?.name || 'Producto')} · ${number(order.kg)} kg</strong><span>${escapeHTML(order.customer?.full_name || '')} · ${escapeHTML(order.customer?.phone || '')}</span><span>${escapeHTML(order.delivery?.address_line || 'Dirección pendiente')} · ${escapeHTML(ORDER_LABELS[order.status] || order.status)}</span></article>`).join('')}</div>` : '<p class="hint">Los pedidos con despacho aparecerán aquí cuando el pago esté confirmado.</p>'}</section>`;
-  const detailSection = `<section class="procurement-section"><div class="procurement-section-head"><div><span class="section-kicker">Al detalle</span><h5>Reposición y preparación por producto</h5></div><strong>${number(detailRestockKg)} kg para comprar</strong></div>${detailCards.join('') || '<div class="empty-state compact"><strong>Sin productos al detalle</strong><p>Crea o publica un producto para comenzar.</p></div>'}</section>`;
+  const detailSection = `<section class="procurement-section"><div class="procurement-section-head"><div><span class="section-kicker">Al detalle</span><h5>Compra semanal por producto</h5></div><strong>${number(detailBuyKg)} kg para comprar</strong></div>${detailCards.join('') || '<div class="empty-state compact"><strong>Sin productos al detalle</strong><p>Crea o publica un producto para comenzar.</p></div>'}</section>`;
   const wholesaleSection = `<section class="procurement-section"><div class="procurement-section-head"><div><span class="section-kicker">Mayorista</span><h5>Lotes completos y lotes en espera</h5></div><strong>${number(wholesaleBuyKg)} kg para comprar</strong></div>${wholesaleCards.join('') || '<div class="empty-state compact"><strong>Sin lotes mayoristas</strong><p>Crea o publica un lote para comenzar.</p></div>'}</section>`;
   el.procurementList.innerHTML = `${detailSection}${wholesaleSection}${deliveryBoard}`;
 }
