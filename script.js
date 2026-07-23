@@ -46,7 +46,7 @@ const ADVANCE_LABELS = {
 
 const q = (id) => document.getElementById(id);
 const el = {
-  header: document.querySelector('.header'), navHome: q('nav-home'),
+  header: document.querySelector('.header'), navHome: q('nav-home'), headerWhatsapp: q('header-whatsapp'),
   entryGate: q('entry-gate'), chooseDetail: q('choose-detail'), chooseCrowd: q('choose-crowd'),
   modeTabs: [...document.querySelectorAll('.mode-tab')],
   detailView: q('detail-view'), crowdView: q('crowd-view'), trackingView: q('tracking-view'),
@@ -794,6 +794,12 @@ el.binImageFile.addEventListener('change', () => previewSelectedImage(el.binImag
 el.detailAdminImageFile.addEventListener('change', () => previewSelectedImage(el.detailAdminImageFile, el.detailAdminImagePreview, el.detailAdminImageEmpty));
 
 async function init() {
+  const whatsappNumber = String(window.APP_CONFIG?.WHATSAPP_NUMBER || '').replace(/\D/g, '');
+  if (whatsappNumber) {
+    const message = encodeURIComponent('Hola, quiero información sobre Lazo Mercado.');
+    el.headerWhatsapp.href = `https://wa.me/${whatsappNumber}?text=${message}`;
+    el.headerWhatsapp.classList.remove('hidden');
+  }
   syncDeliveryFields(el.orderDelivery, el.orderAddressLabel, el.orderAddress);
   syncDeliveryFields(el.detailOrderDelivery, el.detailOrderAddressLabel, el.detailOrderAddress);
   syncPaymentHelp(el.orderPayment, el.orderPaymentHelp);
