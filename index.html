@@ -35,12 +35,6 @@
       </div>
     </section>
 
-    <nav id="mode-tabs" class="mode-tabs hidden" aria-label="Secciones principales">
-      <button class="mode-tab active" data-mode="detail" type="button">Detalle</button>
-      <button class="mode-tab" data-mode="crowd" type="button">Mayorista</button>
-      <button class="mode-tab" data-mode="tracking" type="button">Seguimiento</button>
-    </nav>
-
     <section id="detail-view" class="panel client-panel hidden" aria-labelledby="detail-title"><div class="panel-header centered"><h2 id="detail-title">Productos al detalle</h2><p>Compra desde un kilo.</p></div><div id="detail-products" class="bins-grid"></div><div class="how-it-works"><h3>¿Cómo comprar?</h3><ol><li>Elige el producto y los kilos.</li><li>Registra tus datos y selecciona retiro o despacho.</li><li>Guarda el código del pedido y consulta su avance con tu teléfono.</li></ol></div></section>
     <section id="crowd-view" class="panel client-panel hidden" aria-labelledby="crowd-title"><div class="panel-header centered"><h2 id="crowd-title">Compras mayoristas</h2><p>Completa un lote junto a otros compradores.</p></div><div id="bins-list" class="bins-grid"></div><div class="how-it-works"><h3>¿Cómo funciona el mayorista?</h3><ol><li>Solicita al menos el mínimo indicado.</li><li>Tu aporte se confirma cuando validamos el pago.</li><li>Cuando el lote se completa, comenzamos la preparación y entrega.</li></ol></div></section>
     <section id="tracking-view" class="panel client-panel hidden" aria-labelledby="tracking-title"><div class="panel-header centered"><h2 id="tracking-title">Seguimiento de pedidos</h2><p>Consulta usando el teléfono registrado en tu compra.</p></div><form id="tracking-form" class="tracking-form"><label>Teléfono<input id="tracking-phone" type="tel" autocomplete="tel" required></label><div class="tracking-actions"><button class="btn" type="submit">Buscar pedidos</button><button id="tracking-clear" class="btn secondary" type="button">Limpiar</button></div></form><div id="tracking-results" class="admin-bins"><p class="hint">Ingresa tu teléfono para consultar tus pedidos.</p></div></section>
