@@ -48,7 +48,7 @@ const q = (id) => document.getElementById(id);
 const el = {
   header: document.querySelector('.header'), navHome: q('nav-home'),
   entryGate: q('entry-gate'), chooseDetail: q('choose-detail'), chooseCrowd: q('choose-crowd'),
-  modeTabsWrap: q('mode-tabs'), modeTabs: [...document.querySelectorAll('.mode-tab')],
+  modeTabs: [...document.querySelectorAll('.mode-tab')],
   detailView: q('detail-view'), crowdView: q('crowd-view'), trackingView: q('tracking-view'),
   detailProducts: q('detail-products'), binsList: q('bins-list'),
   trackingForm: q('tracking-form'), trackingPhone: q('tracking-phone'),
@@ -244,7 +244,6 @@ function setMode(mode) {
   state.mode = mode;
   el.navHome.classList.remove('active');
   el.entryGate.classList.add('hidden');
-  el.modeTabsWrap.classList.remove('hidden');
   el.detailView.classList.toggle('hidden', mode !== 'detail');
   el.crowdView.classList.toggle('hidden', mode !== 'crowd');
   el.trackingView.classList.toggle('hidden', mode !== 'tracking');
@@ -532,7 +531,6 @@ function renderProcurement(detail, wholesale) {
 function setHome() {
   state.mode = null;
   el.entryGate.classList.remove('hidden');
-  el.modeTabsWrap.classList.add('hidden');
   el.detailView.classList.add('hidden');
   el.crowdView.classList.add('hidden');
   el.trackingView.classList.add('hidden');
