@@ -959,12 +959,13 @@ input, select, textarea {
 }
 
 /* Composición moderna inspirada en catálogo agrícola, sin alterar funciones. */
+:root { --warn: #b89655; --terracotta: #668a68; --gold: #b89655; }
 body { background: #f7f7f3; }
 .header {
   min-height: 72px;
   padding: .65rem clamp(1rem, 3vw, 2.5rem);
   display: grid;
-  grid-template-columns: minmax(190px, auto) minmax(0, 1fr);
+  grid-template-columns: minmax(190px, auto) minmax(0, 1fr) auto;
   gap: clamp(1rem, 3vw, 3rem);
   color: #153d2a;
   background: rgba(255,255,255,.96);
@@ -1007,6 +1008,23 @@ body { background: #f7f7f3; }
 }
 .site-nav-link:hover { color: #17643a; background: #edf4ec; }
 .site-nav-link.active { color: #fff; border-bottom-color: #17643a; background: linear-gradient(120deg,#2f7d45,#17643a); box-shadow: 0 5px 12px rgba(23,100,58,.16); }
+.header-whatsapp { min-height: 44px; display: inline-flex; align-items: center; gap: .45rem; padding: .55rem .85rem; color: #fff; border: 1px solid #17643a; border-radius: 12px; background: linear-gradient(120deg,#2f8a4b,#17643a); box-shadow: 0 6px 15px rgba(23,100,58,.16); font-size: .82rem; font-weight: 800; text-decoration: none; white-space: nowrap; }
+.header-whatsapp:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.header-whatsapp svg { width: 21px; height: 21px; fill: currentColor; }
+.gate-card.gate-detail { border-color: #d8c69a; background: linear-gradient(145deg,#fff,#fffcf5); }
+.gate-card.gate-detail::before { background: linear-gradient(90deg,#d7bb82,#a88b50); }
+.brand-tagline { color: #3f8452; }
+.bin-status.CLOSED { color: #715d2d; background: #f7f1df; }
+.kpi-card.needs-attention { border-color: #d8c69a; background: #fffaf0; }
+.btn.warn { background: linear-gradient(120deg,#a94a4a,#7f3030); }
+.order-note,
+.action-message { border-left-color: #b89655; background: #fffaf0; color: #604c25; }
+.btn:focus-visible,
+.site-nav-link:focus-visible,
+.main-tab:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible { outline-color: rgba(47,125,69,.34); }
 .layout { width: min(1480px, calc(100% - 2rem)); margin: 1rem auto 2rem; }
 .gate-panel {
   padding: clamp(1.2rem, 3vw, 2.6rem);
@@ -1069,6 +1087,7 @@ body { background: #f7f7f3; }
 @media (max-width: 760px) {
   .header { grid-template-columns: 1fr; gap: .35rem; position: static; }
   .site-nav { width: 100%; justify-self: stretch; justify-content: space-between; overflow-x: auto; }
+  .header-whatsapp { justify-self: stretch; justify-content: center; }
   .site-nav-link { font-size: .75rem; white-space: nowrap; }
   .layout { width: min(100% - 1rem,1480px); }
   .gate-hero { padding-top: .5rem; }
